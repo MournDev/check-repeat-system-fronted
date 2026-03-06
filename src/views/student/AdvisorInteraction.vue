@@ -22,7 +22,7 @@
 
           <div v-if="advisorInfo" class="advisor-detail">
             <div class="advisor-avatar">
-              <el-avatar :size="80" :src="advisorInfo.avatar" :alt="advisorInfo.name">
+              <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" :alt="advisorInfo.name">
                 {{ advisorInfo.name?.charAt(0) }}
               </el-avatar>
             </div>
@@ -83,14 +83,14 @@
               @click="switchSession(session.id)"
             >
               <div class="session-avatar">
-                <el-avatar :size="40" :src="session.avatar">
+                <el-avatar :size="40" :src="getAvatarUrl(session.avatar)">
                   {{ session.name?.charAt(0) }}
                 </el-avatar>
               </div>
               <div class="session-content">
                 <div class="session-header">
                   <span class="session-name">{{ session.name }}</span>
-                  <span class="session-time">{{ formatTime(session.lastTime) }}</span>
+                  <span class="session-time">{{ formatMessageTime(session.lastTime) }}</span>
                 </div>
                 <div class="session-preview">
                   {{ session.lastMessage }}
@@ -114,7 +114,12 @@
               <span class="card-title">
                 <el-icon><ChatDotRound /></el-icon>
                 {{ currentSession?.name || '消息对话' }}
-                <el-tag v-if="currentSession?.unreadCount > 0" type="danger" size="small" effect="dark">
+                <el-tag 
+                  v-if="currentSession?.unreadCount && currentSession.unreadCount > 0" 
+                  type="danger" 
+                  size="small" 
+                  effect="dark"
+                >
                   {{ currentSession.unreadCount }} 条未读
                 </el-tag>
               </span>
@@ -166,14 +171,14 @@
                 }"
               >
                 <div class="message-avatar">
-                  <el-avatar :size="32" :src="message.avatar">
+                  <el-avatar :size="36" :src="getAvatarUrl(message.avatar)" :alt="message.senderName">
                     {{ message.senderName?.charAt(0) }}
                   </el-avatar>
                 </div>
                 <div class="message-content">
                   <div class="message-info">
                     <span class="message-sender">{{ message.senderName }}</span>
-                    <span class="message-time">{{ formatTime(message.time) }}</span>
+                    <span class="message-time">{{ formatMessageTime(message.time) }}</span>
                   </div>
                   <div class="message-bubble">
                     <div class="message-text">{{ message.content }}</div>
@@ -357,6 +362,7 @@ import {
   ChatLineRound, ChatDotRound, Promotion, Paperclip, Picture,
   Folder, Download, Document, Refresh, MoreFilled, Delete, User
 } from '@element-plus/icons-vue'
+import { getAvatarUrl } from '@/utils/avatar'
 
 // 响应式数据
 const advisorInfo = ref(null)
@@ -439,8 +445,13 @@ const loadMessages = async (sessionId) => {
     const res = await getMessages(sessionId, 1, 20);
     if (res.code === 200) {
       currentMessages.value = res.data.records || [];
-      // 标记消息为已读
+      // 标记消息为已读 - 这会自动更新 unreadCount
       await markMessagesAsRead(sessionId);
+      // 手动更新当前会话的未读数
+      const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
+      if (sessionIndex !== -1) {
+        messageSessions.value[sessionIndex].unreadCount = 0;
+      }
     }
   } catch (error) {
     console.error('加载消息失败:', error);
@@ -451,8 +462,13 @@ const loadMessages = async (sessionId) => {
 };
 
 const switchSession = (sessionId) => {
-  activeSessionId.value = sessionId
-  loadMessages(sessionId)
+  activeSessionId.value = sessionId;
+  loadMessages(sessionId);
+  // 切换会话时，同时更新该会话的未读数
+  const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
+  if (sessionIndex !== -1) {
+    messageSessions.value[sessionIndex].unreadCount = 0;
+  }
 }
 
 const startNewMessage = () => {
@@ -704,15 +720,31 @@ const getFileIcon = (fileType) => {
   return iconMap[fileType] || 'Document'
 }
 
-const formatTime = (date) => {
+// 格式化消息时间 - 更详细的时间显示
+const formatMessageTime = (date) => {
   if (!date) return ''
   const now = new Date()
   const target = new Date(date)
+  const diff = now - target
+  const oneDay = 24 * 60 * 60 * 1000
   
+  // 今天
   if (now.toDateString() === target.toDateString()) {
     return target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-  } else {
-    return target.toLocaleDateString('zh-CN')
+  }
+  // 昨天
+  else if (diff < oneDay * 2 && diff >= oneDay) {
+    return `昨天 ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+  }
+  // 本周内
+  else if (diff < oneDay * 7) {
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    return `${weekdays[target.getDay()]} ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+  }
+  // 更早
+  else {
+    return target.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }) + 
+           ' ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   }
 }
 
@@ -844,42 +876,50 @@ onMounted(() => {
   .session-item {
     display: flex;
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid transparent;
+    margin-bottom: 0.5rem;
     
     &:hover {
       background-color: #f8f9fa;
+      transform: translateX(4px);
     }
     
     &.session-active {
-      background-color: #f0f7ff;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
       border-color: #667eea;
+      box-shadow: 0 2px 12px rgba(102, 126, 234, 0.15);
     }
     
     .session-avatar {
       margin-right: 0.75rem;
+      flex-shrink: 0;
     }
     
     .session-content {
       flex: 1;
       min-width: 0;
+      position: relative;
       
       .session-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.375rem;
+        gap: 8px;
         
         .session-name {
-          font-weight: 500;
+          font-weight: 600;
           color: #2c3e50;
+          font-size: 0.95rem;
         }
         
         .session-time {
           font-size: 0.75rem;
-          color: #7f8c8d;
+          color: #909399;
+          flex-shrink: 0;
         }
       }
       
@@ -889,19 +929,28 @@ onMounted(() => {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.375rem;
+        line-height: 1.4;
+      }
+      
+      .session-meta {
+        position: absolute;
+        right: 0;
+        bottom: 0;
       }
     }
   }
 }
 
 .chat-container {
-  height: 400px;
+  height: 500px;
   overflow-y: auto;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
   position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: #c3cfe2 #f5f7fa;
   
   .quick-replies {
     display: flex;
@@ -909,17 +958,20 @@ onMounted(() => {
     gap: 8px;
     margin-bottom: 16px;
     padding: 12px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e4e7ed;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border-radius: 12px;
+    border: 1px solid #e8ecf1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     
     .el-tag {
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-width: 1.5px;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
       }
     }
   }
@@ -928,70 +980,89 @@ onMounted(() => {
     .message-item {
       display: flex;
       margin-bottom: 1.5rem;
+      animation: fadeIn 0.3s ease-in-out;
       
       &.message-sent {
         flex-direction: row-reverse;
         
         .message-content {
           align-items: flex-end;
+          
+          .message-info {
+            justify-content: flex-end;
+          }
         }
         
         .message-bubble {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
           
           .message-time {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.9);
           }
         }
       }
       
       &.message-received {
         .message-bubble {
-          background-color: white;
-          border: 1px solid #e4e7ed;
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+          border: 1px solid #e8ecf1;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
       }
       
       .message-avatar {
         margin: 0 0.75rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
       
       .message-content {
         display: flex;
         flex-direction: column;
-        max-width: 70%;
+        max-width: 65%;
         
         .message-info {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 4px;
+          margin-bottom: 6px;
           font-size: 0.75rem;
-          color: #909399;
+          gap: 12px;
           
           .message-sender {
-            font-weight: 500;
+            font-weight: 600;
             color: #606266;
           }
           
           .message-time {
-            opacity: 0.7;
+            color: #909399;
+            font-size: 0.7rem;
           }
         }
         
         .message-bubble {
-          padding: 0.75rem 1rem;
-          border-radius: 12px;
+          padding: 0.875rem 1.125rem;
+          border-radius: 16px;
           margin-bottom: 0.5rem;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+          }
           
           .message-text {
             margin-bottom: 0.25rem;
+            line-height: 1.6;
+            word-wrap: break-word;
           }
           
           .message-time {
-            font-size: 0.75rem;
-            opacity: 0.7;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            text-align: right;
           }
         }
         
@@ -999,20 +1070,31 @@ onMounted(() => {
           .attachment-item {
             display: flex;
             align-items: center;
-            padding: 0.5rem;
-            background-color: white;
-            border: 1px solid #e4e7ed;
-            border-radius: 6px;
-            margin-bottom: 0.25rem;
+            padding: 0.625rem 0.75rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            border: 1px solid #e8ecf1;
+            border-radius: 8px;
+            margin-bottom: 0.375rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            
+            &:hover {
+              border-color: #667eea;
+              box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+              transform: translateX(2px);
+            }
             
             .el-icon {
               margin-right: 0.5rem;
               color: #667eea;
+              font-size: 16px;
             }
             
             span {
               flex: 1;
               margin-right: 0.5rem;
+              font-size: 0.875rem;
+              color: #303133;
             }
           }
         }
@@ -1042,18 +1124,34 @@ onMounted(() => {
 }
 
 .message-input {
-  border-top: 1px solid #f1f2f6;
+  border-top: 1px solid #e8ecf1;
   padding-top: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 0 0 12px 12px;
   
   .input-toolbar {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
     
     .toolbar-tip {
       font-size: 0.75rem;
       color: #909399;
       margin-left: 8px;
+      font-style: italic;
+    }
+  }
+  
+  :deep(.el-textarea__inner) {
+    border-radius: 8px;
+    border: 1px solid #e4e7ed;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
     }
   }
   
@@ -1061,11 +1159,18 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     
     .attachment-count {
       font-size: 0.875rem;
-      color: #7f8c8d;
+      color: #606266;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      .el-icon {
+        color: #667eea;
+      }
     }
   }
 }
@@ -1095,5 +1200,36 @@ onMounted(() => {
   .message-content {
     max-width: 85% !important;
   }
+}
+
+// 动画效果
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 滚动条美化
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 3px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 </style>

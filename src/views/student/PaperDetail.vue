@@ -330,7 +330,7 @@
 
                         <div v-if="paperDetails.teacherName" class="advisor-info">
                             <div class="advisor-avatar-section">
-                                <el-avatar :size="60" :src="paperDetails.advisorAvatar" class="advisor-avatar">
+                                <el-avatar :size="60" :src="getAvatarUrl(paperDetails.advisorAvatar)" class="advisor-avatar">
                                     {{ paperDetails.advisorName?.charAt(0) }}
                                 </el-avatar>
                                 <div class="advisor-basic">
@@ -484,7 +484,7 @@
                             <div v-for="review in paperDetails.reviewHistory" :key="review.id" class="review-item">
                                 <div class="review-header">
                                     <div class="reviewer-info">
-                                        <el-avatar :size="24" :src="review.reviewerAvatar" class="reviewer-avatar">
+                                        <el-avatar :size="24" :src="getAvatarUrl(review.reviewerAvatar)" class="reviewer-avatar">
                                             {{ review.reviewerName?.charAt(0) }}
                                         </el-avatar>
                                         <span class="reviewer-name">{{ review.reviewerName }}</span>
@@ -560,6 +560,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/student.js"
+import { getAvatarUrl } from '@/utils/avatar'
 
 // 图标引入
 import {

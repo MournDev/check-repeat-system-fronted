@@ -461,8 +461,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getDictDataByType } from "@/api/user.js";
 import { 
@@ -501,6 +501,7 @@ import {
 import useStore from "element-plus/es/components/table/src/store/index.mjs";
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 
 // 响应式数据
@@ -540,6 +541,21 @@ onMounted(async () => {
   }
   fetchPapers();
 });
+
+// 监听路由变化，当从查重相关页面返回时刷新数据
+watch(
+  () => route.name,
+  (newRouteName, oldRouteName) => {
+    // 如果是从查重报告或查重监控页面返回
+    if (
+      oldRouteName === 'PlagiarismReport' || 
+      oldRouteName === 'CheckMonitor' ||
+      oldRouteName === 'CheckHistory'
+    ) {
+      fetchPapers();
+    }
+  }
+);
 
 // 方法
 const fetchPapers = async () => {
@@ -759,8 +775,24 @@ const viewPlagiarismReport = (paperId) => {
   router.push(`/student/plagiarism-report/${paperId}`);
 };
 
-const monitorCheckProgress = (paperId) => {
-  router.push(`/student/check-monitor/${paperId}`);
+const monitorCheckProgress = async (paperId) => {
+  try {
+    // 先获取查重任务详情，获取 taskId
+    const taskRes = await getCheckTaskDetail(paperId);
+    if (taskRes.code === 200 && taskRes.data) {
+      const taskId = taskRes.data.taskId || taskRes.data.id;
+      if (taskId) {
+        router.push(`/student/check-monitor/${taskId}`);
+      } else {
+        ElMessage.error('未找到查重任务');
+      }
+    } else {
+      ElMessage.error('获取查重任务信息失败');
+    }
+  } catch (error) {
+    console.error('获取查重任务失败:', error);
+    ElMessage.error('获取查重任务失败，请稍后重试');
+  }
 };
 
 // 版本对比相关方法

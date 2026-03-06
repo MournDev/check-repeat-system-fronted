@@ -490,7 +490,7 @@
 
           <div v-if="advisorInfo" class="advisor-profile">
             <div class="advisor-avatar-section">
-              <el-avatar :size="80" :src="advisorInfo.avatar" class="advisor-avatar">
+              <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" class="advisor-avatar">
                 {{ advisorInfo.name?.charAt(0) }}
               </el-avatar>
               <div class="advisor-online-status">
@@ -566,19 +566,21 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import * as echarts from 'echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
+
 import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking } from "@/api/student.js"
 
-// 图标引入
+// 图标导入
 import {
   UploadFilled, Download, Document, Clock, Check, EditPen,
   DataLine, Refresh, View, Edit, List, UserFilled, Phone,
   Message, ChatDotRound, Bell, Lightning, CircleCheck,
-  OfficeBuilding, ChatLineRound, TrendCharts, PieChart, Calendar, QuestionFilled,
+  OfficeBuilding, ChatLineRound, TrendCharts, PieChart as PieChartIcon, Calendar, QuestionFilled,
   Delete, Setting, Files, Warning, Trophy, ScaleToOriginal, Star, Timer,
   Collection, Plus, DataAnalysis, User
 } from '@element-plus/icons-vue'
+import { getAvatarUrl } from '@/utils/avatar'
 
 const router = useRouter()
 const userStore = useUserStore()

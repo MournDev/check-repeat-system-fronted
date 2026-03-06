@@ -278,7 +278,8 @@ import {
   Refresh, DataLine, Timer, EditPen, TrendCharts, 
   DataAnalysis, Lightning, ArrowRight
 } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
+
 import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/student'
 
 const route = useRoute()

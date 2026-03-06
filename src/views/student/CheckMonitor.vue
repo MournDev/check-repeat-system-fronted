@@ -353,7 +353,10 @@ const closeCompletionDialog = () => {
 
 const connectWebSocket = () => {
   try {
-    websocket.value = subscribeCheckStatus(route.params.paperId, (data) => {
+    // 注意：WebSocket订阅可能需要paperId而不是taskId
+    // 这取决于后端的具体实现
+    const paperId = route.query.paperId || route.params.taskId;
+    websocket.value = subscribeCheckStatus(paperId, (data) => {
       if (data.type === 'status_update') {
         updateStatus(data.data)
         addLog('info', data.data.message || '状态更新')
@@ -414,9 +417,16 @@ const addLog = (level, message) => {
 
 // 生命周期
 onMounted(() => {
-  connectWebSocket()
+  // 参数校验
+  if (!route.params.taskId || route.params.taskId === 'undefined') {
+    ElMessage.error('缺少任务ID参数');
+    router.back();
+    return;
+  }
+  
+  connectWebSocket();
   // 添加初始日志
-  addLog('info', '连接到查重服务...')
+  addLog('info', '连接到查重服务...');
 })
 
 onUnmounted(() => {

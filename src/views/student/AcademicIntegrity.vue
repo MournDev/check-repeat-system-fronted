@@ -421,7 +421,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { 
@@ -491,6 +491,9 @@ const loadData = async () => {
       getAcademicChecklist()
     ])
     
+    // 如果组件已卸载，不更新数据
+    if (isUnmounted) return
+    
     // 处理个性化学术建议
     if (adviceRes.code === 200) {
       personalAdvice.value = adviceRes.data || {
@@ -513,9 +516,11 @@ const loadData = async () => {
     
   } catch (error) {
     console.error('加载学术诚信数据失败:', error)
-    ElMessage.error('数据加载失败: ' + (error.message || '网络错误'))
+    ElMessage.error('数据加载失败：' + (error.message || '网络错误'))
   } finally {
-    loading.value = false
+    if (!isUnmounted) {
+      loading.value = false
+    }
   }
 }
 
@@ -583,9 +588,16 @@ const getResourceTypeName = (type) => {
   return names[type] || '资源'
 }
 
+// 标记组件是否已卸载
+let isUnmounted = false
+
 // 生命周期
 onMounted(() => {
   loadData()
+})
+
+onUnmounted(() => {
+  isUnmounted = true
 })
 </script>
 

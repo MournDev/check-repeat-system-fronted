@@ -178,7 +178,7 @@
           <template #default="{ row }">
             <div class="student-info-enhanced">
               <div class="student-avatar">
-                <el-avatar :size="32" :src="row.avatar">
+                <el-avatar :size="32" :src="getAvatarUrl(row.avatar)">
                   {{ row.studentName.charAt(0) }}
                 </el-avatar>
               </div>
@@ -552,6 +552,7 @@ import ReviewDialog from '@/views/teacher/ReviewDialog.vue'
 import PlagiarismReportViewer from '@/views/teacher/PlagiarismReportViewer.vue'
 // import SimilarityReportDialog from './components/SimilarityReportDialog.vue'
 import PriorityBadge from '@/views/teacher/PriorityBadge.vue'
+import { getAvatarUrl } from '@/utils/avatar'
 import { 
   getPendingReviewList, 
   doReview, 

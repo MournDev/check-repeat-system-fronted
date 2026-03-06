@@ -363,9 +363,9 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import * as echarts from 'echarts'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
-// 导入管理员API
+// 导入管理员 API
 import { 
   getOperationLogs,
   exportOperationLogs,

@@ -335,9 +335,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
-// API接口引入
+// API 接口导入
 import {
   getTeacherDashboardStats,
   getPendingReviewList,

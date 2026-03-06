@@ -1,9 +1,7 @@
 <template>
   <div class="login-container">
-    <!-- 背景图 -->
-    <div class="background-wrapper">
-      <div class="background-overlay"></div>
-    </div>
+    <!-- 背景遮罩层 -->
+    <div class="background-overlay"></div>
     
     <!-- 登录卡片 -->
     <div class="login-content">
@@ -20,6 +18,7 @@
               placeholder="请输入用户名" 
               size="large"
               :prefix-icon="User"
+              clearable
             />
           </el-form-item>
           
@@ -31,6 +30,7 @@
               size="large"
               :prefix-icon="Lock"
               show-password
+              clearable
             />
           </el-form-item>
         
@@ -42,7 +42,7 @@
               :loading="loading"
               size="large"
             >
-              {{ loading ? '登录中...' : '登录' }}
+              {{ loading ? '登录中...' : '登 录' }}
             </el-button>
           </el-form-item>
         </el-form>
@@ -156,66 +156,39 @@ const handleForgotPassword = () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  min-height: 600px;
-  overflow: hidden;
-}
-
-// 背景图样式
-.background-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  // 可以使用实际图片替换上面的渐变背景
-  // background-image: url('@/assets/images/login-bg.jpg');
+  // 使用本地图片作为背景
+  background-image: url('@/assets/images/login.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(2px);
-  }
 }
 
+// 背景遮罩层 - 让文字更清晰
 .background-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.8) 0%,
-    rgba(118, 75, 162, 0.8) 100%
-  );
+  background: rgba(0, 0, 0, 0.4); // 可调整透明度 0.3-0.5
+  z-index: 1;
 }
 
 // 内容区域
 .login-content {
-  position: relative;
-  z-index: 2;
   width: 100%;
   max-width: 420px;
-  padding: 0 20px;
+  padding: 20px;
 }
 
 .login-card {
   width: 100%;
   padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.98);
+  position: relative;
+  z-index: 2; // 确保卡片在遮罩层之上
   
   :deep(.el-card__body) {
     padding: 0;
@@ -231,57 +204,44 @@ const handleForgotPassword = () => {
   margin: 0 0 0.5rem 0;
   color: #2c3e50;
   font-size: 1.75rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 600;
 }
 
 .login-subtitle {
   margin: 0;
-  color: #7f8c8d;
+  color: #718096;
   font-size: 0.9rem;
-  font-weight: 400;
 }
 
 // 表单样式
 :deep(.el-form-item) {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 :deep(.el-input__wrapper) {
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  border-radius: 8px;
+  transition: all 0.2s;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   }
-  
-  &.is-focus {
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-}
-
-:deep(.el-select .el-input__wrapper) {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .login-btn {
   width: 100%;
-  height: 48px;
-  border-radius: 10px;
+  height: 44px;
+  border-radius: 8px;
   font-size: 1rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
+  margin-top: 0.5rem;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
   }
   
   &:active {
@@ -296,7 +256,7 @@ const handleForgotPassword = () => {
   align-items: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f1f2f6;
+  border-top: 1px solid #eaeaea;
 }
 
 .register-btn {
@@ -309,11 +269,11 @@ const handleForgotPassword = () => {
 }
 
 .forgot-btn {
-  color: #95a5a6;
+  color: #a0aec0;
   font-weight: 400;
   
   &:hover {
-    color: #7f8c8d;
+    color: #718096;
   }
 }
 
@@ -325,8 +285,8 @@ const handleForgotPassword = () => {
 // 响应式设计
 @media (max-width: 480px) {
   .login-content {
-    max-width: 350px;
-    padding: 0 15px;
+    max-width: 360px;
+    padding: 15px;
   }
   
   .login-card {

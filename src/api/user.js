@@ -68,10 +68,10 @@ export const updateUserEmail = (data) => {
   });
 }
 
-// 获取所有学院
+/// 获取所有学院
 export const getAllColleges = () => {
   return request({
-    url: '/api/colleges/all',
+    url: '/api/common/dict/colleges',
     method: 'get'
   });
 }
@@ -79,7 +79,7 @@ export const getAllColleges = () => {
 // 获取对应学院下的专业
 export const getMajorsByCollegeId = (params) => {
   return request({
-    url: '/api/majors/all',
+    url: '/api/common/dict/majors',
     method: 'get',
     params: params
   });
