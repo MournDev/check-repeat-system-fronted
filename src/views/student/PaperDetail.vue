@@ -636,8 +636,15 @@ const canDownloadReport = computed(() => {
     return hasReport.value
 })
 // 相似度报告当前相似度
+// 后端 checkRate 可能是小数(0.23)或整数(23)，统一转为整数百分比
 const getSimilarityRate = computed(() => {
-    return checkTask.value?.checkRate || paperDetails.value?.similarityRate || 0
+    const raw = checkTask.value?.checkRate
+        ?? paperDetails.value?.similarityRate
+        ?? paperDetails.value?.similarity
+        ?? 0
+    if (!raw) return 0
+    // 小数形式（0~1 之间）转为百分比整数
+    return raw > 0 && raw <= 1 ? Math.round(raw * 100) : Math.round(raw)
 })
 
 // 方法

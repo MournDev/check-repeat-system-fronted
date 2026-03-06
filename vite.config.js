@@ -73,7 +73,9 @@ export default defineConfig({
       'pinia',
       'axios',
       'element-plus',
-      '@element-plus/icons-vue'
+      '@element-plus/icons-vue',
+      '@stomp/stompjs',
+      'sockjs-client'
     ]
   }
 })

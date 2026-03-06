@@ -160,14 +160,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Tickets, Delete, InfoFilled, SuccessFilled,
   Check, Loading, Clock, Document, Files, Connection, DocumentChecked
 } from '@element-plus/icons-vue'
-import { getCheckStatus, subscribeCheckStatus } from '@/api/student'
+import { getCheckStatus } from '@/api/student'
+import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const route = useRoute()
 const router = useRouter()
@@ -197,8 +198,10 @@ const logs = ref([
 
 const showCompletionDialog = ref(false)
 const finalSimilarity = ref(23.5)
-const websocket = ref(null)
 const logContainer = ref(null)
+
+// WebSocket（STOMP）
+const { connect: wsConnect, disconnect: wsDisconnect, isConnected: wsConnected } = useCheckProgress()
 
 // 计算属性
 const checkStages = ref([
@@ -352,28 +355,25 @@ const closeCompletionDialog = () => {
 }
 
 const connectWebSocket = () => {
-  try {
-    // 注意：WebSocket订阅可能需要paperId而不是taskId
-    // 这取决于后端的具体实现
-    const paperId = route.query.paperId || route.params.taskId;
-    websocket.value = subscribeCheckStatus(paperId, (data) => {
+  const paperId = route.query.paperId || route.params.taskId
+  wsConnect(
+    paperId,
+    (data) => {
       if (data.type === 'status_update') {
         updateStatus(data.data)
         addLog('info', data.data.message || '状态更新')
       }
-    })
-  } catch (error) {
-    console.error('WebSocket连接失败:', error)
-    // 降级到轮询
-    startPolling()
-  }
+    },
+    (err) => {
+      console.error('WebSocket连接失败，降级到轮询:', err)
+      addLog('warning', 'WebSocket连接失败，切换为轮询模式')
+      startPolling()
+    }
+  )
 }
 
 const disconnectWebSocket = () => {
-  if (websocket.value) {
-    websocket.value.close()
-    websocket.value = null
-  }
+  wsDisconnect()
 }
 
 const pollingTimer = ref(null)
@@ -433,6 +433,7 @@ onUnmounted(() => {
   disconnectWebSocket()
   stopPolling()
 })
+
 </script>
 
 <style lang="scss" scoped>

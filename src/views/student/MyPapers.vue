@@ -140,7 +140,7 @@
                 </el-button>
                 <!-- 撤回申请 -->
                 <el-button
-                  v-if="['PENDING_REVIEW', 'REVIEWING'].includes(paper.paperStatus)"
+                  v-if="['pending', 'checking', 'auditing'].includes(paper.paperStatus)"
                   type="warning"
                   text
                   :icon="RefreshLeft"
@@ -662,6 +662,7 @@ const getStatusType = (status) => {
   const typeMap = {
     pending: "info",
     checking: "warning",
+    withdrawn: "warning",
     auditing: "primary",
     completed: "success",
     rejected: "danger",
@@ -671,8 +672,10 @@ const getStatusType = (status) => {
 
 const getStatusText = (status) => {
   const textMap = {
-    pending: "待查重",
-    checking: "查重中",
+    assigned: "已分配",
+    withdrawn: "已撤回",
+    pending: "待分配",
+    checking: "待查重",
     auditing: "审核中",
     completed: "已完成",
     rejected: "需修改",
@@ -726,7 +729,16 @@ const withdrawPaper = async (paper) => {
     
     if (res.code === 200) {
       ElMessage.success('论文已撤回，您可以修改后重新提交');
-      fetchPapers();
+      
+      // 方案 1：直接从列表中移除（用户体验更好）
+      papers.value = papers.value.filter(p => p.id !== paper.id);
+      total.value = Math.max(0, total.value - 1);
+      
+      // 如果当前页没有数据了且不是第一页，回到上一页
+      if (papers.value.length === 0 && pagination.current > 1) {
+        pagination.current--;
+        fetchPapers();
+      }
     } else {
       ElMessage.error(res.message || '撤回失败，请稍后重试');
     }

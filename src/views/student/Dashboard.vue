@@ -402,22 +402,22 @@
                   <div class="detail-value similarity-value">
                     <div class="similarity-display">
                       <el-progress 
-                        :percentage="latestPaper.similarity || 0" 
+                        :percentage="latestPaperSimilarity" 
                         :stroke-width="8" 
-                        :color="getSimilarityColor(latestPaper.similarity)"
+                        :color="getSimilarityColor(latestPaperSimilarity)"
                         :show-text="false"
                         class="similarity-progress-mini"
                       />
-                      <span :class="['similarity-text', getSimilarityClass(latestPaper.similarity)]">
-                        {{ latestPaper.similarity || 0 }}%
+                      <span :class="['similarity-text', getSimilarityClass(latestPaperSimilarity)]">
+                        {{ latestPaperSimilarity }}%
                       </span>
                     </div>
                     <el-tag 
-                      :type="getSimilarityTagType(latestPaper.similarity)" 
+                      :type="getSimilarityTagType(latestPaperSimilarity)" 
                       size="small" 
                       effect="plain"
                     >
-                      {{ getSimilarityStatus(latestPaper.similarity) }}
+                      {{ getSimilarityStatus(latestPaperSimilarity) }}
                     </el-tag>
                   </div>
                 </div>
@@ -909,6 +909,18 @@ const getSimilarityTrend = (similarity) => {
   if (similarity < 30) return '良好'
   return '需关注'
 }
+
+// 相似度字段兼容：后端详情接口用 similarityRate/checkRate，列表接口用 similarity
+// checkRate 可能是小数(0.23)或整数(23)，统一转为整数百分比
+const latestPaperSimilarity = computed(() => {
+  if (!latestPaper.value) return 0
+  const raw = latestPaper.value.checkRate
+    ?? latestPaper.value.similarityRate
+    ?? latestPaper.value.similarity
+    ?? 0
+  if (!raw) return 0
+  return raw > 0 && raw <= 1 ? Math.round(raw * 100) : Math.round(raw)
+})
 
 // 相似度颜色获取函数
 const getSimilarityColor = (similarity) => {
