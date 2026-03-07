@@ -317,7 +317,7 @@
             {{ formatDateTime(currentPaper.submitTime) }}
           </el-descriptions-item>
           <el-descriptions-item label="指导老师">
-            {{ currentPaper.advisorName || "待分配" }}
+            {{ currentPaper.teacherName }}
           </el-descriptions-item>
           <el-descriptions-item label="当前状态">
             <el-tag :type="getStatusType(currentPaper.paperStatus)">

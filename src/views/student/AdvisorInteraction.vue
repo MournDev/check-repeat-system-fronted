@@ -162,22 +162,31 @@
               </div>
               
               <div 
-                v-for="message in currentMessages" 
+                v-for="(message, index) in currentMessages" 
                 :key="message.id"
-                class="message-item"
-                :class="{
-                  'message-sent': message.sender === 'student',
-                  'message-received': message.sender === 'advisor'
-                }"
               >
-                <div class="message-avatar">
-                  <el-avatar :size="36" :src="getAvatarUrl(message.avatar)" :alt="message.senderName">
-                    {{ message.senderName?.charAt(0) }}
-                  </el-avatar>
-                </div>
+                <div v-if="shouldShowTimeSeparator(index, message)" class="time-separator">{{ formatMessageTime(message.time) }}</div>
+                <div
+                  class="message-item"
+                  :class="{
+                    'message-sent': message.senderId === userStore.userInfo?.userId,
+                    'message-received': message.senderId !== userStore.userInfo?.userId
+                  }"
+                >
+                  <div class="message-avatar">
+                    <el-avatar
+                      :size="36"
+                      :src="getAvatarUrl(userMap[message.senderId]?.avatar || message.avatar)"
+                      :alt="userMap[message.senderId]?.realName || message.senderName"
+                    >
+                      {{ (userMap[message.senderId]?.realName || message.senderName)?.charAt(0) }}
+                    </el-avatar>
+                  </div>
                 <div class="message-content">
                   <div class="message-info">
-                    <span class="message-sender">{{ message.senderName }}</span>
+                    <span v-if="message.senderId !== userStore.userInfo?.userId" class="message-sender">
+                      {{ userMap[message.senderId]?.realName || message.senderName || '未知用户' }}
+                    </span>
                     <span class="message-time">{{ formatMessageTime(message.time) }}</span>
                   </div>
                   <div class="message-bubble">
@@ -196,6 +205,7 @@
                       </el-button>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
               
@@ -337,7 +347,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
@@ -376,6 +386,9 @@ const attachments = ref([])
 const messageDialogVisible = ref(false)
 const sharedFiles = ref([])
 const loadingMessages = ref(false)
+// 用户信息Map（userId→用户信息）
+const userMap = ref({})
+const chatContainer = ref(null)
 
 // 快捷回复选项
 const quickReplyOptions = ref([
@@ -420,17 +433,54 @@ const loadAdvisorData = async () => {
     console.log('导师信息响应:', advisorRes);
     if (advisorRes.code === 200 && advisorRes.data) {
       advisorInfo.value = advisorRes.data;
+      // 收集导师信息到userMap
+      if (advisorInfo.value.userId) {
+        userMap.value[advisorInfo.value.userId] = {
+          userId: advisorInfo.value.userId,
+          realName: advisorInfo.value.name,
+          avatar: advisorInfo.value.avatar
+        }
+      }
+      // 确保当前用户信息也存在于 userMap（用于渲染自己发送的消息）
+      if (userStore.userInfo?.userId && !userMap.value[userStore.userInfo.userId]) {
+        userMap.value[userStore.userInfo.userId] = {
+          userId: userStore.userInfo.userId,
+          realName: userStore.userInfo.realName || userStore.userInfo.username,
+          avatar: userStore.userInfo.avatar
+        }
+      }
       console.log('设置 advisorInfo:', advisorInfo.value);
     } else {
       console.warn('获取导师信息失败或未分配导师:', advisorRes.message);
-      // API 成功但没有数据，说明未分配导�?
       advisorInfo.value = null;
     }
-    
     // 获取消息会话列表
     const sessionsRes = await getMessageSessions();
     if (sessionsRes.code === 200) {
       messageSessions.value = sessionsRes.data;
+      // 收集会话成员到userMap
+      sessionsRes.data.forEach(session => {
+        if (session.members) {
+          session.members.forEach(member => {
+            if (member.userId) {
+              userMap.value[member.userId] = {
+                userId: member.userId,
+                realName: member.name || member.realName || member.username,
+                avatar: member.avatar
+              }
+            }
+          })
+        }
+      })
+      // 补全会话的显示信息（avatar/name/lastTime），保证左侧列表与消息区一致
+      messageSessions.value.forEach(session => {
+        // 优先使用已有字段，否则从成员中取
+        const otherMember = (session.members || []).find(m => m.userId !== userStore.userInfo?.userId) || session.members?.[0];
+        session.avatar = session.avatar || getSessionAvatar(session) || otherMember?.avatar;
+        session.name = session.name || session.displayName || otherMember?.name || otherMember?.realName || otherMember?.username || '会话';
+        // 兼容多种后端时间字段：lastTime, updatedAt, lastMessageTime, lastMessage?.time
+        session.lastTime = session.lastTime || session.updatedAt || session.lastMessageTime || session.lastMessage?.time || session.updatedTime || null;
+      })
     } else {
       console.warn('获取会话列表失败:', sessionsRes.message);
       messageSessions.value = [];
@@ -445,7 +495,7 @@ const loadAdvisorData = async () => {
     }
   } catch (error) {
     console.error('加载导师数据失败:', error);
-    ElMessage.error('加载数据失败�? + (error.message || '未知错误'));
+    ElMessage.error('加载数据失败' + (error.message || '未知错误'));
   }
 };
 
@@ -455,10 +505,41 @@ const loadMessages = async (sessionId) => {
     const res = await getMessages(sessionId, 1, 20);
     if (res.code === 200) {
       currentMessages.value = res.data.records || [];
-      // 标记消息为已�?- 这会自动更新 unreadCount
+      // 收集消息发送者到 userMap，并补全消息的 senderName/avatar
+      currentMessages.value.forEach(msg => {
+        const sid = msg.senderId;
+        if (sid && !userMap.value[sid]) {
+          userMap.value[sid] = {
+            userId: sid,
+            realName: msg.senderName || msg.realName || msg.username || '未知用户',
+            avatar: msg.avatar
+          }
+        }
+        // 优先使用 userMap 中的信息渲染消息
+        if (sid) {
+          msg.senderName = (userMap.value[sid] && userMap.value[sid].realName) || msg.senderName || '未知用户';
+          msg.avatar = (userMap.value[sid] && userMap.value[sid].avatar) || msg.avatar;
+        }
+        // 如果 API 使用其他字段表示发送者，兼容处理
+        if (!msg.senderId && (msg.fromUserId || msg.from)) {
+          const altId = msg.fromUserId || msg.from;
+          msg.senderId = altId;
+          if (altId && userMap.value[altId]) {
+            msg.senderName = userMap.value[altId].realName || msg.senderName;
+            msg.avatar = userMap.value[altId].avatar || msg.avatar;
+          }
+        }
+      });
+      // 标记消息为已读 - 这会自动更新 unreadCount
       await markMessagesAsRead(sessionId);
-      // 手动更新当前会话的未读数
+      // 更新该会话的最后时间和预览信息，使用最新一条消息的时间和内容
       const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
+      if (sessionIndex !== -1) {
+        const latestMsg = currentMessages.value.length ? currentMessages.value[currentMessages.value.length - 1] : null;
+        messageSessions.value[sessionIndex].lastTime = latestMsg?.time || messageSessions.value[sessionIndex].lastTime;
+        messageSessions.value[sessionIndex].lastMessage = latestMsg?.content || messageSessions.value[sessionIndex].lastMessage;
+      }
+      // 手动更新当前会话的未读数
       if (sessionIndex !== -1) {
         messageSessions.value[sessionIndex].unreadCount = 0;
       }
@@ -468,13 +549,34 @@ const loadMessages = async (sessionId) => {
     ElMessage.error('加载消息失败');
   } finally {
     loadingMessages.value = false;
+    await nextTick()
+    scrollToBottom()
   }
 };
+
+const scrollToBottom = () => {
+  try {
+    if (!chatContainer.value) return
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+  } catch (e) {
+    // ignore
+  }
+}
+
+const getMessageSenderName = (message) => {
+  if (!message) return ''
+  const sid = message.senderId
+  const nameFromMap = sid ? (userMap.value[sid] && userMap.value[sid].realName) : null
+  if (nameFromMap && nameFromMap !== '未知用户') return nameFromMap
+  if (message.senderName && message.senderName !== '未知用户') return message.senderName
+  // fallback to current session name (conversation partner)
+  return currentSession.value?.name || ''
+}
 
 const switchSession = (sessionId) => {
   activeSessionId.value = sessionId;
   loadMessages(sessionId);
-  // 切换会话时，同时更新该会话的未读�?
+  // 切换会话时，同时更新该会话的未读数
   const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
   if (sessionIndex !== -1) {
     messageSessions.value[sessionIndex].unreadCount = 0;
@@ -486,7 +588,7 @@ const startNewMessage = () => {
 }
 
 const sendNewMessage = () => {
-  ElMessage.success('消息发送成�?)
+  ElMessage.success('消息发送成功')
   messageDialogVisible.value = false
   // 重置表单
   Object.keys(messageForm).forEach(key => {
@@ -500,27 +602,58 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() && attachments.length === 0) return;
 
   try {
+    // 确保当前用户信息存在于 userMap，便于立即渲染自己的头像和姓名
+    if (userStore.userInfo?.userId && !userMap.value[userStore.userInfo.userId]) {
+      userMap.value[userStore.userInfo.userId] = {
+        userId: userStore.userInfo.userId,
+        realName: userStore.userInfo.realName || userStore.userInfo.username,
+        avatar: userStore.userInfo.avatar
+      }
+    }
     const messageData = {
       sessionId: activeSessionId.value,
       receiverId: currentSession.value?.id,
+      senderId: userStore.userInfo?.userId,
       content: newMessage.value,
-      attachmentIds: attachments.value.map(att => att.id)
+      attachmentIds: attachments.value.map(att => att.id),
+      senderName: userStore.userInfo?.realName || userStore.userInfo?.username || '未知用户'
     };
 
     const res = await sendMsgApi(messageData);
     
     if (res.code === 200) {
+      // 立即将本条消息加入本地消息列表，改善感知延迟
+      try {
+        const localMsg = {
+          id: res.data?.id || Date.now(),
+          senderId: userStore.userInfo?.userId,
+          senderName: userStore.userInfo?.realName || userStore.userInfo?.username || '我',
+          avatar: userStore.userInfo?.avatar,
+          content: newMessage.value,
+          time: new Date().toISOString(),
+          attachments: attachments.value
+        }
+        currentMessages.value.push(localMsg);
+        // 更新会话的 lastTime/lastMessage，保证左侧时间即时更新
+        const sIndex = messageSessions.value.findIndex(s => s.id === activeSessionId.value);
+        if (sIndex !== -1) {
+          messageSessions.value[sIndex].lastTime = localMsg.time;
+          messageSessions.value[sIndex].lastMessage = localMsg.content;
+        }
+      } catch (e) {
+        // ignore local push error
+      }
       // 发送成功后刷新消息列表
       await loadMessages(activeSessionId.value);
       newMessage.value = '';
       attachments.value = [];
-      ElMessage.success('消息发送成�?);
+      ElMessage.success('消息发送成功');
     } else {
-      ElMessage.error(res.message || '发送失�?);
+      ElMessage.error(res.message || '发送失败');
     }
   } catch (error) {
-    console.error('发送消息失�?', error);
-    ElMessage.error('发送失�?);
+    console.error('发送消息失败', error);
+    ElMessage.error('发送失败');
   }
 };
 
@@ -541,7 +674,7 @@ const refreshMessages = async () => {
   try {
     // TODO: 调用刷新消息接口
     await loadMessages(activeSessionId.value)
-    ElMessage.success('消息已刷�?)
+    ElMessage.success('消息已刷新')
   } catch (error) {
     ElMessage.error('刷新失败')
   } finally {
@@ -553,19 +686,19 @@ const refreshMessages = async () => {
 
 // 查看导师主页
 const viewAdvisorProfile = () => {
-  console.log('查看导师主页被点�?);
+  console.log('查看导师主页被点击');
   console.log('advisorInfo:', advisorInfo.value);
   
   if (advisorInfo.value) {
     ElMessageBox.alert(
       `<div style="text-align: left;">
-        <p><strong>姓名�?/strong>${advisorInfo.value.name}</p>
-        <p><strong>职称�?/strong>${advisorInfo.value.title}</p>
-        <p><strong>研究方向�?/strong>${advisorInfo.value.researchField}</p>
-        <p><strong>邮箱�?/strong>${advisorInfo.value.email}</p>
-        <p><strong>电话�?/strong>${advisorInfo.value.phone}</p>
+        <p><strong>姓名：</strong>${advisorInfo.value.name}</p>
+        <p><strong>职称：</strong>${advisorInfo.value.title}</p>
+        <p><strong>研究方向：</strong>${advisorInfo.value.researchField}</p>
+        <p><strong>邮箱：</strong>${advisorInfo.value.email}</p>
+        <p><strong>电话：</strong>${advisorInfo.value.phone}</p>
         <p><strong>办公室：</strong>${advisorInfo.value.office}</p>
-        <p><strong>办公时间�?/strong>${advisorInfo.value.officeHours}</p>
+        <p><strong>办公时间：</strong>${advisorInfo.value.officeHours}</p>
       </div>`,
       '导师信息',
       {
@@ -591,64 +724,12 @@ const downloadAttachment = async (file) => {
     link.download = file.name;
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success(`正在下载�?{file.name}`);
+    ElMessage.success(`正在下载${file.name}`);
   } catch (error) {
     console.error('下载失败:', error);
     ElMessage.error('下载失败');
   }
-};
-
-// 清空消息
-const clearMessages = async () => {
-  try {
-    await ElMessageBox.confirm('确定要清空当前会话的消息吗？此操作不可恢�?, '警告', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    });
-    
-    const res = await clearMsgApi(activeSessionId.value);
-    if (res.code === 200) {
-      currentMessages.value = [];
-      ElMessage.success('消息已清�?);
-    } else {
-      ElMessage.error(res.message || '清空失败');
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('清空失败:', error);
-      ElMessage.error('清空失败');
-    }
-  }
-};
-
-// 导出聊天记录
-const exportChatHistory = async () => {
-  try {
-    const exportData = {
-      sessionId: activeSessionId.value,
-      format: 'pdf',
-      startTime: '2024-01-01',
-      endTime: new Date().toISOString().split('T')[0]
-    };
-    
-    const res = await exportHistoryApi(exportData);
-    
-    // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `聊天记录_${new Date().getTime()}.pdf`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-    
-    ElMessage.success('聊天记录已导�?);
-  } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出失败');
-  }
-};
+}
 
 const attachFile = async () => {
   try {
@@ -769,6 +850,23 @@ const formatFileSize = (bytes) => {
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 是否在两条消息之间显示居中时间分隔（例如相邻消息间隔 >= 5 分钟）
+const shouldShowTimeSeparator = (index, message) => {
+  try {
+    if (!message) return false
+    if (index === 0) return true
+    const prev = currentMessages.value[index - 1]
+    if (!prev || !prev.time) return true
+    const tPrev = new Date(prev.time).getTime()
+    const tCurr = new Date(message.time).getTime()
+    if (isNaN(tPrev) || isNaN(tCurr)) return false
+    const diffMinutes = Math.abs(tCurr - tPrev) / 60000
+    return diffMinutes >= 5 // 5 分钟阈值，可根据需求调整
+  } catch (e) {
+    return false
+  }
 }
 
 onMounted(() => {
@@ -987,10 +1085,23 @@ onMounted(() => {
   }
   
   .messages-area {
+      .time-separator {
+        display: inline-block;
+        margin: 10px auto;
+        padding: 4px 10px;
+        background: #eef6ff;
+        color: #6b7785;
+        font-size: 12px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      }
     .message-item {
-      display: flex;
-      margin-bottom: 1.5rem;
-      animation: messageSlideIn 0.3s ease-out;
+    display: flex;
+    margin-bottom: 12px;
+    animation: messageSlideIn 0.18s ease-out;
+    align-items: flex-end;
+    gap: 8px;
       
       @keyframes messageSlideIn {
         from {
@@ -1005,117 +1116,131 @@ onMounted(() => {
       
       &.message-sent {
         flex-direction: row-reverse;
-        
+
+        .message-avatar {
+          margin-left: 8px;
+          margin-right: 0;
+        }
+
         .message-content {
           align-items: flex-end;
-          
-          .message-info {
-            justify-content: flex-end;
-          }
         }
-        
+
         .message-bubble {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          background: #dcf8c6; /* WeChat-like light green */
+          color: #111;
+          box-shadow: none;
           border: none;
           position: relative;
-          
+          border-radius: 14px 14px 4px 14px;
+          padding: 10px 14px;
+
           &::after {
             content: '';
             position: absolute;
-            bottom: -8px;
-            right: 20px;
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 0;
-            border-top: 8px solid #667eea;
+            right: -6px;
+            bottom: 6px;
+            width: 10px;
+            height: 10px;
+            background: #dcf8c6;
+            transform: rotate(45deg);
+            box-shadow: -1px 1px 0 rgba(0,0,0,0.02);
           }
-          
-          .message-time {
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          
-          .message-time {
-            color: rgba(255, 255, 255, 0.9);
-          }
+
+          .message-text { font-size: 14px; color: #111; }
         }
       }
-      
+
       &.message-received {
+        flex-direction: row;
+
+        .message-avatar {
+          margin-right: 8px;
+        }
+
+        .message-content {
+          align-items: flex-start;
+        }
+
         .message-bubble {
-          background: white;
-          border: 1px solid #e8eaed;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          background: #fff;
+          border: 1px solid #e6e6e6;
+          box-shadow: none;
           position: relative;
-          
+          border-radius: 14px 14px 14px 4px;
+          padding: 10px 14px;
+
           &::after {
             content: '';
             position: absolute;
-            bottom: -8px;
-            left: 20px;
-            width: 0;
-            height: 0;
-            border-right: 8px solid transparent;
-            border-left: 0;
-            border-top: 8px solid white;
+            left: -6px;
+            bottom: 6px;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            transform: rotate(45deg);
+            border-left: 1px solid #e6e6e6;
+            box-shadow: 1px 1px 0 rgba(0,0,0,0.02);
           }
-          background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-          border: 1px solid #e8ecf1;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+          .message-text { font-size: 14px; color: #222; }
         }
       }
       
       .message-avatar {
-        margin: 0 0.75rem;
+        margin: 0 8px;
         flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border: 2px solid white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.04);
       }
       
-      .message-content {
-        display: flex;
-        flex-direction: column;
-        max-width: 65%;
-        
-        .message-info {
+        .message-content {
           display: flex;
-          justify-content: space-between;
+          flex-direction: column;
+          max-width: 72%;
+        
+          .message-info {
+          display: flex;
           align-items: center;
           margin-bottom: 6px;
-          font-size: 0.75rem;
+          font-size: 12px;
           color: #909399;
-          padding: 0 4px;
-          gap: 12px;
-          
+          gap: 8px;
+
           .message-sender {
             font-weight: 600;
             color: #606266;
-            font-size: 0.8rem;
+            font-size: 13px;
           }
-          
+
+          /* 隐藏自己发送消息的用户名，WeChat 风格 */
+          .message-sent & .message-sender { display: none; }
+
           .message-time {
-            opacity: 0.7;
+            opacity: 0.65;
             color: #909399;
-            font-size: 0.7rem;
+            font-size: 11px;
           }
         }
         
         .message-bubble {
-          padding: 12px 16px;
-          border-radius: 16px;
+          padding: 10px 14px;
+          border-radius: 14px;
           margin-bottom: 0.5rem;
           word-wrap: break-word;
           word-break: break-word;
-          padding: 0.875rem 1.125rem;
-          border-radius: 16px;
-          margin-bottom: 0.5rem;
-          transition: all 0.3s ease;
+          transition: all 0.18s ease;
           
           &:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
           }
           
           .message-text {
@@ -1125,17 +1250,13 @@ onMounted(() => {
           }
           
           .message-time {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             opacity: 0.7;
-            margin-top: 4px;
+            margin-top: 6px;
             word-wrap: break-word;
           }
           
-          .message-time {
-            font-size: 0.7rem;
-            opacity: 0.8;
-            text-align: right;
-          }
+          .message-time { text-align: right; }
         }
         
         .message-attachments {
@@ -1159,18 +1280,6 @@ onMounted(() => {
               border-color: #667eea;
               transform: translateX(4px);
               box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-            padding: 0.625rem 0.75rem;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-            border: 1px solid #e8ecf1;
-            border-radius: 8px;
-            margin-bottom: 0.375rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            
-            &:hover {
-              border-color: #667eea;
-              box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-              transform: translateX(2px);
             }
             
             .el-icon {
