@@ -24,6 +24,7 @@
         <el-step title="安全配置" @click="activeTab = 2"></el-step>
         <el-step title="邮件配置" @click="activeTab = 3"></el-step>
         <el-step title="性能配置" @click="activeTab = 4"></el-step>
+        <el-step title="时间节点" @click="activeTab = 5"></el-step>
       </el-steps>
     </el-card>
 
@@ -269,6 +270,66 @@
           </div>
         </el-card>
       </el-col>
+    </el-row>
+
+    <!-- 时间节点配置 -->
+    <div v-show="activeTab === 5" class="config-tab-container">
+      <el-card class="config-card" shadow="never">
+        <h3 class="tab-title">时间节点配置</h3>
+        <el-form :model="deadlinesConfig" label-width="140px" class="config-form">
+          <el-form-item label="论文提交截止">
+            <el-date-picker
+              v-model="deadlinesConfig.submissionDeadline"
+              type="date"
+              placeholder="选择日期"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
+            ></el-date-picker>
+            <div class="form-tip">学生论文提交的最终截止时间</div>
+          </el-form-item>
+          
+          <el-form-item label="审核截止">
+            <el-date-picker
+              v-model="deadlinesConfig.reviewDeadline"
+              type="date"
+              placeholder="选择日期"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
+            ></el-date-picker>
+            <div class="form-tip">导师完成论文审核的截止时间</div>
+          </el-form-item>
+          
+          <el-form-item label="答辩时间">
+            <el-date-picker
+              v-model="deadlinesConfig.defenseDate"
+              type="date"
+              placeholder="选择日期"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
+            ></el-date-picker>
+            <div class="form-tip">论文答辩的开始时间</div>
+          </el-form-item>
+          
+          <el-form-item label="预计毕业时间">
+            <el-date-picker
+              v-model="deadlinesConfig.graduationDate"
+              type="date"
+              placeholder="选择日期"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
+            ></el-date-picker>
+            <div class="form-tip">学生预计毕业的时间</div>
+          </el-form-item>
+          
+          <el-form-item>
+            <el-button type="primary" @click="saveDeadlinesConfig" :loading="savingDeadlines">
+              保存时间节点配置
+            </el-button>
+            <el-button @click="resetDeadlinesConfig">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
 
       <!-- 右侧配置说明 -->
       <el-col :span="8">
@@ -318,13 +379,24 @@
                 <li><strong>测试功能</strong>：修改配置后务必测试连接</li>
               </ul>
             </div>
-            
+                      
             <div v-show="activeTab === 4" class="help-content">
               <h4>性能配置说明</h4>
               <ul>
-                <li><strong>并发数</strong>：根据服务器配置调整，一般设为CPU核心数×2</li>
-                <li><strong>缓存策略</strong>：LRU适合大多数场景</li>
+                <li><strong>并发数</strong>：根据服务器配置调整，一般设为 CPU 核心数×2</li>
+                <li><strong>缓存策略</strong>：LRU 适合大多数场景</li>
                 <li><strong>自动清理</strong>：建议开启，避免磁盘空间不足</li>
+              </ul>
+            </div>
+                      
+            <div v-show="activeTab === 5" class="help-content">
+              <h4>时间节点配置说明</h4>
+              <ul>
+                <li><strong>论文提交截止</strong>：学生必须在此日期前提交论文</li>
+                <li><strong>审核截止</strong>：导师必须在此日期前完成审核</li>
+                <li><strong>答辩时间</strong>：论文答辩的开始日期</li>
+                <li><strong>预计毕业</strong>：学生预计毕业的日期</li>
+                <li><strong>修改生效</strong>：保存后立即生效，学生会看到更新后的倒计时</li>
               </ul>
             </div>
           </div>
@@ -366,7 +438,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-// 导入管理员API
+// 导入管理员 API
 import { 
   getSystemConfig,
   updateBasicConfig,
@@ -377,7 +449,9 @@ import {
   saveAllConfig as saveAllApiConfig,
   testEmailConfig as testEmailApi,
   exportConfig as exportApiConfig,
-  resetDefaultConfig
+  resetDefaultConfig,
+  getDeadlinesConfig,
+  updateDeadlinesConfig
 } from '@/api/admin/config'
 
 
@@ -436,6 +510,15 @@ const performanceConfig = reactive({
   autoCleanup: true,
   cleanupInterval: 24
 })
+
+const deadlinesConfig = reactive({
+  submissionDeadline: '',
+  reviewDeadline: '',
+  defenseDate: '',
+  graduationDate: ''
+})
+
+const savingDeadlines = ref(false)
 
 // 计算属性
 const thresholdMarks = computed(() => ({
@@ -527,6 +610,58 @@ const testEmailConnection = async () => {
   }
 }
 
+// 时间节点配置方法
+const loadDeadlinesConfig = async () => {
+  try {
+    const response = await getDeadlinesConfig()
+    if (response.code === 200 && response.data) {
+      deadlinesConfig.submissionDeadline = response.data.submissionDeadline || ''
+      deadlinesConfig.reviewDeadline = response.data.reviewDeadline || ''
+      deadlinesConfig.defenseDate = response.data.defenseDate || ''
+      deadlinesConfig.graduationDate = response.data.graduationDate || ''
+    }
+  } catch (error) {
+    console.error('加载时间节点配置失败:', error)
+  }
+}
+
+const saveDeadlinesConfig = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要保存时间节点配置吗？',
+      '保存配置',
+      {
+        confirmButtonText: '确定保存',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    savingDeadlines.value = true
+    
+    await updateDeadlinesConfig({
+      submissionDeadline: deadlinesConfig.submissionDeadline,
+      reviewDeadline: deadlinesConfig.reviewDeadline,
+      defenseDate: deadlinesConfig.defenseDate,
+      graduationDate: deadlinesConfig.graduationDate
+    })
+    
+    ElMessage.success('时间节点配置保存成功')
+    savingDeadlines.value = false
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('保存时间节点配置失败:', error)
+      ElMessage.error('保存时间节点配置失败')
+    }
+    savingDeadlines.value = false
+  }
+}
+
+const resetDeadlinesConfig = () => {
+  loadDeadlinesConfig()
+  ElMessage.info('已重置为上次保存的配置')
+}
+
 const validateEmailConfig = () => {
   if (!emailConfig.smtpServer) {
     ElMessage.warning('请输入SMTP服务器地址')
@@ -596,6 +731,8 @@ const resetConfig = async () => {
 onMounted(() => {
   // 加载配置数据
   refreshConfig()
+  // 加载时间节点配置
+  loadDeadlinesConfig()
 })
 </script>
 
