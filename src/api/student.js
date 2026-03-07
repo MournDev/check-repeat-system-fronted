@@ -489,10 +489,11 @@ export const replyFeedback = (paperId, content) => {
  * 撤回论文
  * @param paperId 论文 ID
  */
-export const withdrawPaper = (paperId) => {
+export const withdrawPaper = (paperId, reason = '') => {
   return request({
     url: `/api/papers/${paperId}/withdraw`,
-    method: "post"
+    method: "post",
+    data: { reason }
   });
 };
 

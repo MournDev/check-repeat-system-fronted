@@ -729,30 +729,37 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-// 撤回论文
+// 撤回论文（一步对话框）
 const withdrawPaper = async (paper) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要撤回论文《${paper.paperTitle}》吗？撤回后可以重新修改提交。`,
-      '确认撤回',
+    // 在同一个 prompt 里同时确认操作并收集理由
+    const { value: reason } = await ElMessageBox.prompt(
+      `确定要撤回论文《${paper.paperTitle}》吗？\n请简要说明撤回理由：`,
+      '撤回论文',
       {
-        confirmButtonText: '确定',
+        confirmButtonText: '提交',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
+        inputPattern: /.+/, // 不允许空
+        inputErrorMessage: '请输入撤回理由',
+        inputPlaceholder: '例如：上传文件有误，需要重新提交',
+        textarea: true,
+        inputType: 'textarea',
+        inputValidator(val) {
+          return val && val.trim().length > 0;
+        }
       }
     );
-    
-    // 调用撤回接口
-    const res = await withdrawPaperApi(paper.id);
-    
+
+    // 调用撤回接口，后端接口已扩展接受原因参数
+    const res = await withdrawPaperApi(paper.id, reason);
+
     if (res.code === 200) {
       ElMessage.success('论文已撤回，您可以修改后重新提交');
-      
-      // 方案 1：直接从列表中移除（用户体验更好）
+
       papers.value = papers.value.filter(p => p.id !== paper.id);
       total.value = Math.max(0, total.value - 1);
-      
-      // 如果当前页没有数据了且不是第一页，回到上一页
+
       if (papers.value.length === 0 && pagination.current > 1) {
         pagination.current--;
         fetchPapers();
