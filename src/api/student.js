@@ -495,10 +495,12 @@ export const withdrawPaper = (paperId, withdrawReasonType, reasonDetail) => {
   return request({
     url: `/api/papers/${paperId}/withdraw`,
     method: "post",
+    headers: {
+      'Content-Type': 'application/json'
+    },
     data: {
-      paperId,
       withdrawReasonType,
-      reasonDetail
+      reasonDetail: reasonDetail || '' // 确保不传 undefined
     }
   });
 };
