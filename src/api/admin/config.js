@@ -87,3 +87,20 @@ export const resetDefaultConfig = () => {
     method: 'post'
   })
 }
+
+// 获取时间节点配置
+export const getDeadlinesConfig = () => {
+  return request({
+    url: '/api/admin/config/deadlines',
+    method: 'get'
+  })
+}
+
+// 更新时间节点配置
+export const updateDeadlinesConfig = (data) => {
+  return request({
+    url: '/api/admin/config/deadlines',
+    method: 'put',
+    data: data
+  })
+}
