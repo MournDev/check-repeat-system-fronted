@@ -515,7 +515,6 @@ export const resubmitAfterWithdraw = (paperId, data) => {
     url: `/api/papers/${paperId}/resubmit-after-withdraw`,
     method: "post",
     data
->>>>>>> e205cc59e93997c6aa691b359b3d5f183893c0b5
   });
 };
 
