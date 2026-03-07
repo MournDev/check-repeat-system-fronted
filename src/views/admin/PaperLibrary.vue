@@ -77,7 +77,7 @@
       <el-form :model="filterForm" label-width="80px" inline>
         <el-form-item label="学院">
           <el-select 
-            v-model="filterForm.collegeName" 
+            v-model="filterForm.collegeId" 
             placeholder="请选择学院" 
             clearable 
             style="width: 180px"
@@ -87,24 +87,24 @@
               v-for="college in collegeList" 
               :key="college.value" 
               :label="college.label" 
-              :value="college.label"
+              :value="college.value"
             >
             </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="专业">
           <el-select 
-            v-model="filterForm.majorName" 
+            v-model="filterForm.majorId" 
             placeholder="请选择专业" 
             clearable 
             style="width: 180px"
-            :disabled="!filterForm.collegeName"
+            :disabled="!filterForm.collegeId"
           >
             <el-option 
               v-for="major in filteredMajorList" 
               :key="major.value" 
               :label="major.label" 
-              :value="major.label"
+              :value="major.value"
             >
             </el-option>
           </el-select>
@@ -537,26 +537,17 @@ const libraryStats = ref({
 const collegeList = ref([])
 const majorList = ref([])
 const filteredMajorList = computed(() => {
-  // 如果专业数据包含collegeName字段，则按学院过滤
-  // 否则返回所有专业（因为无法按学院过滤）
-  if (!filterForm.collegeName) return []
+  // 根据选中的学院ID过滤专业
+  if (!filterForm.collegeId) return []
   
-  // 假设专业数据可能有collegeName字段
-  const hasCollegeName = majorList.value.length > 0 && majorList.value[0].hasOwnProperty('collegeName')
-  
-  if (hasCollegeName) {
-    return majorList.value.filter(major => major.collegeName === filterForm.collegeName)
-  } else {
-    // 如果没有collegeName字段，暂时返回所有专业
-    // 实际项目中应该联系后端确认专业数据结构
-    return majorList.value
-  }
+  // 专业数据中包含 collegeId 字段
+  return majorList.value.filter(major => major.collegeId === filterForm.collegeId)
 })
 
 // 筛选表单
 const filterForm = reactive({
-  collegeName: '',
-  majorName: '',
+  collegeId: '',
+  majorId: '',
   grade: '',
   checkStatus: '',
   similarityRange: '',
@@ -621,8 +612,8 @@ const handleSearch = () => {
 }
 
 const resetFilter = () => {
-  filterForm.collegeName = ''
-  filterForm.majorName = ''
+  filterForm.collegeId = ''
+  filterForm.majorId = ''
   filterForm.grade = ''
   filterForm.checkStatus = ''
   filterForm.similarityRange = ''
@@ -674,8 +665,8 @@ const loadPaperList = async () => {
     const params = {
       page: pagination.currentPage,
       size: pagination.pageSize,
-      collegeName: filterForm.collegeName,
-      majorName: filterForm.majorName,
+      collegeId: filterForm.collegeId,
+      majorId: filterForm.majorId,
       grade: filterForm.grade,
       checkStatus: filterForm.checkStatus,
       keyword: filterForm.keyword
@@ -1068,8 +1059,8 @@ const handleDownloadPaper = async (paper) => {
 const exportLibrary = () => {
   // 导出当前筛选条件下的数据
   const params = {
-    collegeName: filterForm.collegeName,
-    majorName: filterForm.majorName,
+    collegeId: filterForm.collegeId,
+    majorId: filterForm.majorId,
     grade: filterForm.grade,
     checkStatus: filterForm.checkStatus,
     keyword: filterForm.keyword

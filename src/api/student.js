@@ -488,12 +488,32 @@ export const replyFeedback = (paperId, content) => {
 /**
  * 撤回论文
  * @param paperId 论文 ID
+ * @param withdrawReasonType 撤回原因类型
+ * @param reasonDetail 详细原因描述
  */
-export const withdrawPaper = (paperId, reason = '') => {
+export const withdrawPaper = (paperId, withdrawReasonType, reasonDetail) => {
   return request({
     url: `/api/papers/${paperId}/withdraw`,
     method: "post",
-    data: { reason }
+    data: {
+      paperId,
+      withdrawReasonType,
+      reasonDetail
+    }
+  });
+};
+
+/**
+ * 撤回后重新提交论文
+ * @param paperId 论文 ID
+ * @param data 提交数据
+ */
+export const resubmitAfterWithdraw = (paperId, data) => {
+  return request({
+    url: `/api/papers/${paperId}/resubmit-after-withdraw`,
+    method: "post",
+    data
+>>>>>>> e205cc59e93997c6aa691b359b3d5f183893c0b5
   });
 };
 

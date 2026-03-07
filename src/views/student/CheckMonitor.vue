@@ -160,14 +160,22 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+=======
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Tickets, Delete, InfoFilled, SuccessFilled,
   Check, Loading, Clock, Document, Files, Connection, DocumentChecked
 } from '@element-plus/icons-vue'
+<<<<<<< HEAD
+import { getCheckStatus, subscribeCheckStatus, getCheckTaskById } from '@/api/student'
+=======
 import { getCheckStatus } from '@/api/student'
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const route = useRoute()
@@ -200,8 +208,13 @@ const showCompletionDialog = ref(false)
 const finalSimilarity = ref(23.5)
 const logContainer = ref(null)
 
+<<<<<<< HEAD
+// 使用实时推送 Hook
+const { connect, disconnect, progress: checkProgress, isConnected } = useCheckProgress();
+=======
 // WebSocket（STOMP）
 const { connect: wsConnect, disconnect: wsDisconnect, isConnected: wsConnected } = useCheckProgress()
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 
 // 计算属性
 const checkStages = ref([
@@ -355,6 +368,34 @@ const closeCompletionDialog = () => {
 }
 
 const connectWebSocket = () => {
+<<<<<<< HEAD
+  const taskId = route.params.taskId;
+  
+  // 使用新的 Hook 连接
+  connect(taskId);
+  
+  // 监听进度变化
+  watch(() => checkProgress.stage, (newStage) => {
+    if (newStage) {
+      updateStatusFromHook(checkProgress);
+      addLog('info', checkProgress.message || '状态更新');
+      
+      if (newStage === 'COMPLETED') {
+        ElMessage.success('查重完成！');
+        setTimeout(() => {
+          router.push(`/student/plagiarism-report/${checkProgress.paperId}`);
+        }, 2000);
+      } else if (newStage === 'FAILED') {
+        ElMessage.error(checkProgress.message || '查重失败');
+      }
+    }
+  });
+};
+
+const disconnectWebSocket = () => {
+  disconnect();
+};
+=======
   const paperId = route.query.paperId || route.params.taskId
   wsConnect(
     paperId,
@@ -375,6 +416,7 @@ const connectWebSocket = () => {
 const disconnectWebSocket = () => {
   wsDisconnect()
 }
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 
 const pollingTimer = ref(null)
 const startPolling = () => {
@@ -772,6 +814,24 @@ onUnmounted(() => {
           text-align: left;
         }
       }
+    }
+    
+    .estimate-content {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+}
+</style>
+    }
+    
+    .estimate-content {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+}
+</style>
     }
     
     .estimate-content {

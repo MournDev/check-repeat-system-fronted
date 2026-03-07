@@ -1121,7 +1121,7 @@ const goBack = () => {
 }
 
 const editPaper = () => {
-    if (paperDetails.value.status === 'rejected' || paperDetails.value.status === 'submitted') {
+    if (paperDetails.value.status === 'rejected' || paperDetails.value.status === 'pending') {
         router.push(`/student/paper-edit/${paperId.value}`)
     } else {
         ElMessage.warning('当前状态下不可修改论文')
@@ -1300,8 +1300,8 @@ const replyToFeedback = async () => {
 //状态处理
 const getStatusText = (status) => {
     const textMap = {
-        'submitted': '已提交',
-        'assigned': '审核中',
+        'pending': '待分配',
+        'assigned': '已分配',
         'auditing': '审核中',
         'completed': '已通过',
         'rejected': '需修改'
@@ -1311,7 +1311,7 @@ const getStatusText = (status) => {
 
 const getStatusType = (status) => {
     const typeMap = {
-        'submitted': 'info',
+        'pending': 'info',
         'assigned': 'warning',
         'auditing': 'warning',
         'completed': 'success',
@@ -1395,11 +1395,11 @@ const getSimilarityTips = (similarity) => {
 
 const getActiveStep = (paperStatus) => {
     const stepMap = {
-        'submitted': 1,      // 步骤1：已提交
-        'assigned': 2,       // 步骤2：已分配（有导师）
-        'auditing': 2,       // 步骤2：审核中（与 assigned 同一级）
-        'rejected': 3,       // 步骤3：需修改
-        'completed': 4       // 步骤4：已完成
+        'pending': 1,        // 步骤 1：待分配
+        'assigned': 2,       // 步骤 2：已分配（有导师）
+        'auditing': 2,       // 步骤 2：审核中（与 assigned 同一级）
+        'rejected': 3,       // 步骤 3：需修改
+        'completed': 4       // 步骤 4：已完成
     }
     return stepMap[paperStatus] || 1
 }
@@ -1407,15 +1407,15 @@ const getActiveStep = (paperStatus) => {
 const getReviewStepTitle = (paperStatus) => {
     if (paperStatus === 'rejected') return '需要修改'
     if (paperStatus === 'completed') return '审核通过'
-    if (paperStatus === 'auditing' || paperStatus === 'assigned') return '导师审核' // 统一为导师审核
-    if (paperStatus === 'submitted') return '等待分配'
+    if (paperStatus === 'auditing' || paperStatus === 'assigned') return '导师审核'
+    if (paperStatus === 'pending') return '等待分配'
     return '处理中'
 }
 
 const getReviewStepDesc = (paper) => {
     const status = paper.paperStatus
 
-    if (status === 'submitted') {
+    if (status === 'pending') {
         return '论文已提交，等待分配导师'
     }
 

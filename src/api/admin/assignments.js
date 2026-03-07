@@ -3,7 +3,7 @@ import request from '../request'
 // 获取分配统计
 export const getAssignmentStats = () => {
   return request({
-    url: '/api/admin/assignments/stats',
+    url: '/api/admin/assignment/stats',
     method: 'get'
   })
 }
@@ -11,7 +11,7 @@ export const getAssignmentStats = () => {
 // 执行自动分配
 export const autoAssign = (data) => {
   return request({
-    url: '/api/admin/assignments/auto-assign',
+    url: '/api/admin/assignment/auto-assign',
     method: 'post',
     data: data
   })
@@ -20,7 +20,7 @@ export const autoAssign = (data) => {
 // 获取待分配学生列表
 export const getPendingStudents = (params) => {
   return request({
-    url: '/api/admin/assignments/pending-students',
+    url: '/api/admin/assignment/pending-students',
     method: 'get',
     params: params
   })
@@ -29,7 +29,7 @@ export const getPendingStudents = (params) => {
 // 获取可分配导师列表
 export const getAvailableAdvisors = () => {
   return request({
-    url: '/api/admin/assignments/available-advisors',
+    url: '/api/admin/assignment/available-advisors',
     method: 'get'
   })
 }
@@ -37,7 +37,7 @@ export const getAvailableAdvisors = () => {
 // 执行手动分配
 export const manualAssign = (data) => {
   return request({
-    url: '/api/admin/assignments/manual-assign',
+    url: '/api/admin/assignment/manual-assign',
     method: 'post',
     data: data
   })

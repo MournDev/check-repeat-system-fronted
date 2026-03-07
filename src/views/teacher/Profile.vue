@@ -34,8 +34,8 @@
             <div class="profile-section">
               <div class="avatar-upload">
                 <div class="avatar-preview">
-                  <el-avatar :size="120" :src="avatarSrc" class="teacher-avatar" :key="avatarSrc">
-                    {{ formData.name?.charAt(0) }}
+                  <el-avatar :size="120" :src="userStore.avatarSrc" class="teacher-avatar">
+                    {{ userStore.realName?.charAt(0) }}
                   </el-avatar>
                   <div class="avatar-actions">
                     <el-button :icon="Edit" @click="changeAvatar">更换头像</el-button>
@@ -75,8 +75,8 @@
                     <el-form-item label="所属学院" prop="collegeId">
                       <el-select v-model="formData.collegeId" placeholder="请选择学院" @change="handleCollegeChange"
                         :loading="collegeLoading">
-                        <el-option v-for="college in collegeList" :key="college.id" :label="college.collegeName"
-                          :value="college.id"></el-option>
+                        <el-option v-for="college in collegeList" :key="college.value" :label="college.label"
+                          :value="college.value"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -280,8 +280,6 @@ import { updateInfo, getInfo, changePassword } from '@/api/teacher'
 const uploading = ref(false)
 const userStore = useUserStore()
 const avatarInput = ref(null);
-const userInfo = ref({ ...userStore.userInfo })
-console.log("初始用户信息：", userInfo.value);
 const collegeList = ref([])
 const collegeLoading = ref(false)
 const contactForm = ref()
@@ -360,13 +358,6 @@ const saveSettings = async () => {
   }
 };
 
-const avatarSrc = computed(() => {
-  const raw = userInfo.value?.avatar || userStore.userInfo?.avatar || "";
-  console.log("头像原始路径:", raw);
-  if (!raw || raw === "null" || raw === "undefined") return "";
-  return raw;
-});
-
 const changeAvatar = () => {
   avatarInput.value.click()
 }
@@ -396,16 +387,9 @@ const handleAvatarChange = async (event) => {
     // 根据后端返回结构调整取值
     const avatarUrl = res.data;
     if (avatarUrl) {
-      console.log("上传成功，头像URL：", avatarUrl);
-      // 更新本地显示与 store
-      const updatedUserInfo = {
-        ...userStore.userInfo, // 这里是获取状态，不是调用函数
-        avatar: avatarUrl,
-      };
-      userStore.userInfo = updatedUserInfo;
-      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
-      // 更新本地 userInfo
-      userInfo.value = { ...updatedUserInfo };
+      console.log("上传成功，头像 URL：", avatarUrl);
+      // 使用 userStore 的 updateAvatar 方法
+      userStore.updateAvatar(avatarUrl);
       await nextTick();
       ElMessage.success("头像上传成功");
     } else {

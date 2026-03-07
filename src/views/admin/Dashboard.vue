@@ -244,7 +244,7 @@ import { ElMessage } from 'element-plus'
 import { getDashboardStats, getRecentActivities } from '@/api/admin/dashboard'
 import { getUserList } from '@/api/admin/users'
 import { getPaperList } from '@/api/admin/papers'
-import { getAssignmentStats } from '@/api/admin/assignments'
+import { getAssignmentStats } from '@/api/admin/assignment'
 
 // 图标引入
 import {

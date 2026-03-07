@@ -96,13 +96,13 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 导入管理员API
-import { 
+import {
   getAssignmentStats, 
   getPendingStudents, 
   getAvailableAdvisors,
   autoAssign,
   manualAssign
-} from '@/api/admin/assignments'
+} from '@/api/admin/assignment'
 
 // 导入其他必要API
 import { getStudentDetail } from '@/api/admin/users'

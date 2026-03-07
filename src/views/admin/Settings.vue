@@ -34,8 +34,8 @@
             <div class="profile-section">
               <div class="avatar-upload">
                 <div class="avatar-preview">
-                  <el-avatar :size="120" :src="avatarSrc" class="admin-avatar" :key="avatarSrc">
-                    {{ formData.realName?.charAt(0) }}
+                  <el-avatar :size="120" :src="userStore.avatarSrc" class="admin-avatar">
+                    {{ userStore.realName?.charAt(0) }}
                   </el-avatar>
                   <div class="avatar-actions">
                     <el-button :icon="Edit" @click="changeAvatar">更换头像</el-button>
@@ -309,13 +309,6 @@ const contactRules = {
   ]
 }
 
-// 计算属性
-const avatarSrc = computed(() => {
-  const raw = formData.avatar || userStore.userInfo?.avatar || ""
-  if (!raw || raw === "null" || raw === "undefined") return ""
-  return raw
-})
-
 // 方法
 const saveSettings = async () => {
   try {
@@ -380,12 +373,8 @@ const handleAvatarChange = async (event) => {
     const avatarUrl = res.data
     if (avatarUrl) {
       formData.avatar = avatarUrl
-      const updatedUserInfo = {
-        ...userStore.userInfo,
-        avatar: avatarUrl,
-      }
-      userStore.userInfo = updatedUserInfo
-      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo))
+      // 使用 userStore 的 updateAvatar 方法
+      userStore.updateAvatar(avatarUrl)
       await nextTick()
       ElMessage.success("头像上传成功")
     }

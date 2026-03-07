@@ -26,8 +26,8 @@
           </template>
           <div class="profile-overview">
             <div class="avatar-section">
-              <el-avatar :size="80" :src="avatarSrc" :alt="displayUserInfo.realName" :key="avatarSrc">
-                {{ displayUserInfo.realName?.charAt(0) }}
+              <el-avatar :size="80" :src="userStore.avatarSrc" :alt="displayUserInfo.realName">
+                {{ userStore.realName?.charAt(0) }}
               </el-avatar>
               <div class="avatar-actions">
                 <el-button text :icon="Camera" @click="changeAvatar">
@@ -734,12 +734,6 @@ const loadLoginLogs = async () => {
   }
 };
 
-const avatarSrc = computed(() => {
-  const raw = userInfo.value?.avatar || userStore.userInfo?.avatar || "";
-  console.log("头像原始路径:", raw);
-  if (!raw || raw === "null" || raw === "undefined") return "";
-  return raw;
-});
 // 点击按钮触发文件选择
 const changeAvatar = () => {
   avatarInput.value && avatarInput.value.click();
@@ -770,16 +764,9 @@ const onAvatarSelected = async (event) => {
     // 根据后端返回结构调整取值
     const avatarUrl = res.data;
     if (avatarUrl) {
-      console.log("上传成功，头像URL：", avatarUrl);
-      // 更新本地显示与 store
-      const updatedUserInfo = {
-        ...userStore.userInfo, // 这里是获取状态，不是调用函数
-        avatar: avatarUrl,
-      };
-      userStore.userInfo = updatedUserInfo;
-      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
-      // 更新本地 userInfo
-      userInfo.value = { ...updatedUserInfo };
+      console.log("上传成功，头像 URL：", avatarUrl);
+      // 使用 userStore 的 updateAvatar 方法
+      userStore.updateAvatar(avatarUrl);
       await nextTick();
       ElMessage.success("头像上传成功");
     } else {

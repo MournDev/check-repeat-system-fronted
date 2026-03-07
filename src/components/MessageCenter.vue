@@ -111,8 +111,8 @@
               </div>
             </div>
             <div class="message-meta">
-              <span class="message-time">{{ formatTime(notification.createTime) }}</span>
-              <span class="message-sender" v-if="notification.sender">来自: {{ notification.sender }}</span>
+              <span class="message-time">{{ notification.formattedTime || formatTime(notification.createTime) }}</span>
+              <span class="message-sender" v-if="notification.sender">来自：{{ notification.sender }}</span>
             </div>
           </div>
           <div class="message-actions">
