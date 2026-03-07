@@ -240,7 +240,7 @@
         >
           <div class="history-record">
             <div class="reviewer-info">
-              <el-avatar :size="32" :src="record.reviewerAvatar">
+              <el-avatar :size="32" :src="getAvatarUrl(record.reviewerAvatar)">
                 {{ record.reviewerName.charAt(0) }}
               </el-avatar>
               <span class="reviewer-name">{{ record.reviewerName }}</span>
@@ -278,6 +278,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getAvatarUrl } from '@/utils/avatar'
 
 // 图标导入
 import {

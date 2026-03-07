@@ -203,9 +203,9 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElLoading } from 'element-plus'
-import * as echarts from 'echarts'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
-// API接口导入
+// API 接口导入
 import {
   getReviewStats,
   getDetailData,
@@ -218,7 +218,7 @@ import {
 
 // 图标导入
 import {
-  TrendCharts, PieChart, Histogram, OfficeBuilding, List, Download
+  TrendCharts, PieChart as PieChartIcon, Histogram, OfficeBuilding, List, Download
 } from '@element-plus/icons-vue'
 
 // Store

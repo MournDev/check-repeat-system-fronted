@@ -68,7 +68,7 @@ export const updateUserEmail = (data) => {
   });
 }
 
-// 获取所有学院
+/// 获取所有学院
 export const getAllColleges = () => {
   return request({
     url: '/api/common/dict/colleges',

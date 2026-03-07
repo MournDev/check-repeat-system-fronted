@@ -782,3 +782,47 @@ export const recallMessage = (messageId) => {
     method: 'delete'
   });
 };
+
+/**
+ * 获取个性化学术建议
+ */
+export const getPersonalAcademicAdvice = () => {
+  return request({
+    url: '/api/student/academic-integrity/personal-advice',
+    method: 'get'
+  });
+};
+
+/**
+ * 获取推荐学习资源
+ */
+export const getAcademicResources = (params) => {
+  return request({
+    url: '/api/student/academic-integrity/resources',
+    method: 'get',
+    params
+  });
+};
+
+/**
+ * 获取用户检查清单状态
+ */
+export const getAcademicChecklist = () => {
+  return request({
+    url: '/api/student/academic-integrity/checklist',
+    method: 'get'
+  });
+};
+
+/**
+ * 更新检查项状态
+ * @param itemId 检查项ID
+ * @param checked 是否完成
+ */
+export const updateChecklistItem = (itemId, checked) => {
+  return request({
+    url: `/api/student/academic-integrity/checklist/${itemId}`,
+    method: 'put',
+    data: { checked }
+  });
+};

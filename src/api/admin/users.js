@@ -70,6 +70,14 @@ export const getUserDetail = (userId) => {
   })
 }
 
+// 获取学生详细信息
+export const getStudentDetail = (studentId) => {
+  return request({
+    url: `/api/admin/students/${studentId}`,
+    method: 'get'
+  })
+}
+
 // 获取用户登录历史
 export const getUserLoginHistory = (userId, params) => {
   return request({

@@ -160,14 +160,22 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+=======
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Tickets, Delete, InfoFilled, SuccessFilled,
   Check, Loading, Clock, Document, Files, Connection, DocumentChecked
 } from '@element-plus/icons-vue'
+<<<<<<< HEAD
 import { getCheckStatus, subscribeCheckStatus, getCheckTaskById } from '@/api/student'
+=======
+import { getCheckStatus } from '@/api/student'
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const route = useRoute()
@@ -198,11 +206,15 @@ const logs = ref([
 
 const showCompletionDialog = ref(false)
 const finalSimilarity = ref(23.5)
-const websocket = ref(null)
 const logContainer = ref(null)
 
+<<<<<<< HEAD
 // 使用实时推送 Hook
 const { connect, disconnect, progress: checkProgress, isConnected } = useCheckProgress();
+=======
+// WebSocket（STOMP）
+const { connect: wsConnect, disconnect: wsDisconnect, isConnected: wsConnected } = useCheckProgress()
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 
 // 计算属性
 const checkStages = ref([
@@ -356,6 +368,7 @@ const closeCompletionDialog = () => {
 }
 
 const connectWebSocket = () => {
+<<<<<<< HEAD
   const taskId = route.params.taskId;
   
   // 使用新的 Hook 连接
@@ -382,6 +395,28 @@ const connectWebSocket = () => {
 const disconnectWebSocket = () => {
   disconnect();
 };
+=======
+  const paperId = route.query.paperId || route.params.taskId
+  wsConnect(
+    paperId,
+    (data) => {
+      if (data.type === 'status_update') {
+        updateStatus(data.data)
+        addLog('info', data.data.message || '状态更新')
+      }
+    },
+    (err) => {
+      console.error('WebSocket连接失败，降级到轮询:', err)
+      addLog('warning', 'WebSocket连接失败，切换为轮询模式')
+      startPolling()
+    }
+  )
+}
+
+const disconnectWebSocket = () => {
+  wsDisconnect()
+}
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 
 const pollingTimer = ref(null)
 const startPolling = () => {
@@ -424,15 +459,23 @@ const addLog = (level, message) => {
 
 // 生命周期
 onMounted(() => {
-  connectWebSocket()
+  // 参数校验
+  if (!route.params.taskId || route.params.taskId === 'undefined') {
+    ElMessage.error('缺少任务ID参数');
+    router.back();
+    return;
+  }
+  
+  connectWebSocket();
   // 添加初始日志
-  addLog('info', '连接到查重服务...')
+  addLog('info', '连接到查重服务...');
 })
 
 onUnmounted(() => {
   disconnectWebSocket()
   stopPolling()
 })
+
 </script>
 
 <style lang="scss" scoped>

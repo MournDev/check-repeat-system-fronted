@@ -157,7 +157,7 @@
                 </el-card>
               </el-col>
               <el-col :span="8">
-                <el-card class="sidebar-card" shadow="hover">
+                <el-card class="sidebar-card" shadow="hover" v-loading="loading">
                   <template #header>
                     <div class="card-header">
                       <el-icon><Lightning /></el-icon>
@@ -171,7 +171,12 @@
                       class="checklist-item"
                       :class="{ checked: item.checked }"
                     >
-                      <el-checkbox v-model="item.checked">{{ item.text }}</el-checkbox>
+                      <el-checkbox 
+                        v-model="item.checked" 
+                        @change="updateChecklist(item, index)"
+                      >
+                        {{ item.text }}
+                      </el-checkbox>
                     </div>
                   </div>
                 </el-card>
@@ -184,12 +189,12 @@
           <div class="tab-content">
             <el-row :gutter="20">
               <el-col :span="16">
-                <el-card class="content-card personal-guide" shadow="hover">
+                <el-card class="content-card personal-guide" shadow="hover" v-loading="loading">
                   <template #header>
                     <div class="card-header">
                       <el-icon><User /></el-icon>
                       <span>基于您查重报告的个性化建议</span>
-                      <el-tag type="info" size="small">基于最新报告 V{{ personalAdvice.version }}</el-tag>
+                      <el-tag type="info" size="small" v-if="personalAdvice.version > 0">基于最新报告 V{{ personalAdvice.version }}</el-tag>
                     </div>
                   </template>
                   
@@ -249,7 +254,7 @@
                 </el-card>
               </el-col>
               <el-col :span="8">
-                <el-card class="resource-card" shadow="hover">
+                <el-card class="resource-card" shadow="hover" v-loading="loading">
                   <template #header>
                     <div class="card-header">
                       <el-icon><Collection /></el-icon>
@@ -416,8 +421,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import { 
+  getPersonalAcademicAdvice,
+  getAcademicResources,
+  getAcademicChecklist,
+  updateChecklistItem
+} from '@/api/student'
 import { 
   Warning, DataLine, Document, SuccessFilled, CircleClose,
   Lightning, User, Check, Star, InfoFilled, Collection,
@@ -425,52 +437,23 @@ import {
   ChatLineSquare, Phone, Message
 } from '@element-plus/icons-vue'
 
+const userStore = useUserStore()
+
 // 响应式数据
 const activeTab = ref('basics')
 const activeFAQ = ref(0)
+const loading = ref(false)
 
-const citationChecklist = ref([
-  { text: '引用时标注作者和年份', checked: false },
-  { text: '使用引号标识直接引用', checked: false },
-  { text: '提供完整的参考文献', checked: false },
-  { text: '避免过度依赖单一来源', checked: false },
-  { text: '区分自己的观点和引用内容', checked: false },
-  { text: '使用文献管理工具', checked: false }
-])
+const citationChecklist = ref([])
 
 const personalAdvice = ref({
-  version: 3,
-  highRiskAreas: [
-    {
-      section: '文献综述',
-      similarity: 35.8,
-      issue: '相似度偏高',
-      suggestion: '重新梳理文献脉络，增加个人观点表达，减少直接引用'
-    }
-  ],
-  goodAspects: [
-    {
-      section: '研究方法',
-      similarity: 8.5,
-      strength: '原创性较好',
-      encouragement: '继续保持独立思考和创新精神'
-    }
-  ],
-  generalTips: [
-    '养成及时记录参考文献的习惯',
-    '学会用自己的语言表述他人观点',
-    '定期使用查重工具自查',
-    '参加学术写作培训课程'
-  ]
+  version: 0,
+  highRiskAreas: [],
+  goodAspects: [],
+  generalTips: []
 })
 
-const recommendedResources = ref([
-  { title: '《学术写作规范手册》', type: 'book' },
-  { title: '学校图书馆引用格式指南', type: 'online' },
-  { title: 'EndNote文献管理软件教程', type: 'video' },
-  { title: '查重系统使用说明', type: 'document' },
-  { title: '学术道德与规范课程', type: 'course' }
-])
+const recommendedResources = ref([])
 
 const faqList = ref([
   {
@@ -493,9 +476,83 @@ const faqList = ref([
 ])
 
 // 方法
-const openResource = (resource) => {
-  ElMessage.info(`正在打开资源: ${resource.title}`)
-  // 实际开发中这里会跳转到相应的资源页面
+const loadData = async () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  
+  loading.value = true
+  try {
+    // 并行请求所有数据
+    const [adviceRes, resourcesRes, checklistRes] = await Promise.all([
+      getPersonalAcademicAdvice(),
+      getAcademicResources(),
+      getAcademicChecklist()
+    ])
+    
+    // 如果组件已卸载，不更新数据
+    if (isUnmounted) return
+    
+    // 处理个性化学术建议
+    if (adviceRes.code === 200) {
+      personalAdvice.value = adviceRes.data || {
+        version: 0,
+        highRiskAreas: [],
+        goodAspects: [],
+        generalTips: []
+      }
+    }
+    
+    // 处理推荐资源
+    if (resourcesRes.code === 200) {
+      recommendedResources.value = resourcesRes.data || []
+    }
+    
+    // 处理检查清单
+    if (checklistRes.code === 200) {
+      citationChecklist.value = checklistRes.data?.items || []
+    }
+    
+  } catch (error) {
+    console.error('加载学术诚信数据失败:', error)
+    ElMessage.error('数据加载失败：' + (error.message || '网络错误'))
+  } finally {
+    if (!isUnmounted) {
+      loading.value = false
+    }
+  }
+}
+
+const updateChecklist = async (item, index) => {
+  try {
+    const res = await updateChecklistItem(item.itemId, item.checked)
+    if (res.code === 200) {
+      ElMessage.success('检查项状态已更新')
+    } else {
+      // 恢复原状态
+      item.checked = !item.checked
+      ElMessage.error(res.message || '更新失败')
+    }
+  } catch (error) {
+    // 恢复原状态
+    item.checked = !item.checked
+    console.error('更新检查项失败:', error)
+    ElMessage.error('更新失败: ' + (error.message || '网络错误'))
+  }
+}
+
+const openResource = async (resource) => {
+  try {
+    // 如果资源有URL，打开链接
+    if (resource.url) {
+      window.open(resource.url, '_blank')
+    } else {
+      ElMessage.info(`正在打开资源: ${resource.title}`)
+    }
+  } catch (error) {
+    ElMessage.error('打开资源失败')
+  }
 }
 
 const getResourceColor = (type) => {
@@ -531,9 +588,16 @@ const getResourceTypeName = (type) => {
   return names[type] || '资源'
 }
 
+// 标记组件是否已卸载
+let isUnmounted = false
+
 // 生命周期
 onMounted(() => {
-  // 可以在这里加载用户的个性化数据
+  loadData()
+})
+
+onUnmounted(() => {
+  isUnmounted = true
 })
 </script>
 

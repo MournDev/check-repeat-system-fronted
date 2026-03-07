@@ -45,11 +45,11 @@
               @click="selectContact(contact)"
             >
               <el-badge :value="contact.unreadCount" :max="99" v-if="contact.unreadCount > 0">
-                <el-avatar :size="40" :src="contact.avatar">
+                <el-avatar :size="40" :src="getAvatarUrl(contact.avatar)">
                   {{ contact.name.charAt(0) }}
                 </el-avatar>
               </el-badge>
-              <el-avatar v-else :size="40" :src="contact.avatar">
+              <el-avatar v-else :size="40" :src="getAvatarUrl(contact.avatar)">
                 {{ contact.name.charAt(0) }}
               </el-avatar>
               
@@ -81,7 +81,7 @@
           <template #header>
             <div class="chat-header">
               <div class="contact-profile">
-                <el-avatar :size="40" :src="activeContact.avatar">
+                <el-avatar :size="40" :src="getAvatarUrl(activeContact.avatar)">
                   {{ activeContact.name.charAt(0) }}
                 </el-avatar>
                 <div class="contact-details">
@@ -108,7 +108,7 @@
               :class="{ 'sent': message.senderId === currentUser.id, 'received': message.senderId !== currentUser.id }"
             >
               <div class="message-avatar">
-                <el-avatar :size="32" :src="message.senderAvatar">
+                <el-avatar :size="32" :src="getAvatarUrl(message.senderAvatar)">
                   {{ message.senderName.charAt(0) }}
                 </el-avatar>
               </div>
@@ -230,6 +230,7 @@ import {
   Search, Bell, Phone, VideoCamera, More, Document, 
   Folder, Picture, Link, Check, ChatDotRound, UploadFilled
 } from '@element-plus/icons-vue'
+import { getAvatarUrl } from '@/utils/avatar'
 
 // Store
 const userStore = useUserStore()

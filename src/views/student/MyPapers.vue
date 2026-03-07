@@ -129,15 +129,6 @@
             <div class="paper-header">
               <h4 class="paper-title">{{ paper.paperTitle }}</h4>
               <div class="paper-actions">
-                <!-- 调试信息 - 显示所有状态相关信息 -->
-                <div style="font-size: 10px; color: red; margin-bottom: 5px; background: yellow;">
-                  Debug: status='{{ paper.paperStatus }}', type={{ typeof paper.paperStatus }}, equals={{ paper.paperStatus === 'withdrawn' }}, toLowerCase={{ (paper.paperStatus || '').toLowerCase() }}
-                </div>
-                
-                <!-- 强制显示的测试按钮 -->
-                <el-button type="danger" text @click="console.log('TEST BUTTON CLICKED!')">
-                  🚨 测试按钮 (一定能看到)
-                </el-button>
                 
                 <!-- 提交修改（被驳回的论文） -->
                 <el-button
@@ -149,27 +140,26 @@
                 >
                   提交修改
                 </el-button>
-                
-                <!-- 撤回申请（审核中/查重中的论文） -->
+                <!-- 重新编辑已撤回论文 -->
                 <el-button
-                  v-if="['auditing', 'checking'].includes(paper.paperStatus)"
-                  type="warning"
-                  text
-                  :icon="RefreshLeft"
-                  @click="withdrawPaper(paper)"
+                    v-if="paper.paperStatus === 'withdrawn'"
+                    type="primary"
+                    text
+                    :icon="EditPen"
+                    @click="resubmitPaper(paper)"
                 >
-                  申请撤回
+                  重新编辑
                 </el-button>
-                
-                <!-- 重新编辑（已撤回的论文）-->
-                <!-- 临时测试：强制显示 -->
+
+                <!-- 撤回申请（待分配/待查重/待审核的论文） -->
                 <el-button
-                  type="primary"
-                  text
-                  :icon="EditPen"
-                  @click="reeditWithdrawnPaper(paper)"
+                    v-if="['pending', 'checking', 'auditing'].includes(paper.paperStatus)"
+                    type="warning"
+                    text
+                    :icon="Close"
+                    @click="withdrawPaper(paper)"
                 >
-                  重新编辑 (TEST)
+                  撤回申请
                 </el-button>
                 
                 <!-- 申请修改（已通过的论文） -->
@@ -392,7 +382,7 @@
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
         <el-button
-          v-if="currentPaper?.status === 'REJECTED'"
+          v-if="currentPaper?.paperStatus === 'rejected'"
           type="primary"
           :icon="Upload"
           @click="submitRevision(currentPaper.id)"
@@ -573,8 +563,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { 
   getStudentPaperPage, 
@@ -593,10 +583,30 @@ import {
   createBatchCheckTasks
 } from "@/api/student.js";
 import { useUserStore } from "@/stores/user";
-import BatchCheckProgress from '@/components/BatchCheckProgress.vue';
-import { useCheckProgress } from "@/composables/useCheckProgress";
-import { h } from 'vue';
-import { ElSelect, ElOption, ElInput } from 'element-plus';
+
+// 图标引入
+import {
+  UploadFilled,
+  Search,
+  Refresh,
+  Document,
+  Monitor,
+  Calendar,
+  User,
+  Files,
+  View,
+  Download,
+  Upload,
+  ArrowUp,
+  ArrowDown,
+  RefreshLeft,
+  EditPen,
+} from "@element-plus/icons-vue";
+import useStore from "element-plus/es/components/table/src/store/index.mjs";
+
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
 
 // 响应式数据
 const filterForm = reactive({
@@ -645,6 +655,21 @@ onMounted(async () => {
   }
   fetchPapers();
 });
+
+// 监听路由变化，当从查重相关页面返回时刷新数据
+watch(
+  () => route.name,
+  (newRouteName, oldRouteName) => {
+    // 如果是从查重报告或查重监控页面返回
+    if (
+      oldRouteName === 'PlagiarismReport' || 
+      oldRouteName === 'CheckMonitor' ||
+      oldRouteName === 'CheckHistory'
+    ) {
+      fetchPapers();
+    }
+  }
+);
 
 // 方法
 const fetchPapers = async () => {
@@ -740,6 +765,14 @@ const submitRevision = (paperId) => {
   // 跳转到提交修改页面
 };
 
+const resubmitPaper = (paper) => {
+  // 跳转到论文提交页面，带上论文ID用于重新编辑
+  router.push({
+    path: '/student/paper-submit',
+    query: { paperId: paper.id, action: 'resubmit' }
+  });
+};
+
 const toggleVersions = (paperId) => {
   const paper = papers.value.find((p) => p.id === paperId);
   if (paper) {
@@ -753,20 +786,20 @@ const getStatusType = (status) => {
     pending: "info",
     assigned: "info",
     checking: "warning",
+    withdrawn: "warning",
     auditing: "primary",
     completed: "success",
     rejected: "danger",
-    withdrawn: "info", // 已撤回
   };
   return typeMap[status] || "info";
 };
 
 const getStatusText = (status) => {
   const textMap = {
-    pending: "待查重",
     assigned: "已分配",
-    checking: "查重中",
-    auditing: "审核中",
+    pending: "待分配",
+    checking: "待查重",
+    auditing: "待审核",
     completed: "已完成",
     rejected: "需修改",
     withdrawn: "已撤回", // 已撤回
@@ -981,7 +1014,16 @@ const withdrawPaper = async (paper) => {
     
     if (res.code === 200) {
       ElMessage.success('论文已撤回，您可以修改后重新提交');
-      fetchPapers();
+      
+      // 方案 1：直接从列表中移除（用户体验更好）
+      papers.value = papers.value.filter(p => p.id !== paper.id);
+      total.value = Math.max(0, total.value - 1);
+      
+      // 如果当前页没有数据了且不是第一页，回到上一页
+      if (papers.value.length === 0 && pagination.current > 1) {
+        pagination.current--;
+        fetchPapers();
+      }
     } else {
       ElMessage.error(res.message || '撤回失败，请稍后重试');
     }
@@ -1051,8 +1093,24 @@ const viewPlagiarismReport = (paperId) => {
   router.push(`/student/plagiarism-report/${paperId}`);
 };
 
-const monitorCheckProgress = (paperId) => {
-  router.push(`/student/check-monitor/${paperId}`);
+const monitorCheckProgress = async (paperId) => {
+  try {
+    // 先获取查重任务详情，获取 taskId
+    const taskRes = await getCheckTaskDetail(paperId);
+    if (taskRes.code === 200 && taskRes.data) {
+      const taskId = taskRes.data.taskId || taskRes.data.id;
+      if (taskId) {
+        router.push(`/student/check-monitor/${taskId}`);
+      } else {
+        ElMessage.error('未找到查重任务');
+      }
+    } else {
+      ElMessage.error('获取查重任务信息失败');
+    }
+  } catch (error) {
+    console.error('获取查重任务失败:', error);
+    ElMessage.error('获取查重任务失败，请稍后重试');
+  }
 };
 
 // 版本对比相关方法

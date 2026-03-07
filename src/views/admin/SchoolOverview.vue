@@ -197,9 +197,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
-// 导入管理员API
+// 导入管理员 API
 import {
   getSchoolOverview,
   getCollegeDistribution,
@@ -213,7 +213,7 @@ import {
 // 图标导入
 import {
   Refresh, Download, User, Document, Warning, Monitor,
-  Top, Bottom, PieChart, DataAnalysis, Histogram, Notification,
+  Top, Bottom, PieChart as PieChartIcon, DataAnalysis, Histogram, Notification,
   TrendCharts, InfoFilled, WarningFilled, SuccessFilled
 } from '@element-plus/icons-vue'
 

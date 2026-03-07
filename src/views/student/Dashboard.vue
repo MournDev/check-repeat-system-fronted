@@ -402,22 +402,22 @@
                   <div class="detail-value similarity-value">
                     <div class="similarity-display">
                       <el-progress 
-                        :percentage="latestPaper.similarity || 0" 
+                        :percentage="latestPaperSimilarity" 
                         :stroke-width="8" 
-                        :color="getSimilarityColor(latestPaper.similarity)"
+                        :color="getSimilarityColor(latestPaperSimilarity)"
                         :show-text="false"
                         class="similarity-progress-mini"
                       />
-                      <span :class="['similarity-text', getSimilarityClass(latestPaper.similarity)]">
-                        {{ latestPaper.similarity || 0 }}%
+                      <span :class="['similarity-text', getSimilarityClass(latestPaperSimilarity)]">
+                        {{ latestPaperSimilarity }}%
                       </span>
                     </div>
                     <el-tag 
-                      :type="getSimilarityTagType(latestPaper.similarity)" 
+                      :type="getSimilarityTagType(latestPaperSimilarity)" 
                       size="small" 
                       effect="plain"
                     >
-                      {{ getSimilarityStatus(latestPaper.similarity) }}
+                      {{ getSimilarityStatus(latestPaperSimilarity) }}
                     </el-tag>
                   </div>
                 </div>
@@ -490,7 +490,7 @@
 
           <div v-if="advisorInfo" class="advisor-profile">
             <div class="advisor-avatar-section">
-              <el-avatar :size="80" :src="advisorInfo.avatar" class="advisor-avatar">
+              <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" class="advisor-avatar">
                 {{ advisorInfo.name?.charAt(0) }}
               </el-avatar>
               <div class="advisor-online-status">
@@ -566,19 +566,21 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import * as echarts from 'echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
+// ECharts 通过 CDN 引入，全局 window.echarts 可用
+
 import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking } from "@/api/student.js"
 
-// 图标引入
+// 图标导入
 import {
   UploadFilled, Download, Document, Clock, Check, EditPen,
   DataLine, Refresh, View, Edit, List, UserFilled, Phone,
   Message, ChatDotRound, Bell, Lightning, CircleCheck,
-  OfficeBuilding, ChatLineRound, TrendCharts, PieChart, Calendar, QuestionFilled,
+  OfficeBuilding, ChatLineRound, TrendCharts, PieChart as PieChartIcon, Calendar, QuestionFilled,
   Delete, Setting, Files, Warning, Trophy, ScaleToOriginal, Star, Timer,
   Collection, Plus, DataAnalysis, User
 } from '@element-plus/icons-vue'
+import { getAvatarUrl } from '@/utils/avatar'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -907,6 +909,18 @@ const getSimilarityTrend = (similarity) => {
   if (similarity < 30) return '良好'
   return '需关注'
 }
+
+// 相似度字段兼容：后端详情接口用 similarityRate/checkRate，列表接口用 similarity
+// checkRate 可能是小数(0.23)或整数(23)，统一转为整数百分比
+const latestPaperSimilarity = computed(() => {
+  if (!latestPaper.value) return 0
+  const raw = latestPaper.value.checkRate
+    ?? latestPaper.value.similarityRate
+    ?? latestPaper.value.similarity
+    ?? 0
+  if (!raw) return 0
+  return raw > 0 && raw <= 1 ? Math.round(raw * 100) : Math.round(raw)
+})
 
 // 相似度颜色获取函数
 const getSimilarityColor = (similarity) => {

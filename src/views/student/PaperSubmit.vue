@@ -13,8 +13,12 @@
       <el-form-item label="所属学院" prop="collegeId">
         <el-select v-model="paperForm.collegeId" placeholder="请选择学院" @change="handleCollegeChange"
           :loading="collegeLoading">
+<<<<<<< HEAD
           <el-option v-for="college in collegeList" :key="college.value" :label="college.label"
             :value="college.value"></el-option>
+=======
+          <el-option v-for="college in collegeList" :key="college.value" :label="college.label" :value="college.value"></el-option>
+>>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
         </el-select>
       </el-form-item>
       <el-form-item label="专业" prop="majorId">

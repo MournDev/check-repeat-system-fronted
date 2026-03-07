@@ -1,16 +1,14 @@
 <template>
   <div class="register-container">
-    <!-- 背景图 -->
-    <div class="background-wrapper">
-      <div class="background-overlay"></div>
-    </div>
+    <!-- 背景遮罩层 -->
+    <div class="background-overlay"></div>
     
     <!-- 注册卡片 -->
     <div class="register-content">
       <el-card class="register-card">
         <div class="card-header">
           <h2 class="register-title">用户注册</h2>
-          <p class="register-subtitle">创建您的账户</p>
+          <p class="register-subtitle">创建您的账户，开启学术之旅</p>
         </div>
         
         <el-form :model="registerForm" :rules="registerRules" ref="registerFormRef" label-width="0">
@@ -20,6 +18,7 @@
               placeholder="请输入用户名" 
               size="large"
               :prefix-icon="User"
+              clearable
             />
           </el-form-item>
           
@@ -31,6 +30,7 @@
               size="large"
               :prefix-icon="Lock"
               show-password
+              clearable
             />
           </el-form-item>
           
@@ -42,6 +42,7 @@
               size="large"
               :prefix-icon="Lock"
               show-password
+              clearable
             />
           </el-form-item>
           
@@ -51,6 +52,7 @@
               placeholder="请输入真实姓名" 
               size="large"
               :prefix-icon="User"
+              clearable
             />
           </el-form-item>
           
@@ -75,6 +77,7 @@
               placeholder="请输入邮箱" 
               size="large"
               :prefix-icon="Message"
+              clearable
             />
           </el-form-item>
           <el-form-item prop="phone">
@@ -83,12 +86,10 @@
               placeholder="请输入手机号"
               size="large"
               :prefix-icon="Phone"
+              clearable
             />
           </el-form-item>
 
-
-
-          
           <el-form-item>
             <el-button 
               type="primary" 
@@ -97,14 +98,15 @@
               :loading="loading"
               size="large"
             >
-              {{ loading ? '注册中...' : '注册' }}
+              {{ loading ? '注册中...' : '立即注册' }}
             </el-button>
           </el-form-item>
         </el-form>
         
         <div class="register-footer">
+          <span class="footer-text">已有账号？</span>
           <el-button type="text" @click="handleLogin" class="login-btn">
-            已有账号？立即登录
+            立即登录
           </el-button>
         </div>
       </el-card>
@@ -214,38 +216,38 @@ const handleLogin = () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  min-height: 600px;
-  overflow: hidden;
-}
-
-// 使用和登录页相同的样式
-.background-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // 使用本地图片作为背景
+  background-image: url('@/assets/images/login.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
+// 背景遮罩层
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
 .register-content {
+  width: 100%;
+  max-width: 480px;
+  padding: 20px;
   position: relative;
   z-index: 2;
-  width: 100%;
-  max-width: 450px;
-  padding: 0 20px;
 }
 
 .register-card {
   width: 100%;
   padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.98);
   
   :deep(.el-card__body) {
     padding: 0;
@@ -261,44 +263,87 @@ const handleLogin = () => {
   margin: 0 0 0.5rem 0;
   color: #2c3e50;
   font-size: 1.75rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 600;
 }
 
 .register-subtitle {
   margin: 0;
-  color: #7f8c8d;
+  color: #718096;
   font-size: 0.9rem;
-  font-weight: 400;
 }
 
 :deep(.el-form-item) {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-select .el-input__wrapper) {
+  border-radius: 8px;
+  transition: all 0.2s;
+  
+  &:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .register-btn {
   width: 100%;
-  height: 48px;
-  border-radius: 10px;
+  height: 44px;
+  border-radius: 8px;
   font-size: 1rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .register-footer {
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f1f2f6;
+  border-top: 1px solid #eaeaea;
+}
+
+.footer-text {
+  color: #a0aec0;
+  font-size: 0.9rem;
+  margin-right: 8px;
 }
 
 .login-btn {
   color: #667eea;
   font-weight: 500;
+  font-size: 0.95rem;
+  
+  &:hover {
+    color: #764ba2;
+  }
+}
+
+// 响应式设计
+@media (max-width: 480px) {
+  .register-content {
+    max-width: 380px;
+    padding: 15px;
+  }
+  
+  .register-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .register-title {
+    font-size: 1.6rem;
+  }
 }
 </style>

@@ -33,19 +33,19 @@
           <el-icon size="24" color="#667eea"><Document /></el-icon>
         </div>
         <div class="info-content">
-          <h2 class="paper-title">{{ reportData.paperTitle }}</h2>
+          <h2 class="paper-title">{{ reportData.paperTitle || '暂无标题' }}</h2>
           <div class="paper-meta">
             <span class="meta-item">
               <el-icon><User /></el-icon>
-              作者: {{ reportData.author }} ({{ reportData.studentId }})
+              作者: {{ reportData.author || '未知' }} ({{ reportData.studentId || '未知学号' }})
             </span>
             <span class="meta-item">
               <el-icon><Calendar /></el-icon>
-              提交时间: {{ formatDateTime(reportData.submitTime) }}
+              提交时间: {{ formatDateTime(reportData.submitTime) || '暂无' }}
             </span>
             <span class="meta-item">
               <el-icon><Timer /></el-icon>
-              检测时间: {{ formatDateTime(reportData.checkTime) }}
+              检测时间: {{ formatDateTime(reportData.checkTime) || '暂无' }}
             </span>
           </div>
         </div>
@@ -65,14 +65,14 @@
                     <div class="similarity-value">
                       <el-progress
                         type="circle"
-                        :percentage="Math.round(reportData.totalSimilarity)"
+                        :percentage="Math.round(reportData.totalSimilarity || 0)"
                         :width="120"
                         :stroke-width="10"
-                        :color="getSimilarityColor(reportData.totalSimilarity)"
+                        :color="getSimilarityColor(reportData.totalSimilarity || 0)"
                       />
                       <div class="similarity-text">
-                        <div class="percentage">{{ Math.round(reportData.totalSimilarity) }}%</div>
-                        <div class="rating">{{ getSimilarityRating(reportData.totalSimilarity) }}</div>
+                        <div class="percentage">{{ Math.round(reportData.totalSimilarity || 0) }}%</div>
+                        <div class="rating">{{ getSimilarityRating(reportData.totalSimilarity || 0) }}</div>
                       </div>
                     </div>
                   </div>
@@ -109,25 +109,25 @@
               <el-row :gutter="20">
                 <el-col :span="6">
                   <div class="stat-item">
-                    <div class="stat-value">{{ reportData.wordCount }}</div>
+                    <div class="stat-value">{{ reportData.wordCount || 0 }}</div>
                     <div class="stat-label">总字数</div>
                   </div>
                 </el-col>
                 <el-col :span="6">
                   <div class="stat-item">
-                    <div class="stat-value">{{ reportData.citationCount }}</div>
+                    <div class="stat-value">{{ reportData.citationCount || 0 }}</div>
                     <div class="stat-label">引用文献</div>
                   </div>
                 </el-col>
                 <el-col :span="6">
                   <div class="stat-item">
-                    <div class="stat-value">{{ reportData.similarSources }}</div>
+                    <div class="stat-value">{{ reportData.similarSources || 0 }}</div>
                     <div class="stat-label">相似文献</div>
                   </div>
                 </el-col>
                 <el-col :span="6">
                   <div class="stat-item">
-                    <div class="stat-value">{{ reportData.checkEngines.join(' + ') }}</div>
+                    <div class="stat-value">{{ (reportData.checkEngines || []).join(' + ') || '暂无数据' }}</div>
                     <div class="stat-label">检测引擎</div>
                   </div>
                 </el-col>
@@ -149,7 +149,7 @@
               
               <div class="sections-list">
                 <div 
-                  v-for="(section, key) in reportData.sections" 
+                  v-for="(section, key) in (reportData.sections || {})" 
                   :key="key"
                   class="section-item"
                 >
@@ -250,8 +250,8 @@
         <el-tab-pane label="修改建议" name="suggestions">
           <div class="suggestions-content">
             <el-alert
-              :title="getOverallAssessment(reportData.totalSimilarity)"
-              :type="getAssessmentType(reportData.totalSimilarity)"
+              :title="getOverallAssessment(reportData.totalSimilarity || 0)"
+              :type="getAssessmentType(reportData.totalSimilarity || 0)"
               show-icon
               :closable="false"
             />
@@ -311,7 +311,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
@@ -417,20 +417,33 @@ const exportReport = async (format) => {
 }
 
 const loadReportData = async () => {
-  loading.value = true
+  // 参数校验
+  if (!route.params.paperId || route.params.paperId === 'undefined') {
+    ElMessage.error('缺少论文 ID 参数');
+    router.back();
+    return;
+  }
+  
+  loading.value = true;
   try {
-    const res = await getPaperReport(route.params.paperId)
+    const res = await getPaperReport(route.params.paperId);
+    
+    // 如果组件已卸载，不更新数据
+    if (isUnmounted) return;
+    
     if (res.code === 200) {
-      reportData.value = res.data
+      reportData.value = res.data;
     } else {
-      ElMessage.error(res.message || '获取报告失败')
+      ElMessage.error(res.message || '获取报告失败');
     }
   } catch (error) {
-    ElMessage.error('网络错误: ' + error.message)
+    ElMessage.error('网络错误：' + error.message);
   } finally {
-    loading.value = false
+    if (!isUnmounted) {
+      loading.value = false;
+    }
   }
-}
+};
 
 const getSimilarityColor = (similarity) => {
   if (similarity < 15) return '#67c23a'
@@ -498,9 +511,16 @@ const viewHistoricalReport = (reportId) => {
   ElMessage.info(`查看历史报告: ${reportId}`)
 }
 
+// 标记组件是否已卸载
+let isUnmounted = false
+
 // 生命周期
 onMounted(() => {
   loadReportData()
+})
+
+onUnmounted(() => {
+  isUnmounted = true
 })
 </script>
 
