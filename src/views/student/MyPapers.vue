@@ -129,8 +129,6 @@
             <div class="paper-header">
               <h4 class="paper-title">{{ paper.paperTitle }}</h4>
               <div class="paper-actions">
-                
-                <!-- 提交修改（被驳回的论文） -->
                 <el-button
                   v-if="paper.paperStatus === 'rejected'"
                   type="primary"
@@ -142,29 +140,27 @@
                 </el-button>
                 <!-- 重新编辑已撤回论文 -->
                 <el-button
-                    v-if="paper.paperStatus === 'withdrawn'"
-                    type="primary"
-                    text
-                    :icon="EditPen"
-                    @click="resubmitPaper(paper)"
+                  v-if="paper.paperStatus === 'withdrawn'"
+                  type="primary"
+                  text
+                  :icon="EditPen"
+                  @click="resubmitPaper(paper)"
                 >
                   重新编辑
                 </el-button>
-
-                <!-- 撤回申请（待分配/待查重/待审核的论文） -->
+                <!-- 撤回申请 -->
                 <el-button
-                    v-if="['pending', 'checking', 'auditing'].includes(paper.paperStatus)"
-                    type="warning"
-                    text
-                    :icon="Close"
-                    @click="withdrawPaper(paper)"
+                  v-if="['pending', 'checking', 'auditing'].includes(paper.paperStatus)"
+                  type="warning"
+                  text
+                  :icon="RefreshLeft"
+                  @click="withdrawPaper(paper)"
                 >
-                  撤回申请
+                  申请撤回
                 </el-button>
-                
-                <!-- 申请修改（已通过的论文） -->
+                <!-- 申请修改 -->
                 <el-button
-                  v-if="paper.paperStatus === 'completed'"
+                  v-if="paper.paperStatus === 'PASSED'"
                   type="info"
                   text
                   :icon="EditPen"
@@ -172,30 +168,23 @@
                 >
                   申请修改
                 </el-button>
-                
-                <!-- 查看详情 -->
                 <el-button text :icon="View" @click="viewPaperDetail(paper)">
                   查看详情
                 </el-button>
-                
-                <!-- 下载 -->
                 <el-button text :icon="Download" @click="downloadPaper(paper)">
                   下载
                 </el-button>
-                
-                <!-- 查重报告 -->
+                <!-- 查重功能按钮 -->
                 <el-button 
-                  v-if="['assigned', 'checking', 'auditing', 'completed', 'rejected', 'withdrawn'].includes(paper.paperStatus)" 
+                  v-if="paper.paperStatus !== 'DRAFT'" 
                   text 
                   :icon="Document" 
                   @click="viewPlagiarismReport(paper.id)"
                 >
                   查重报告
                 </el-button>
-                
-                <!-- 查重监控 -->
                 <el-button 
-                  v-if="['checking', 'auditing'].includes(paper.paperStatus)" 
+                  v-if="paper.paperStatus !== 'DRAFT'" 
                   text 
                   :icon="Monitor" 
                   @click="monitorCheckProgress(paper.id)"
@@ -392,70 +381,6 @@
       </template>
     </el-dialog>
 
-    <!-- 查重进度对话框 -->
-    <el-dialog 
-      v-model="showProgressDialog" 
-      title="查重进度" 
-      width="600px"
-      :close-on-click-modal="false"
-      :show-close="false"
-    >
-      <div class="progress-content">
-        <div class="progress-header">
-          <el-icon :size="24" color="#409eff"><Loading /></el-icon>
-          <span>{{ checkProgress.message || '正在处理中...' }}</span>
-        </div>
-        
-        <el-progress 
-          :percentage="checkProgress.percent" 
-          :status="checkProgress.stage === 'FAILED' ? 'exception' : undefined"
-          :stroke-width="20"
-        >
-          <template #default="percentage">
-            <span class="percentage-value">{{ percentage }}%</span>
-          </template>
-        </el-progress>
-        
-        <div class="progress-details">
-          <div class="detail-item">
-            <span class="label">当前阶段:</span>
-            <span class="value">{{ getStageName(checkProgress.stage) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">预计剩余:</span>
-            <span class="value">{{ formatRemainingTime(checkProgress.estimatedRemainingSeconds) }}</span>
-          </div>
-        </div>
-        
-        <div class="progress-stages">
-          <div 
-            v-for="stage in ['FILE_PARSING', 'TEXT_COMPARING', 'REPORT_GENERATING', 'COMPLETED']" 
-            :key="stage"
-            :class="['stage-item', getStageClass(stage)]"
-          >
-            <div class="stage-icon">
-              <el-icon v-if="isStageCompleted(stage)"><Check /></el-icon>
-              <el-icon v-else-if="isStageCurrent(stage)"><Loading /></el-icon>
-              <el-icon v-else><Clock /></el-icon>
-            </div>
-            <div class="stage-name">{{ getStageName(stage) }}</div>
-          </div>
-        </div>
-      </div>
-      
-      <template #footer>
-        <el-button @click="cancelCheck" :disabled="isCheckCompleted">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="viewReport" 
-          :disabled="!isCheckCompleted"
-          v-if="isCheckCompleted"
-        >
-          查看报告
-        </el-button>
-      </template>
-    </el-dialog>
-
     <!-- 版本对比对话框 -->
     <el-dialog 
       v-model="versionCompareDialogVisible" 
@@ -542,23 +467,6 @@
         </el-button>
       </template>
     </el-dialog>
-
-    <!-- 批量查重进度对话框 -->
-    <el-dialog 
-      v-model="showBatchProgressDialog" 
-      title="批量查重进度" 
-      width="900px"
-      :close-on-click-modal="false"
-      :show-close="false"
-    >
-      <BatchCheckProgress :paperIds="selectedPaperIds" />
-      
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="showBatchProgressDialog = false">关闭</el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -566,6 +474,7 @@
 import { ref, reactive, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { getDictDataByType } from "@/api/user.js";
 import { 
   getStudentPaperPage, 
   withdrawPaper as withdrawPaperApi, 
@@ -577,10 +486,7 @@ import {
   comparePaperVersions,
   downloadVersionCompare,
   downloadVersion as downloadVersionApi,
-  downloadAttachment as downloadAttachmentApi,
-  getDictDataByType,
-  createCheckTask,
-  createBatchCheckTasks
+  downloadAttachment as downloadAttachmentApi
 } from "@/api/student.js";
 import { useUserStore } from "@/stores/user";
 
@@ -616,12 +522,6 @@ const filterForm = reactive({
 });
 const paperStatusDictList = ref([]);
 
-// 查重进度相关
-const { connect, disconnect, progress: checkProgress, isConnected } = useCheckProgress();
-const showProgressDialog = ref(false);
-const checkingPaperId = ref(null);
-const isCheckCompleted = ref(false);
-
 const pagination = reactive({
   current: 1,
   size: 5
@@ -640,10 +540,6 @@ const compareVersions = ref([]);
 // 批量操作相关
 const selectedPaperIds = ref([]);
 const selectAll = ref(false);
-
-// 撤回原因相关
-const selectedReasonType = ref('');
-const reasonDetail = ref('');
 
 onMounted(async () => {
   try {
@@ -685,8 +581,7 @@ const fetchPapers = async () => {
     };
     // 调用真实后端接口
     const res = await getStudentPaperPage(queryParams);
-    console.log('后端返回的论文数据:', res.data);
-    console.log('第一条论文的 paperStatus:', res.data.records?.[0]?.paperStatus);
+    papers.value = res.data; // 赋值后端返回的论文列表
     papers.value = res.data.records; // 论文列表数据
 
     total.value = res.data.total; // 论文总数
@@ -784,7 +679,6 @@ const toggleVersions = (paperId) => {
 const getStatusType = (status) => {
   const typeMap = {
     pending: "info",
-    assigned: "info",
     checking: "warning",
     withdrawn: "warning",
     auditing: "primary",
@@ -797,12 +691,12 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const textMap = {
     assigned: "已分配",
+    withdrawn: "已撤回",
     pending: "待分配",
     checking: "待查重",
-    auditing: "待审核",
+    auditing: "审核中",
     completed: "已完成",
     rejected: "需修改",
-    withdrawn: "已撤回", // 已撤回
   };
   return textMap[status] || "未知状态";
 };
@@ -835,137 +729,27 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-/**
- * 开始查重任务
- */
-const startCheckTask = async (paperId) => {
-  try {
-    checkingPaperId.value = paperId;
-    
-    // 1. 创建查重任务
-    const result = await createCheckTask(paperId);
-    
-    if (result.code === 200) {
-      const taskId = result.data.id;
-      
-      // 2. 连接到 WebSocket
-      connect(taskId);
-      
-      // 3. 显示进度对话框
-      showProgressDialog.value = true;
-      isCheckCompleted.value = false;
-      
-      ElMessage.success(result.msg || '查重任务已启动，正在实时监控进度...');
-      
-      // 4. 跳转到监控页面（可选）
-      // router.push(`/student/check-monitor/${taskId}`);
-    } else {
-      ElMessage.error(result.msg || '查重任务创建失败');
-    }
-  } catch (error) {
-    console.error('启动查重失败:', error);
-    ElMessage.error(error.message || '启动查重失败，请稍后重试');
-  } finally {
-    checkingPaperId.value = null;
-  }
-};
-
-/**
- * 获取查重阶段名称
- */
-const getStageName = (stage) => {
-  const names = {
-    'FILE_PARSING': '文件解析',
-    'TEXT_COMPARING': '文本比对',
-    'REPORT_GENERATING': '报告生成',
-    'COMPLETED': '已完成'
-  };
-  return names[stage] || '处理中';
-};
-
-/**
- * 格式化剩余时间
- */
-const formatRemainingTime = (seconds) => {
-  if (!seconds || seconds <= 0) return '即将完成';
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}分${secs}秒`;
-};
-
-/**
- * 取消查重
- */
-const cancelCheck = () => {
-  disconnect();
-  showProgressDialog.value = false;
-  checkingPaperId.value = null;
-};
-
-/**
- * 查看报告
- */
-const viewReport = () => {
-  router.push(`/student/plagiarism-report/${checkProgress.paperId}`);
-  showProgressDialog.value = false;
-};
-
-// 监听查重完成
-watch(() => checkProgress.stage, (newStage) => {
-  if (newStage === 'COMPLETED') {
-    isCheckCompleted.value = true;
-    setTimeout(() => {
-      ElMessage.success('查重完成！即将跳转到报告页面...');
-      setTimeout(() => {
-        viewReport();
-      }, 2000);
-    }, 500);
-  } else if (newStage === 'FAILED') {
-    ElMessage.error(checkProgress.message || '查重失败');
-    cancelCheck();
-  }
-});
-
-/**
- * 判断阶段是否完成
- */
-const isStageCompleted = (stageKey) => {
-  const stageOrder = ['FILE_PARSING', 'TEXT_COMPARING', 'REPORT_GENERATING', 'COMPLETED'];
-  const currentIndex = stageOrder.indexOf(checkProgress.stage);
-  const targetIndex = stageOrder.indexOf(stageKey);
-  return currentIndex > targetIndex;
-};
-
-/**
- * 判断是否是当前阶段
- */
-const isStageCurrent = (stageKey) => {
-  return checkProgress.stage === stageKey;
-};
-
-/**
- * 获取阶段样式类
- */
-const getStageClass = (stageKey) => {
-  if (isStageCompleted(stageKey)) return 'completed';
-  if (isStageCurrent(stageKey)) return 'current';
-  return 'pending';
-};
-
-// 撤回论文
+// 撤回论文（一步对话框）
 const withdrawPaper = async (paper) => {
   try {
-    // 先确认是否要撤回
-    await ElMessageBox.confirm(
-      `确定要撤回论文《${paper.paperTitle}》吗？`,
-      '确认撤回',
+    // 在同一个 prompt 里同时确认操作并收集理由
+    const { value: reason } = await ElMessageBox.prompt(
+      `确定要撤回论文《${paper.paperTitle}》吗？\n请简要说明撤回理由：`,
+      '撤回论文',
       {
-        confirmButtonText: '确定',
+        confirmButtonText: '提交',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
+        inputPattern: /.+/, // 不允许空
+        inputErrorMessage: '请输入撤回理由',
+        inputPlaceholder: '例如：上传文件有误，需要重新提交',
+        textarea: true,
+        inputType: 'textarea',
+        inputValidator(val) {
+          return val && val.trim().length > 0;
+        }
       }
     );
-    
     // 再弹窗选择原因类型和详细描述
     try {
       await ElMessageBox({
@@ -1013,24 +797,22 @@ const withdrawPaper = async (paper) => {
       }
       throw action; // 其他错误继续抛出
     }
-    
+
     // 验证是否选择了原因类型
     if (!selectedReasonType.value) {
       ElMessage.warning('请选择撤回原因类型');
       return;
     }
-    
+
     // 调用撤回接口
     const res = await withdrawPaperApi(paper.id, selectedReasonType.value, reasonDetail.value);
-    
+
     if (res.code === 200) {
       ElMessage.success('论文已撤回，您可以修改后重新提交');
-      
-      // 方案 1：直接从列表中移除（用户体验更好）
+
       papers.value = papers.value.filter(p => p.id !== paper.id);
       total.value = Math.max(0, total.value - 1);
-      
-      // 如果当前页没有数据了且不是第一页，回到上一页
+
       if (papers.value.length === 0 && pagination.current > 1) {
         pagination.current--;
         fetchPapers();
@@ -1043,27 +825,6 @@ const withdrawPaper = async (paper) => {
       console.error('撤回失败:', error);
       ElMessage.error('撤回失败，请稍后重试');
     }
-  }
-};
-
-/**
- * 重新编辑已撤回的论文
- */
-const reeditWithdrawnPaper = (paper) => {
-  try {
-    // 跳转到论文提交页面，带上论文 ID 和 action 参数
-    router.push({
-      name: 'PaperSubmit',
-      query: {
-        paperId: paper.id,
-        action: 'resubmit-after-withdraw'
-      }
-    });
-    
-    ElMessage.success('已进入重新提交模式，请修改后重新上传文件并提交');
-  } catch (error) {
-    console.error('重新编辑失败:', error);
-    ElMessage.error('重新编辑失败，请稍后重试');
   }
 };
 
@@ -1372,7 +1133,6 @@ const batchDownload = async () => {
   }
 };
 
-const showBatchProgressDialog = ref(false);
 const batchCheckPlagiarism = async () => {
   try {
     await ElMessageBox.confirm(
@@ -1385,16 +1145,11 @@ const batchCheckPlagiarism = async () => {
       }
     );
     
-    // 调用批量查重接口
+    // 调用批量查重接口（已在 student.js 中定义）
     const res = await createBatchCheckTasks(selectedPaperIds.value);
     
     if (res.code === 200) {
       ElMessage.success(`批量查重任务已提交，共 ${res.data?.totalCount || selectedPaperIds.value.length} 篇论文`);
-      
-      // 打开批量进度对话框
-      showBatchProgressDialog.value = true;
-      
-      // 清空选中状态
       selectedPaperIds.value = [];
       selectAll.value = false;
     } else {
@@ -1668,129 +1423,6 @@ const batchDelete = async () => {
 
 .empty-state {
   padding: 3rem 0;
-}
-
-// 查重进度对话框样式
-.progress-content {
-  padding: 20px 0;
-  
-  .progress-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
-  }
-  
-  .percentage-value {
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .progress-details {
-    display: flex;
-    justify-content: space-between;
-    margin: 16px 0;
-    padding: 12px;
-    background: #f5f7fa;
-    border-radius: 8px;
-    
-    .detail-item {
-      display: flex;
-      gap: 8px;
-      
-      .label {
-        color: #909399;
-        font-size: 14px;
-      }
-      
-      .value {
-        color: #606266;
-        font-weight: 500;
-        font-size: 14px;
-      }
-    }
-  }
-  
-  .progress-stages {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 32px;
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 40px;
-      right: 40px;
-      height: 2px;
-      background: #e4e7ed;
-      z-index: 1;
-    }
-    
-    .stage-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 2;
-      
-      &.completed {
-        .stage-icon {
-          background: #67c23a;
-          color: white;
-        }
-      }
-      
-      &.current {
-        .stage-icon {
-          background: #409eff;
-          color: white;
-          animation: pulse 2s infinite;
-        }
-      }
-      
-      &.pending {
-        .stage-icon {
-          background: #e4e7ed;
-          color: #909399;
-        }
-      }
-      
-      .stage-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 8px;
-        transition: all 0.3s ease;
-      }
-      
-      .stage-name {
-        font-size: 12px;
-        color: #606266;
-      }
-    }
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.7);
-  }
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(64, 158, 255, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
-  }
 }
 
 .paper-detail {
