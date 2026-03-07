@@ -396,14 +396,6 @@ const currentSession = computed(() => {
   return messageSessions.value.find(session => session.id === activeSessionId.value)
 })
 
-// 方法：处理头像URL，确保空值时返回 undefined 让el-avatar 显示默认文字
-const getAvatarUrl = (avatar) => {
-  if (!avatar || avatar === 'null' || avatar === 'undefined' || avatar.trim() === '') {
-    return undefined // 返回 undefined，el-avatar 会显示插槽中的文字
-  }
-  return avatar
-}
-
 // 方法：从会话成员中提取对方（非当前用户）的头像
 const getSessionAvatar = (session) => {
   if (!session || !session.members) return undefined
@@ -422,7 +414,6 @@ const getSessionAvatar = (session) => {
 
 // 方法
 const loadAdvisorData = async () => {
-  console.log('开始加载导师数�?);
   try {
     // 获取导师信息
     const advisorRes = await getAdvisorInteractionInfo();
