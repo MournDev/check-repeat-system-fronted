@@ -130,13 +130,23 @@
               <h4 class="paper-title">{{ paper.paperTitle }}</h4>
               <div class="paper-actions">
                 <el-button
-                  v-if="paperStatus === 'REJECTED'"
+                  v-if="paper.paperStatus === 'rejected'"
                   type="primary"
                   text
                   :icon="Upload"
                   @click="submitRevision(paper.id)"
                 >
                   提交修改
+                </el-button>
+                <!-- 重新编辑已撤回论文 -->
+                <el-button
+                  v-if="paper.paperStatus === 'withdrawn'"
+                  type="primary"
+                  text
+                  :icon="EditPen"
+                  @click="resubmitPaper(paper)"
+                >
+                  重新编辑
                 </el-button>
                 <!-- 撤回申请 -->
                 <el-button
@@ -361,7 +371,7 @@
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
         <el-button
-          v-if="currentPaper?.status === 'REJECTED'"
+          v-if="currentPaper?.paperStatus === 'rejected'"
           type="primary"
           :icon="Upload"
           @click="submitRevision(currentPaper.id)"
@@ -648,6 +658,14 @@ const downloadPaper = async (paper) => {
 const submitRevision = (paperId) => {
   ElMessage.info(`提交论文 ${paperId} 的修改版本`);
   // 跳转到提交修改页面
+};
+
+const resubmitPaper = (paper) => {
+  // 跳转到论文提交页面，带上论文ID用于重新编辑
+  router.push({
+    path: '/student/paper-submit',
+    query: { paperId: paper.id, action: 'resubmit' }
+  });
 };
 
 const toggleVersions = (paperId) => {
