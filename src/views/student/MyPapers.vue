@@ -750,9 +750,62 @@ const withdrawPaper = async (paper) => {
         }
       }
     );
+    // 再弹窗选择原因类型和详细描述
+    try {
+      await ElMessageBox({
+        title: '请选择撤回原因类型',
+        message: h('div', {}, [
+          h(ElSelect, {
+            modelValue: selectedReasonType.value,
+            placeholder: '请选择原因类型',
+            style: 'width: 100%; margin-bottom: 15px;',
+            onChange: (value) => {
+              selectedReasonType.value = value;
+            }
+          }, {
+            default: () => [
+              h(ElOption, { label: '个人原因', value: 'PERSONAL' }),
+              h(ElOption, { label: '格式问题', value: 'FORMAT' }),
+              h(ElOption, { label: '内容问题', value: 'CONTENT' }),
+              h(ElOption, { label: '其他', value: 'OTHER' })
+            ]
+          }),
+          h(ElInput, {
+            modelValue: reasonDetail.value,
+            placeholder: '详细原因描述（可选）',
+            type: 'textarea',
+            rows: 3,
+            maxlength: 500,
+            showWordLimit: true,
+            style: 'margin-top: 10px;',
+            'onUpdate:modelValue': (value) => {
+              reasonDetail.value = value;
+            }
+          })
+        ]),
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        customClass: 'reason-type-dialog',
+        distinguishCancelAndClose: true // 区分取消按钮和关闭动作
+      });
+    } catch (action) {
+      // 如果用户点击了取消或关闭对话框
+      if (action === 'cancel') {
+        console.log('用户取消了撤回操作');
+        return; // 直接返回，不执行后续逻辑
+      }
+      throw action; // 其他错误继续抛出
+    }
 
-    // 调用撤回接口，后端接口已扩展接受原因参数
-    const res = await withdrawPaperApi(paper.id, reason);
+    // 验证是否选择了原因类型
+    if (!selectedReasonType.value) {
+      ElMessage.warning('请选择撤回原因类型');
+      return;
+    }
+
+    // 调用撤回接口
+    const res = await withdrawPaperApi(paper.id, selectedReasonType.value, reasonDetail.value);
 
     if (res.code === 200) {
       ElMessage.success('论文已撤回，您可以修改后重新提交');
