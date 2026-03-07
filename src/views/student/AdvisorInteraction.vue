@@ -83,11 +83,7 @@
               @click="switchSession(session.id)"
             >
               <div class="session-avatar">
-<<<<<<< HEAD
-                <el-avatar :size="40" :src="getSessionAvatar(session)">
-=======
                 <el-avatar :size="40" :src="getAvatarUrl(session.avatar)">
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
                   {{ session.name?.charAt(0) }}
                 </el-avatar>
               </div>
@@ -175,22 +171,14 @@
                 }"
               >
                 <div class="message-avatar">
-<<<<<<< HEAD
-                  <el-avatar :size="32" :src="getAvatarUrl(message.avatar)">
-=======
                   <el-avatar :size="36" :src="getAvatarUrl(message.avatar)" :alt="message.senderName">
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
                     {{ message.senderName?.charAt(0) }}
                   </el-avatar>
                 </div>
                 <div class="message-content">
                   <div class="message-info">
                     <span class="message-sender">{{ message.senderName }}</span>
-<<<<<<< HEAD
-                    <span class="message-time">{{ message.formattedTime || formatTime(message.sendTime) }}</span>
-=======
                     <span class="message-time">{{ formatMessageTime(message.time) }}</span>
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
                   </div>
                   <div class="message-bubble">
                     <div class="message-text">{{ message.content }}</div>
@@ -237,7 +225,7 @@
               v-model="newMessage"
               type="textarea"
               :rows="3"
-              placeholder="输入消息内容，按 Ctrl+Enter 发送..."
+              placeholder="输入消息内容，按 Ctrl+Enter 发送.."
               resize="none"
               @keydown.ctrl.enter.exact="sendMessage"
             />
@@ -245,7 +233,7 @@
               <div class="input-info">
                 <span v-if="attachments.length > 0" class="attachment-count">
                   <el-icon><Paperclip /></el-icon>
-                  已添加 {{ attachments.length }} 个附件
+                  已添加{{ attachments.length }} 个附件
                 </span>
               </div>
               <el-button 
@@ -408,7 +396,7 @@ const currentSession = computed(() => {
   return messageSessions.value.find(session => session.id === activeSessionId.value)
 })
 
-// 方法：处理头像 URL，确保空值时返回 undefined 让 el-avatar 显示默认文字
+// 方法：处理头像URL，确保空值时返回 undefined 让el-avatar 显示默认文字
 const getAvatarUrl = (avatar) => {
   if (!avatar || avatar === 'null' || avatar === 'undefined' || avatar.trim() === '') {
     return undefined // 返回 undefined，el-avatar 会显示插槽中的文字
@@ -420,13 +408,13 @@ const getAvatarUrl = (avatar) => {
 const getSessionAvatar = (session) => {
   if (!session || !session.members) return undefined
   
-  // 找到不是当前用户的成员（即导师/联系人）
+  // 找到不是当前用户的成员（即导师联系人）
   const otherMember = session.members.find(member => member.userId !== userStore.userInfo?.userId)
   
   // 如果有其他成员，返回其头像；否则返回第一个成员的头像
   const avatar = otherMember ? otherMember.avatar : session.members[0]?.avatar
   
-  // 如果 avatar 为空、null 或 undefined，返回 undefined（让 el-avatar 显示插槽内容）
+  // 如果 avatar 为空、null 或undefined，返回undefined（让 el-avatar 显示插槽内容)
   if (!avatar || avatar === 'null' || avatar === 'undefined') return undefined
   
   return avatar
@@ -434,7 +422,7 @@ const getSessionAvatar = (session) => {
 
 // 方法
 const loadAdvisorData = async () => {
-  console.log('开始加载导师数据');
+  console.log('开始加载导师数�?);
   try {
     // 获取导师信息
     const advisorRes = await getAdvisorInteractionInfo();
@@ -444,7 +432,7 @@ const loadAdvisorData = async () => {
       console.log('设置 advisorInfo:', advisorInfo.value);
     } else {
       console.warn('获取导师信息失败或未分配导师:', advisorRes.message);
-      // API 成功但没有数据，说明未分配导师
+      // API 成功但没有数据，说明未分配导�?
       advisorInfo.value = null;
     }
     
@@ -466,7 +454,7 @@ const loadAdvisorData = async () => {
     }
   } catch (error) {
     console.error('加载导师数据失败:', error);
-    ElMessage.error('加载数据失败：' + (error.message || '未知错误'));
+    ElMessage.error('加载数据失败�? + (error.message || '未知错误'));
   }
 };
 
@@ -476,7 +464,7 @@ const loadMessages = async (sessionId) => {
     const res = await getMessages(sessionId, 1, 20);
     if (res.code === 200) {
       currentMessages.value = res.data.records || [];
-      // 标记消息为已读 - 这会自动更新 unreadCount
+      // 标记消息为已�?- 这会自动更新 unreadCount
       await markMessagesAsRead(sessionId);
       // 手动更新当前会话的未读数
       const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
@@ -495,7 +483,7 @@ const loadMessages = async (sessionId) => {
 const switchSession = (sessionId) => {
   activeSessionId.value = sessionId;
   loadMessages(sessionId);
-  // 切换会话时，同时更新该会话的未读数
+  // 切换会话时，同时更新该会话的未读�?
   const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
   if (sessionIndex !== -1) {
     messageSessions.value[sessionIndex].unreadCount = 0;
@@ -507,7 +495,7 @@ const startNewMessage = () => {
 }
 
 const sendNewMessage = () => {
-  ElMessage.success('消息发送成功')
+  ElMessage.success('消息发送成�?)
   messageDialogVisible.value = false
   // 重置表单
   Object.keys(messageForm).forEach(key => {
@@ -535,13 +523,13 @@ const sendMessage = async () => {
       await loadMessages(activeSessionId.value);
       newMessage.value = '';
       attachments.value = [];
-      ElMessage.success('消息发送成功');
+      ElMessage.success('消息发送成�?);
     } else {
-      ElMessage.error(res.message || '发送失败');
+      ElMessage.error(res.message || '发送失�?);
     }
   } catch (error) {
-    console.error('发送消息失败:', error);
-    ElMessage.error('发送失败');
+    console.error('发送消息失�?', error);
+    ElMessage.error('发送失�?);
   }
 };
 
@@ -562,7 +550,7 @@ const refreshMessages = async () => {
   try {
     // TODO: 调用刷新消息接口
     await loadMessages(activeSessionId.value)
-    ElMessage.success('消息已刷新')
+    ElMessage.success('消息已刷�?)
   } catch (error) {
     ElMessage.error('刷新失败')
   } finally {
@@ -574,19 +562,19 @@ const refreshMessages = async () => {
 
 // 查看导师主页
 const viewAdvisorProfile = () => {
-  console.log('查看导师主页被点击');
+  console.log('查看导师主页被点�?);
   console.log('advisorInfo:', advisorInfo.value);
   
   if (advisorInfo.value) {
     ElMessageBox.alert(
       `<div style="text-align: left;">
-        <p><strong>姓名：</strong>${advisorInfo.value.name}</p>
-        <p><strong>职称：</strong>${advisorInfo.value.title}</p>
-        <p><strong>研究方向：</strong>${advisorInfo.value.researchField}</p>
-        <p><strong>邮箱：</strong>${advisorInfo.value.email}</p>
-        <p><strong>电话：</strong>${advisorInfo.value.phone}</p>
+        <p><strong>姓名�?/strong>${advisorInfo.value.name}</p>
+        <p><strong>职称�?/strong>${advisorInfo.value.title}</p>
+        <p><strong>研究方向�?/strong>${advisorInfo.value.researchField}</p>
+        <p><strong>邮箱�?/strong>${advisorInfo.value.email}</p>
+        <p><strong>电话�?/strong>${advisorInfo.value.phone}</p>
         <p><strong>办公室：</strong>${advisorInfo.value.office}</p>
-        <p><strong>办公时间：</strong>${advisorInfo.value.officeHours}</p>
+        <p><strong>办公时间�?/strong>${advisorInfo.value.officeHours}</p>
       </div>`,
       '导师信息',
       {
@@ -612,7 +600,7 @@ const downloadAttachment = async (file) => {
     link.download = file.name;
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success(`正在下载：${file.name}`);
+    ElMessage.success(`正在下载�?{file.name}`);
   } catch (error) {
     console.error('下载失败:', error);
     ElMessage.error('下载失败');
@@ -622,7 +610,7 @@ const downloadAttachment = async (file) => {
 // 清空消息
 const clearMessages = async () => {
   try {
-    await ElMessageBox.confirm('确定要清空当前会话的消息吗？此操作不可恢复', '警告', {
+    await ElMessageBox.confirm('确定要清空当前会话的消息吗？此操作不可恢�?, '警告', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
@@ -631,7 +619,7 @@ const clearMessages = async () => {
     const res = await clearMsgApi(activeSessionId.value);
     if (res.code === 200) {
       currentMessages.value = [];
-      ElMessage.success('消息已清空');
+      ElMessage.success('消息已清�?);
     } else {
       ElMessage.error(res.message || '清空失败');
     }
@@ -664,7 +652,7 @@ const exportChatHistory = async () => {
     link.click();
     window.URL.revokeObjectURL(url);
     
-    ElMessage.success('聊天记录已导出');
+    ElMessage.success('聊天记录已导�?);
   } catch (error) {
     console.error('导出失败:', error);
     ElMessage.error('导出失败');
@@ -673,7 +661,7 @@ const exportChatHistory = async () => {
 
 const attachFile = async () => {
   try {
-    // 创建文件选择器
+    // 创建文件选择�?
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
@@ -707,7 +695,7 @@ const attachFile = async () => {
 
 const attachImage = async () => {
   try {
-    // 创建图片选择器
+    // 创建图片选择�?
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -751,7 +739,7 @@ const getFileIcon = (fileType) => {
   return iconMap[fileType] || 'Document'
 }
 
-// 格式化消息时间 - 更详细的时间显示
+// 格式化消息时�?- 更详细的时间显示
 const formatMessageTime = (date) => {
   if (!date) return ''
   const now = new Date()
@@ -767,7 +755,7 @@ const formatMessageTime = (date) => {
   else if (diff < oneDay * 2 && diff >= oneDay) {
     return `昨天 ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
   }
-  // 本周内
+  // 本周�?
   else if (diff < oneDay * 7) {
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
     return `${weekdays[target.getDay()]} ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
@@ -1011,7 +999,6 @@ onMounted(() => {
     .message-item {
       display: flex;
       margin-bottom: 1.5rem;
-<<<<<<< HEAD
       animation: messageSlideIn 0.3s ease-out;
       
       @keyframes messageSlideIn {
@@ -1024,9 +1011,6 @@ onMounted(() => {
           transform: translateY(0);
         }
       }
-=======
-      animation: fadeIn 0.3s ease-in-out;
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
       
       &.message-sent {
         flex-direction: row-reverse;
@@ -1043,7 +1027,6 @@ onMounted(() => {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-<<<<<<< HEAD
           border: none;
           position: relative;
           
@@ -1062,18 +1045,15 @@ onMounted(() => {
           .message-time {
             color: rgba(255, 255, 255, 0.9);
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-=======
           
           .message-time {
             color: rgba(255, 255, 255, 0.9);
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
           }
         }
       }
       
       &.message-received {
         .message-bubble {
-<<<<<<< HEAD
           background: white;
           border: 1px solid #e8eaed;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -1090,11 +1070,9 @@ onMounted(() => {
             border-left: 0;
             border-top: 8px solid white;
           }
-=======
           background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
           border: 1px solid #e8ecf1;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
         }
       }
       
@@ -1102,10 +1080,7 @@ onMounted(() => {
         margin: 0 0.75rem;
         flex-shrink: 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-<<<<<<< HEAD
         border: 2px solid white;
-=======
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
       }
       
       .message-content {
@@ -1119,12 +1094,9 @@ onMounted(() => {
           align-items: center;
           margin-bottom: 6px;
           font-size: 0.75rem;
-<<<<<<< HEAD
           color: #909399;
           padding: 0 4px;
-=======
           gap: 12px;
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
           
           .message-sender {
             font-weight: 600;
@@ -1133,23 +1105,18 @@ onMounted(() => {
           }
           
           .message-time {
-<<<<<<< HEAD
             opacity: 0.7;
-=======
             color: #909399;
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
             font-size: 0.7rem;
           }
         }
         
         .message-bubble {
-<<<<<<< HEAD
           padding: 12px 16px;
           border-radius: 16px;
           margin-bottom: 0.5rem;
           word-wrap: break-word;
           word-break: break-word;
-=======
           padding: 0.875rem 1.125rem;
           border-radius: 16px;
           margin-bottom: 0.5rem;
@@ -1159,12 +1126,10 @@ onMounted(() => {
             transform: translateY(-1px);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
           }
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
           
           .message-text {
             margin-bottom: 0.25rem;
             line-height: 1.6;
-<<<<<<< HEAD
             font-size: 0.95rem;
           }
           
@@ -1172,14 +1137,12 @@ onMounted(() => {
             font-size: 0.75rem;
             opacity: 0.7;
             margin-top: 4px;
-=======
             word-wrap: break-word;
           }
           
           .message-time {
             font-size: 0.7rem;
             opacity: 0.8;
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
             text-align: right;
           }
         }
@@ -1193,7 +1156,6 @@ onMounted(() => {
           .attachment-item {
             display: flex;
             align-items: center;
-<<<<<<< HEAD
             padding: 10px 12px;
             background: linear-gradient(to right, #f8f9fa, #ffffff);
             border: 1px solid #e4e7ed;
@@ -1206,7 +1168,6 @@ onMounted(() => {
               border-color: #667eea;
               transform: translateX(4px);
               box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-=======
             padding: 0.625rem 0.75rem;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
             border: 1px solid #e8ecf1;
@@ -1219,7 +1180,6 @@ onMounted(() => {
               border-color: #667eea;
               box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
               transform: translateX(2px);
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
             }
             
             .el-icon {
@@ -1231,15 +1191,12 @@ onMounted(() => {
             
             span {
               flex: 1;
-<<<<<<< HEAD
               margin-right: 8px;
               font-size: 0.85rem;
               color: #606266;
-=======
               margin-right: 0.5rem;
               font-size: 0.875rem;
               color: #303133;
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
             }
           }
         }
@@ -1330,7 +1287,7 @@ onMounted(() => {
   }
 }
 
-// 响应式设计
+// 响应式设�?
 @media (max-width: 768px) {
   .interaction-content {
     .el-col {
@@ -1359,7 +1316,7 @@ onMounted(() => {
   }
 }
 
-// 滚动条美化
+// 滚动条美�?
 .chat-container::-webkit-scrollbar {
   width: 6px;
 }
