@@ -160,14 +160,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Tickets, Delete, InfoFilled, SuccessFilled,
   Check, Loading, Clock, Document, Files, Connection, DocumentChecked
 } from '@element-plus/icons-vue'
-import { getCheckStatus, subscribeCheckStatus } from '@/api/student'
+import { getCheckStatus, subscribeCheckStatus, getCheckTaskById } from '@/api/student'
+import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const route = useRoute()
 const router = useRouter()
@@ -199,6 +200,9 @@ const showCompletionDialog = ref(false)
 const finalSimilarity = ref(23.5)
 const websocket = ref(null)
 const logContainer = ref(null)
+
+// 使用实时推送 Hook
+const { connect, disconnect, progress: checkProgress, isConnected } = useCheckProgress();
 
 // 计算属性
 const checkStages = ref([
@@ -352,26 +356,32 @@ const closeCompletionDialog = () => {
 }
 
 const connectWebSocket = () => {
-  try {
-    websocket.value = subscribeCheckStatus(route.params.paperId, (data) => {
-      if (data.type === 'status_update') {
-        updateStatus(data.data)
-        addLog('info', data.data.message || '状态更新')
+  const taskId = route.params.taskId;
+  
+  // 使用新的 Hook 连接
+  connect(taskId);
+  
+  // 监听进度变化
+  watch(() => checkProgress.stage, (newStage) => {
+    if (newStage) {
+      updateStatusFromHook(checkProgress);
+      addLog('info', checkProgress.message || '状态更新');
+      
+      if (newStage === 'COMPLETED') {
+        ElMessage.success('查重完成！');
+        setTimeout(() => {
+          router.push(`/student/plagiarism-report/${checkProgress.paperId}`);
+        }, 2000);
+      } else if (newStage === 'FAILED') {
+        ElMessage.error(checkProgress.message || '查重失败');
       }
-    })
-  } catch (error) {
-    console.error('WebSocket连接失败:', error)
-    // 降级到轮询
-    startPolling()
-  }
-}
+    }
+  });
+};
 
 const disconnectWebSocket = () => {
-  if (websocket.value) {
-    websocket.value.close()
-    websocket.value = null
-  }
-}
+  disconnect();
+};
 
 const pollingTimer = ref(null)
 const startPolling = () => {
@@ -761,6 +771,24 @@ onUnmounted(() => {
           text-align: left;
         }
       }
+    }
+    
+    .estimate-content {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+}
+</style>
+    }
+    
+    .estimate-content {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+}
+</style>
     }
     
     .estimate-content {

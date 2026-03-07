@@ -132,7 +132,7 @@
                   </div>
                 </div>
                 <div class="message-time">
-                  {{ formatDateTime(message.createTime) }}
+                  {{ message.formattedTime || formatDateTime(message.createTime) }}
                   <el-icon v-if="message.senderId === currentUser.id && message.status === 'read'">
                     <Check />
                   </el-icon>

@@ -282,12 +282,13 @@ export const onlinePreview = (fileId, fileType) => {
 
 /**
  * 查询论文查重报告
- * @param paperId 论文ID
+ * @param reportId 报告ID
  */
-export const getPaperReport = (paperId) => {
+export const getPaperReport = (reportId) => {
   return request({
-    url: `/student/paper/report/${paperId}`,
+    url: '/api/student/reports/preview',
     method: "get",
+    params: { reportId }
   });
 };
 
@@ -297,8 +298,9 @@ export const getPaperReport = (paperId) => {
  */
 export const getSimpleCheckReport = (paperId) => {
   return request({
-    url: `/student/paper/report/${paperId}/simple`,
+    url: '/api/student/reports/list',
     method: "get",
+    params: { paperId }
   });
 };
 
@@ -370,12 +372,13 @@ export const getCheckTaskById = (taskId) => {
 
 /**
  * 获取详细的查重报告
- * @param paperId 论文ID
+ * @param reportId 报告ID
  */
-export const getDetailedCheckReport = (paperId) => {
+export const getDetailedCheckReport = (reportId) => {
   return request({
-    url: `api/student/paper/report/${paperId}/detailed`,
-    method: "get"
+    url: '/api/student/reports/preview',
+    method: "get",
+    params: { reportId }
   });
 };
 
@@ -457,14 +460,14 @@ export const getCheckStatus = (taskId) => {
 
 /**
  * 导出查重报告
- * @param paperId 论文 ID
- * @param format 导出格式 (pdf/doc/html)
+ * @param reportId 报告 ID
+ * @param format 导出格式 (pdf/html)
  */
-export const exportCheckReport = (paperId, format) => {
+export const exportCheckReport = (reportId, format) => {
   return request({
-    url: `api/student/paper/report/${paperId}/export`,
-    method: "get",
-    params: { format },
+    url: '/api/student/reports/download',
+    method: "post",
+    data: { reportId, format },
     responseType: 'blob'
   });
 };
@@ -485,11 +488,31 @@ export const replyFeedback = (paperId, content) => {
 /**
  * 撤回论文
  * @param paperId 论文 ID
+ * @param withdrawReasonType 撤回原因类型
+ * @param reasonDetail 详细原因描述
  */
-export const withdrawPaper = (paperId) => {
+export const withdrawPaper = (paperId, withdrawReasonType, reasonDetail) => {
   return request({
     url: `/api/papers/${paperId}/withdraw`,
-    method: "post"
+    method: "post",
+    data: {
+      paperId,
+      withdrawReasonType,
+      reasonDetail
+    }
+  });
+};
+
+/**
+ * 撤回后重新提交论文
+ * @param paperId 论文 ID
+ * @param data 提交数据
+ */
+export const resubmitAfterWithdraw = (paperId, data) => {
+  return request({
+    url: `/api/papers/${paperId}/resubmit-after-withdraw`,
+    method: "post",
+    data
   });
 };
 

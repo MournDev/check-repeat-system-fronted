@@ -22,7 +22,7 @@
 
           <div v-if="advisorInfo" class="advisor-detail">
             <div class="advisor-avatar">
-              <el-avatar :size="80" :src="advisorInfo.avatar" :alt="advisorInfo.name">
+              <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" :alt="advisorInfo.name">
                 {{ advisorInfo.name?.charAt(0) }}
               </el-avatar>
             </div>
@@ -83,7 +83,7 @@
               @click="switchSession(session.id)"
             >
               <div class="session-avatar">
-                <el-avatar :size="40" :src="session.avatar">
+                <el-avatar :size="40" :src="getSessionAvatar(session)">
                   {{ session.name?.charAt(0) }}
                 </el-avatar>
               </div>
@@ -166,14 +166,14 @@
                 }"
               >
                 <div class="message-avatar">
-                  <el-avatar :size="32" :src="message.avatar">
+                  <el-avatar :size="32" :src="getAvatarUrl(message.avatar)">
                     {{ message.senderName?.charAt(0) }}
                   </el-avatar>
                 </div>
                 <div class="message-content">
                   <div class="message-info">
                     <span class="message-sender">{{ message.senderName }}</span>
-                    <span class="message-time">{{ formatTime(message.time) }}</span>
+                    <span class="message-time">{{ message.formattedTime || formatTime(message.sendTime) }}</span>
                   </div>
                   <div class="message-bubble">
                     <div class="message-text">{{ message.content }}</div>
@@ -334,6 +334,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 
 // API 导入
 import { 
@@ -359,6 +360,7 @@ import {
 } from '@element-plus/icons-vue'
 
 // 响应式数据
+const userStore = useUserStore()
 const advisorInfo = ref(null)
 const messageSessions = ref([])
 const activeSessionId = ref(null)
@@ -388,6 +390,30 @@ const currentSession = computed(() => {
   return messageSessions.value.find(session => session.id === activeSessionId.value)
 })
 
+// 方法：处理头像 URL，确保空值时返回 undefined 让 el-avatar 显示默认文字
+const getAvatarUrl = (avatar) => {
+  if (!avatar || avatar === 'null' || avatar === 'undefined' || avatar.trim() === '') {
+    return undefined // 返回 undefined，el-avatar 会显示插槽中的文字
+  }
+  return avatar
+}
+
+// 方法：从会话成员中提取对方（非当前用户）的头像
+const getSessionAvatar = (session) => {
+  if (!session || !session.members) return undefined
+  
+  // 找到不是当前用户的成员（即导师/联系人）
+  const otherMember = session.members.find(member => member.userId !== userStore.userInfo?.userId)
+  
+  // 如果有其他成员，返回其头像；否则返回第一个成员的头像
+  const avatar = otherMember ? otherMember.avatar : session.members[0]?.avatar
+  
+  // 如果 avatar 为空、null 或 undefined，返回 undefined（让 el-avatar 显示插槽内容）
+  if (!avatar || avatar === 'null' || avatar === 'undefined') return undefined
+  
+  return avatar
+}
+
 // 方法
 const loadAdvisorData = async () => {
   console.log('开始加载导师数据');
@@ -395,29 +421,22 @@ const loadAdvisorData = async () => {
     // 获取导师信息
     const advisorRes = await getAdvisorInteractionInfo();
     console.log('导师信息响应:', advisorRes);
-    if (advisorRes.code === 200) {
+    if (advisorRes.code === 200 && advisorRes.data) {
       advisorInfo.value = advisorRes.data;
       console.log('设置 advisorInfo:', advisorInfo.value);
     } else {
-      console.log('获取导师信息失败:', advisorRes.message);
-      // 如果 API 失败，使用模拟数据进行测试
-      advisorInfo.value = {
-        name: '张教授',
-        title: '教授、博士生导师',
-        researchField: '人工智能、计算机视觉',
-        email: 'zhang.prof@university.edu',
-        phone: '138****1234',
-        office: '计算机学院 A301',
-        officeHours: '周一、三 14:00-16:00',
-        avatar: ''
-      };
-      console.log('使用模拟数据:', advisorInfo.value);
+      console.warn('获取导师信息失败或未分配导师:', advisorRes.message);
+      // API 成功但没有数据，说明未分配导师
+      advisorInfo.value = null;
     }
     
     // 获取消息会话列表
     const sessionsRes = await getMessageSessions();
     if (sessionsRes.code === 200) {
       messageSessions.value = sessionsRes.data;
+    } else {
+      console.warn('获取会话列表失败:', sessionsRes.message);
+      messageSessions.value = [];
     }
     
     // 获取共享文件
@@ -429,7 +448,7 @@ const loadAdvisorData = async () => {
     }
   } catch (error) {
     console.error('加载导师数据失败:', error);
-    ElMessage.error('加载数据失败');
+    ElMessage.error('加载数据失败：' + (error.message || '未知错误'));
   }
 };
 
@@ -928,6 +947,18 @@ onMounted(() => {
     .message-item {
       display: flex;
       margin-bottom: 1.5rem;
+      animation: messageSlideIn 0.3s ease-out;
+      
+      @keyframes messageSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
       
       &.message-sent {
         flex-direction: row-reverse;
@@ -937,24 +968,57 @@ onMounted(() => {
         }
         
         .message-bubble {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          border: none;
+          position: relative;
+          
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 0;
+            border-top: 8px solid #667eea;
+          }
           
           .message-time {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           }
         }
       }
       
       &.message-received {
         .message-bubble {
-          background-color: white;
-          border: 1px solid #e4e7ed;
+          background: white;
+          border: 1px solid #e8eaed;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          position: relative;
+          
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-right: 8px solid transparent;
+            border-left: 0;
+            border-top: 8px solid white;
+          }
         }
       }
       
       .message-avatar {
         margin: 0 0.75rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 2px solid white;
       }
       
       .message-content {
@@ -966,53 +1030,78 @@ onMounted(() => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 4px;
+          margin-bottom: 6px;
           font-size: 0.75rem;
           color: #909399;
+          padding: 0 4px;
           
           .message-sender {
             font-weight: 500;
             color: #606266;
+            font-size: 0.8rem;
           }
           
           .message-time {
             opacity: 0.7;
+            font-size: 0.7rem;
           }
         }
         
         .message-bubble {
-          padding: 0.75rem 1rem;
-          border-radius: 12px;
+          padding: 12px 16px;
+          border-radius: 16px;
           margin-bottom: 0.5rem;
+          word-wrap: break-word;
+          word-break: break-word;
           
           .message-text {
             margin-bottom: 0.25rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
           }
           
           .message-time {
             font-size: 0.75rem;
             opacity: 0.7;
+            margin-top: 4px;
+            text-align: right;
           }
         }
         
         .message-attachments {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 8px;
+          
           .attachment-item {
             display: flex;
             align-items: center;
-            padding: 0.5rem;
-            background-color: white;
+            padding: 10px 12px;
+            background: linear-gradient(to right, #f8f9fa, #ffffff);
             border: 1px solid #e4e7ed;
-            border-radius: 6px;
-            margin-bottom: 0.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              background: linear-gradient(to right, #e8f4ff, #ffffff);
+              border-color: #667eea;
+              transform: translateX(4px);
+              box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            }
             
             .el-icon {
-              margin-right: 0.5rem;
+              margin-right: 8px;
+              font-size: 1.2rem;
               color: #667eea;
             }
             
             span {
               flex: 1;
-              margin-right: 0.5rem;
+              margin-right: 8px;
+              font-size: 0.85rem;
+              color: #606266;
             }
           }
         }

@@ -13,14 +13,14 @@
       <el-form-item label="所属学院" prop="collegeId">
         <el-select v-model="paperForm.collegeId" placeholder="请选择学院" @change="handleCollegeChange"
           :loading="collegeLoading">
-          <el-option v-for="college in collegeList" :key="college.id" :label="college.collegeName"
-            :value="college.id"></el-option>
+          <el-option v-for="college in collegeList" :key="college.value" :label="college.label"
+            :value="college.value"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="专业" prop="majorId">
         <el-select v-model="paperForm.majorId" placeholder="请选择专业" :disabled="!paperForm.collegeId"
           :loading="majorLoading">
-          <el-option v-for="major in majorList" :key="major.id" :label="major.majorName" :value="major.id"></el-option>
+          <el-option v-for="major in majorList" :key="major.value" :label="major.label" :value="major.value"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="论文类型" prop="paperType">
@@ -62,22 +62,30 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getAllColleges, getMajorsByCollegeId } from '@/api/user'
-import { uploadPaper } from '@/api/student'
-import { ElMessage, ElLoading } from 'element-plus' // 只导入 ElMessage
+import { uploadPaper, resubmitAfterWithdraw } from '@/api/student'
+import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
 import { Check } from '@element-plus/icons-vue'
-import SparkMD5 from 'spark-md5' // 需安装：npm install spark-md5 -S
+import SparkMD5 from 'spark-md5'
 import { getDictDataByType, getSubjectFieldTree } from '@/api/user.js'
 import { autoAssign } from '@/api/student.js'
+
+const route = useRoute()
+const router = useRouter()
 
 const userStore = useUserStore()
 const paperFormRef = ref(null)
 const submitLoading = ref(false)
 const fileList = ref([])
-const paperId = ref('') // 上传成功后的文件ID
-const fileMd5 = ref('') // 文件MD5值
-const loginUserId = ref('')
+const paperId = ref('') // 上传成功后的文件 ID
+const fileMd5 = ref('') // 文件 MD5 值
+const loginUserId = ref('') // Long 类型，后端已改为 Long
+
+// 撤回后重新提交相关
+const isResubmitMode = ref(false)
+const resubmitPaperId = ref('')
 
 // 学院和专业相关
 const collegeList = ref([])
@@ -145,18 +153,20 @@ onMounted(async () => {
   getColleges()
   // 获取论文类型字典数据
   try {
-    // 调用接口：获取论文类型字典（假设后端 dictType 是 "paper_type"）
     const res = await getDictDataByType('paper_type');
     const subjectRes = await getSubjectFieldTree('subject_field');
-    subjectTree.value = subjectRes.data; // res.data 是 List<SysDictData>
-    paperTypeDictList.value = res.data; // res.data 是 List<SysDictData>
+    subjectTree.value = subjectRes.data;
+    paperTypeDictList.value = res.data;
   } catch (err) {
     console.error('获取论文类型字典失败：', err);
   }
   if (userStore.userInfo?.userId) {
     loginUserId.value = userStore.userInfo.userId
-    console.log('用户ID已设置:', loginUserId.value)
+    console.log('用户 ID 已设置:', loginUserId.value)
   }
+  
+  // 检查是否是撤回后重新提交模式
+  checkResubmitMode();
 })
 
 // 获取所有学院
@@ -285,6 +295,29 @@ const onUploadError = (error) => {
   console.error('上传失败：', error)
 }
 
+// 检查是否是撤回后重新提交模式
+const checkResubmitMode = () => {
+  const action = route.query.action;
+  const paperIdParam = route.query.paperId;
+  
+  if (action === 'resubmit-after-withdraw' && paperIdParam) {
+    isResubmitMode.value = true;
+    resubmitPaperId.value = paperIdParam;
+    
+    // 显示提示信息
+    ElMessageBox.alert(
+      '您正在对已撤回的论文进行重新提交。请修改论文内容后重新上传并提交。',
+      '重新提交模式',
+      {
+        confirmButtonText: '确定',
+        type: 'info'
+      }
+    );
+    
+    console.log('进入撤回后重新提交模式，论文 ID:', resubmitPaperId.value);
+  }
+}
+
 const assignTeacherAutomatically = async (submittedPaperId) => {
   try {
     console.log('开始分配导师，paperId:', submittedPaperId)
@@ -331,7 +364,7 @@ const submitPaper = async () => {
       return
     }
     submitLoading.value = true
-    // 构建提交参数（含MD5值）
+    // 构建提交参数（含 MD5 值）
     const submitParams = {
       subjectCode: paperForm.value.subjectCode,
       paperTitle: paperForm.value.paperTitle,
@@ -340,22 +373,40 @@ const submitPaper = async () => {
       paperType: paperForm.value.paperType,
       paperAbstract: paperForm.value.paperAbstract,
       fileId: paperId.value,
-      fileMd5: fileMd5.value,
-      studentId: loginUserId.value
+      fileMd5: fileMd5.value
     }
     console.log('提交参数:', submitParams)
-    // 调用提交接口
-    const res = await uploadPaper(submitParams)
-    console.log('论文提交完整响应:', res)
-    console.log('论文提交响应数据:', res.data)
-    if (res.code === 200) {
-      const submittedPaperId = res.data.id
-      ElMessage.success('附件上传成功')
-      const assignResult = await assignTeacherAutomatically(String(submittedPaperId))
-      if (assignResult.success) {
-        ElMessage.success('论文提交完成，指导老师已分配')
+        
+    let res;
+    // 判断是否是撤回后重新提交模式
+    if (isResubmitMode.value && resubmitPaperId.value) {
+      // 撤回后重新提交
+      res = await resubmitAfterWithdraw(resubmitPaperId.value, submitParams);
+      console.log('撤回后重新提交响应数据:', res.data)
+          
+      if (res.code === 200) {
+        ElMessage.success('重新提交成功！论文已进入审核流程');
+        // 跳转到我的论文页面
+        setTimeout(() => {
+          router.push('/student/my-papers');
+        }, 1000);
       } else {
-        ElMessage.warning('论文提交完成，但指导老师分配失败，请联系管理员')
+        ElMessage.error('重新提交失败：' + res.message);
+      }
+    } else {
+      // 正常提交
+      res = await uploadPaper(submitParams)
+      console.log('论文提交完整响应:', res)
+      console.log('论文提交响应数据:', res.data)
+      if (res.code === 200) {
+        const submittedPaperId = res.data.id
+        ElMessage.success('附件上传成功')
+        const assignResult = await assignTeacherAutomatically(String(submittedPaperId))
+        if (assignResult.success) {
+          ElMessage.success('论文提交完成，指导老师已分配')
+        } else {
+          ElMessage.warning('论文提交完成，但指导老师分配失败，请联系管理员')
+        }
       }
     }
     // 重置表单

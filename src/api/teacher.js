@@ -278,17 +278,17 @@ export function addStudent(studentData) {
 // 获取学院列表
 export function getColleges() {
   return request({
-    url: '/api/common/colleges',
+    url: '/api/common/dict/colleges',
     method: 'get'
   })
 }
 
 // 获取专业列表
-export function getMajors(collegeCode) {
+export function getMajors(collegeId) {
   return request({
-    url: '/api/common/majors',
+    url: '/api/common/dict/majors',
     method: 'get',
-    params: { collegeCode }
+    params: { collegeId }
   })
 }
 
