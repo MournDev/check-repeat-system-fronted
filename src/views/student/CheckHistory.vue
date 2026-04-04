@@ -125,6 +125,14 @@
                   <el-button 
                     text 
                     size="small" 
+                    @click="downloadPdfReport(record.reportId)"
+                  >
+                    <el-icon><Download /></el-icon>
+                    下载PDF
+                  </el-button>
+                  <el-button 
+                    text 
+                    size="small" 
                     @click="compareWithCurrent(record.version)"
                     v-if="!record.isCurrent"
                   >
@@ -276,7 +284,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Timer, EditPen, TrendCharts, 
-  DataAnalysis, Lightning, ArrowRight
+  DataAnalysis, Lightning, ArrowRight, Download
 } from '@element-plus/icons-vue'
 // ECharts 通过 CDN 引入，全局 window.echarts 可用
 
@@ -505,6 +513,28 @@ const toggleCompactView = () => {
 
 const viewReport = (reportId) => {
   router.push(`/student/plagiarism-report/${reportId}`)
+}
+
+const downloadPdfReport = (reportId) => {
+  try {
+    // 构建PDF下载URL
+    const downloadUrl = `/api/detection/report/pdf/${reportId}`
+    
+    // 创建下载链接
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `plagiarism_report_${reportId}_${Date.now()}.pdf`
+    
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    ElMessage.success('PDF报告下载已开始')
+  } catch (error) {
+    console.error('下载PDF报告失败:', error)
+    ElMessage.error('下载PDF报告失败: ' + (error.message || '网络错误'))
+  }
 }
 
 const compareWithCurrent = async (version) => {

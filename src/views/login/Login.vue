@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+<div class="login-container">
     <!-- 背景遮罩层 -->
     <div class="background-overlay"></div>
     
@@ -66,6 +66,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
+import { ElCard, ElForm, ElFormItem, ElInput, ElButton, ElDivider } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -163,22 +164,23 @@ const handleForgotPassword = () => {
   background-repeat: no-repeat;
 }
 
-// 背景遮罩层 - 让文字更清晰
+// 背景遮罩层
 .background-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4); // 可调整透明度 0.3-0.5
+  background: rgba(0, 0, 0, 0.4);
   z-index: 1;
 }
 
-// 内容区域
 .login-content {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   padding: 20px;
+  position: relative;
+  z-index: 2;
 }
 
 .login-card {
@@ -187,8 +189,6 @@ const handleForgotPassword = () => {
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   background: rgba(255, 255, 255, 0.98);
-  position: relative;
-  z-index: 2; // 确保卡片在遮罩层之上
   
   :deep(.el-card__body) {
     padding: 0;
@@ -213,12 +213,12 @@ const handleForgotPassword = () => {
   font-size: 0.9rem;
 }
 
-// 表单样式
 :deep(.el-form-item) {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
-:deep(.el-input__wrapper) {
+:deep(.el-input__wrapper),
+:deep(.el-select .el-input__wrapper) {
   border-radius: 8px;
   transition: all 0.2s;
   
@@ -249,11 +249,8 @@ const handleForgotPassword = () => {
   }
 }
 
-// 底部链接
 .login-footer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #eaeaea;
@@ -262,6 +259,7 @@ const handleForgotPassword = () => {
 .register-btn {
   color: #667eea;
   font-weight: 500;
+  font-size: 0.95rem;
   
   &:hover {
     color: #764ba2;
@@ -270,22 +268,18 @@ const handleForgotPassword = () => {
 
 .forgot-btn {
   color: #a0aec0;
-  font-weight: 400;
+  font-weight: 500;
+  font-size: 0.95rem;
   
   &:hover {
     color: #718096;
   }
 }
 
-:deep(.el-divider--vertical) {
-  height: 1em;
-  margin: 0 12px;
-}
-
 // 响应式设计
 @media (max-width: 480px) {
   .login-content {
-    max-width: 360px;
+    max-width: 380px;
     padding: 15px;
   }
   
@@ -294,7 +288,7 @@ const handleForgotPassword = () => {
   }
   
   .login-title {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
 }
 </style>

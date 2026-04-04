@@ -295,8 +295,10 @@
       </div>
       <div v-if="papers.length > 0" class="pagination-container">
         <el-pagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
+          :current-page="pagination.current"
+          @update:current-page="pagination.current = $event"
+          :page-size="pagination.size"
+          @update:page-size="pagination.size = $event"
           :page-sizes="[5, 10, 20, 50]"
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
@@ -486,7 +488,9 @@ import {
   comparePaperVersions,
   downloadVersionCompare,
   downloadVersion as downloadVersionApi,
-  downloadAttachment as downloadAttachmentApi
+  downloadAttachment as downloadAttachmentApi,
+  createBatchCheckTasks,
+  getCheckTaskDetail
 } from "@/api/student.js";
 import { useUserStore } from "@/stores/user";
 

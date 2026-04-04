@@ -83,9 +83,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ElCard, ElForm, ElFormItem, ElInput, ElButton, ElDivider } from 'element-plus'
 import { User, Lock, Message } from '@element-plus/icons-vue'
 import { forgetPassword } from '@/api/login'
-
 const router = useRouter()
 const resetFormRef = ref(null)
 const loading = ref(false)

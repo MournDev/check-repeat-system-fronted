@@ -119,6 +119,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Phone, Message } from '@element-plus/icons-vue'
+import { ElCard, ElForm, ElFormItem, ElInput, ElButton, ElDivider } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()

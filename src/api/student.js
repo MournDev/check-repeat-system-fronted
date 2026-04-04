@@ -67,7 +67,7 @@ export const createCheckTask = (paperId) => {
  */
 export const createBatchCheckTasks = (paperIds) => {
   return request({
-    url: "/api/student/check-tasks/batch-create",
+    url: "/api/student/batch-check/create",
     method: "post",
     data: {
       paperIds: paperIds
@@ -101,31 +101,27 @@ export const manualAssignAdvisor = (paperId, teacherId) => {
   });
 };
 
-export const getLatestPaper = (token) => {
+export const getLatestPaper = () => {
   return request({
     url: '/api/student/dashboard/latest-paper',
-    method: 'get',
-    params: {token},
+    method: 'get'
   })
 }
 
 /**
  * 获取学生仪表盘统计数据
- * @param token 用户令牌
  */
-export const getStudentDashboardStats = (token) => {
+export const getStudentDashboardStats = () => {
   return request({
     url: '/api/student/dashboard/stats',
-    method: 'get',
-    params: {token},
+    method: 'get'
   })
 }
 
-export const getAdvisorInfo = (token) => {
+export const getAdvisorInfo = () => {
   return request({
     url: '/api/student/dashboard/advisor',
-    method: 'get',
-    params: {token},
+    method: 'get'
   })
 }
 

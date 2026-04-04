@@ -211,6 +211,12 @@ const asyncRoutes = [
         ],
       },
       {
+        path: "review-workflow",
+        name: "ReviewWorkflow",
+        component: () => import("@/views/teacher/ReviewWorkflow.vue"),
+        meta: { title: "审核工作流" },
+      },
+      {
         path: "data-statistics",
         name: "DataStatistics",
         component: () => import("@/views/teacher/DataStatistics.vue"),
