@@ -19,6 +19,13 @@ export default defineConfig({
         changeOrigin: true,
         // 不重写路径，保持/check 前缀
         rewrite: (path) => path
+      },
+      '/ws': {
+        target: 'http://localhost:8080',
+        ws: true,
+        changeOrigin: true,
+        // WebSocket路径需要加上/check前缀
+        rewrite: (path) => '/check' + path
       }
     }
   },
@@ -28,6 +35,8 @@ export default defineConfig({
     
     // 代码分割优化
     rollupOptions: {
+      // 外部依赖 - 这些依赖不会被打包，需要在运行时提供
+      external: ['sockjs-client', '@stomp/stompjs'],
       output: {
         // 手动分割大块依赖 - 使用函数形式
         manualChunks(id) {
@@ -50,7 +59,7 @@ export default defineConfig({
     cssCodeSplit: true,
     
     // CSS 压缩选项
-    cssMinify: 'lightningcss',
+    cssMinify: 'esbuild',
     
     // 生成源码映射（生产环境可关闭）
     sourcemap: false

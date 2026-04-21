@@ -160,22 +160,14 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
-=======
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Tickets, Delete, InfoFilled, SuccessFilled,
   Check, Loading, Clock, Document, Files, Connection, DocumentChecked
 } from '@element-plus/icons-vue'
-<<<<<<< HEAD
-import { getCheckStatus, subscribeCheckStatus, getCheckTaskById } from '@/api/student'
-=======
 import { getCheckStatus } from '@/api/student'
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const route = useRoute()
@@ -185,36 +177,26 @@ const router = useRouter()
 const currentStatus = ref({
   status: 'processing',
   currentStage: 'internal_check',
-  overallProgress: 45,
-  stageProgress: 65,
-  elapsedTime: 1680, // 秒
-  estimatedRemainingTime: 1800, // 秒
+  overallProgress: 0,
+  stageProgress: 0,
+  elapsedTime: 0, // 秒
+  estimatedRemainingTime: 0, // 秒
   stages: {
     upload: { status: 'completed', duration: 120 },
-    internal_check: { status: 'processing', progress: 65, duration: 900 },
+    internal_check: { status: 'processing', progress: 0, duration: 0 },
     third_party_check: { status: 'pending' },
     report_generation: { status: 'pending' }
   }
 })
 
-const logs = ref([
-  { time: '15:42:30', message: '开始校内查重检测', level: 'info' },
-  { time: '15:43:15', message: '已比对文献库中 1,250 篇论文', level: 'info' },
-  { time: '15:44:02', message: '发现 8 篇高相似度文献', level: 'warning' },
-  { time: '15:45:20', message: '正在进行详细段落比对...', level: 'info' }
-])
+const logs = ref([])
 
 const showCompletionDialog = ref(false)
-const finalSimilarity = ref(23.5)
+const finalSimilarity = ref(0)
 const logContainer = ref(null)
 
-<<<<<<< HEAD
 // 使用实时推送 Hook
 const { connect, disconnect, progress: checkProgress, isConnected } = useCheckProgress();
-=======
-// WebSocket（STOMP）
-const { connect: wsConnect, disconnect: wsDisconnect, isConnected: wsConnected } = useCheckProgress()
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 
 // 计算属性
 const checkStages = ref([
@@ -368,26 +350,45 @@ const closeCompletionDialog = () => {
 }
 
 const connectWebSocket = () => {
-<<<<<<< HEAD
-  const taskId = route.params.taskId;
+  const paperId = route.query.paperId || route.params.taskId;
   
   // 使用新的 Hook 连接
-  connect(taskId);
+  connect(paperId, (data) => {
+    // 处理收到的消息
+    if (data.type === 'START') {
+      addLog('info', data.message || '查重任务已启动');
+      currentStatus.value.overallProgress = data.progress || 0;
+    } else if (data.type === 'PROGRESS') {
+      addLog('info', data.message || '查重进度更新');
+      currentStatus.value.overallProgress = data.progress || 0;
+      currentStatus.value.elapsedTime = Math.floor((Date.now() - new Date().getTime()) / 1000);
+    } else if (data.type === 'COMPLETE') {
+      addLog('success', data.message || '查重完成');
+      currentStatus.value.overallProgress = 100;
+      currentStatus.value.status = 'completed';
+      finalSimilarity.value = data.similarity || 0;
+      showCompletionDialog.value = true;
+    } else if (data.type === 'ERROR') {
+      addLog('error', data.message || '查重失败');
+      currentStatus.value.status = 'failed';
+    }
+  });
   
   // 监听进度变化
-  watch(() => checkProgress.stage, (newStage) => {
-    if (newStage) {
-      updateStatusFromHook(checkProgress);
-      addLog('info', checkProgress.message || '状态更新');
-      
-      if (newStage === 'COMPLETED') {
-        ElMessage.success('查重完成！');
-        setTimeout(() => {
-          router.push(`/student/plagiarism-report/${checkProgress.paperId}`);
-        }, 2000);
-      } else if (newStage === 'FAILED') {
-        ElMessage.error(checkProgress.message || '查重失败');
-      }
+  watch(() => checkProgress.percent, (newPercent) => {
+    if (newPercent !== undefined) {
+      currentStatus.value.overallProgress = newPercent;
+    }
+  });
+  
+  watch(() => checkProgress.status, (newStatus) => {
+    if (newStatus === 'success') {
+      addLog('success', '查重完成！');
+      finalSimilarity.value = checkProgress.similarity || 0;
+      showCompletionDialog.value = true;
+    } else if (newStatus === 'exception') {
+      addLog('error', checkProgress.message || '查重失败');
+      currentStatus.value.status = 'failed';
     }
   });
 };
@@ -395,28 +396,6 @@ const connectWebSocket = () => {
 const disconnectWebSocket = () => {
   disconnect();
 };
-=======
-  const paperId = route.query.paperId || route.params.taskId
-  wsConnect(
-    paperId,
-    (data) => {
-      if (data.type === 'status_update') {
-        updateStatus(data.data)
-        addLog('info', data.data.message || '状态更新')
-      }
-    },
-    (err) => {
-      console.error('WebSocket连接失败，降级到轮询:', err)
-      addLog('warning', 'WebSocket连接失败，切换为轮询模式')
-      startPolling()
-    }
-  )
-}
-
-const disconnectWebSocket = () => {
-  wsDisconnect()
-}
->>>>>>> 3cb79670a03886833e5da0e809f0d02f230915aa
 
 const pollingTimer = ref(null)
 const startPolling = () => {
@@ -814,24 +793,6 @@ onUnmounted(() => {
           text-align: left;
         }
       }
-    }
-    
-    .estimate-content {
-      flex-direction: column;
-      gap: 20px;
-    }
-  }
-}
-</style>
-    }
-    
-    .estimate-content {
-      flex-direction: column;
-      gap: 20px;
-    }
-  }
-}
-</style>
     }
     
     .estimate-content {

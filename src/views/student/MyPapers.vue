@@ -2,113 +2,119 @@
   <div class="my-papers-page">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h1 class="page-title">我的论文</h1>
-      <p class="page-desc">管理您的所有论文提交记录</p>
-      <div class="header-actions">
-        <el-button type="primary" :icon="UploadFilled" @click="goToPaperSubmit">
-          提交新论文
-        </el-button>
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="page-title">我的论文</h1>
+          <p class="page-desc">管理您的所有论文提交记录</p>
+        </div>
+        <div class="header-actions">
+          <button class="primary-button" @click="goToPaperSubmit">
+            <el-icon><UploadFilled /></el-icon>
+            <span>提交新论文</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- 筛选和搜索 -->
-    <el-card class="filter-card" shadow="never">
-      <el-form :model="filterForm" inline>
-        <el-form-item label="论文状态">
-          <el-select
-            v-model="filterForm.paperStatus"
-            placeholder="全部状态"
-            clearable
-            @change="fetchPapers"
-          >
-            <el-option
-              v-for="item in paperStatusDictList"
-              :key="item.dictValue"
-              :label="item.dictLabel"
-              :value="item.dictValue"
+    <div class="filter-card">
+      <div class="filter-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">论文状态</label>
+            <select 
+              v-model="filterForm.paperStatus" 
+              class="form-select"
+              @change="fetchPapers"
             >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="提交时间">
-          <el-date-picker
-            v-model="filterForm.dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            @change="fetchPapers"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-input
-            v-model="filterForm.paperTitle"
-            placeholder="搜索论文标题..."
-            :prefix-icon="Search"
-            style="width: 240px"
-            @keyup.enter="fetchPapers"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="Search" @click="fetchPapers">
-            搜索
-          </el-button>
-          <el-button :icon="Refresh" @click="handleReset"> 重置 </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
-    <!-- 论文列表 -->
-    <el-card class="papers-card" shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span class="card-title">
-            <el-icon><Document /></el-icon>
-            论文列表
-          </span>
-          <div class="header-actions-group">
-            <!-- 批量操作工具栏 -->
-            <div v-if="selectedPaperIds.length > 0" class="batch-toolbar">
-              <el-tag type="info" size="small">
-                已选择 {{ selectedPaperIds.length }} 篇论文
-              </el-tag>
-              <el-button 
-                type="primary" 
-                size="small" 
-                :icon="Download" 
-                @click="batchDownload"
+              <option value="">全部状态</option>
+              <option 
+                v-for="item in paperStatusDictList" 
+                :key="item.dictValue" 
+                :value="item.dictValue"
               >
-                批量下载
-              </el-button>
-              <el-button 
-                type="success" 
-                size="small" 
-                :icon="Document" 
-                @click="batchCheckPlagiarism"
-              >
-                批量查重
-              </el-button>
-              <el-button 
-                type="danger" 
-                size="small" 
-                :icon="Delete" 
-                @click="batchDelete"
-              >
-                批量删除
-              </el-button>
-              <el-divider direction="vertical" />
-              <el-checkbox 
-                v-model="selectAll" 
-                @change="handleSelectAll"
-              >
-                全选
-              </el-checkbox>
+                {{ item.dictLabel }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">提交时间</label>
+            <el-date-picker
+              v-model="filterForm.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              @change="fetchPapers"
+              class="form-control"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">论文标题</label>
+            <div class="search-input">
+              <el-icon class="search-icon"><Search /></el-icon>
+              <el-input
+                v-model="filterForm.paperTitle"
+                placeholder="搜索论文标题..."
+                @keyup.enter="fetchPapers"
+                class="input-field"
+              />
             </div>
-            <span v-else class="card-extra"> 共 {{ total }} 篇论文 </span>
+          </div>
+          <div class="form-actions">
+            <button class="primary-button" @click="fetchPapers">
+              <el-icon><Search /></el-icon>
+              <span>搜索</span>
+            </button>
+            <button class="secondary-button" @click="handleReset">
+              <el-icon><Refresh /></el-icon>
+              <span>重置</span>
+            </button>
           </div>
         </div>
-      </template>
+      </div>
+    </div>
+
+    <!-- 论文列表 -->
+    <div class="papers-card">
+      <div class="card-header">
+        <div class="card-title">
+          <el-icon><Document /></el-icon>
+          <span>论文列表</span>
+        </div>
+        <div class="header-actions-group">
+          <!-- 批量操作工具栏 -->
+          <div v-if="selectedPaperIds.length > 0" class="batch-toolbar">
+            <span class="selected-count">
+              已选择 {{ selectedPaperIds.length }} 篇论文
+            </span>
+            <button class="primary-button" @click="batchDownload">
+              <el-icon><Download /></el-icon>
+              <span>批量下载</span>
+            </button>
+            <button class="success-button" @click="batchCheckPlagiarism">
+              <el-icon><Document /></el-icon>
+              <span>批量查重</span>
+            </button>
+            <button class="danger-button" @click="batchDelete">
+              <el-icon><Delete /></el-icon>
+              <span>批量删除</span>
+            </button>
+            <div class="divider"></div>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="selectAll" 
+                @change="handleSelectAll"
+                class="checkbox-input"
+              />
+              <span class="checkbox-text">全选</span>
+            </label>
+          </div>
+          <span v-else class="card-extra"> 共 {{ total }} 篇论文 </span>
+        </div>
+      </div>
 
       <div class="papers-list">
         <div
@@ -119,78 +125,88 @@
         >
           <!-- 批量选择 -->
           <div class="paper-select">
-            <el-checkbox 
-              v-model="selectedPaperIds" 
-              :label="paper.id" 
-              @change="handlePaperSelect"
-            />
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="selectedPaperIds" 
+                :value="paper.id" 
+                @change="handlePaperSelect"
+                class="checkbox-input"
+              />
+            </label>
           </div>
           <div class="paper-main">
             <div class="paper-header">
               <h4 class="paper-title">{{ paper.paperTitle }}</h4>
               <div class="paper-actions">
-                <el-button
+                <button
                   v-if="paper.paperStatus === 'rejected'"
-                  type="primary"
-                  text
-                  :icon="Upload"
+                  class="action-button primary"
                   @click="submitRevision(paper.id)"
                 >
-                  提交修改
-                </el-button>
+                  <el-icon><Upload /></el-icon>
+                  <span>提交修改</span>
+                </button>
                 <!-- 重新编辑已撤回论文 -->
-                <el-button
+                <button
                   v-if="paper.paperStatus === 'withdrawn'"
-                  type="primary"
-                  text
-                  :icon="EditPen"
+                  class="action-button primary"
                   @click="resubmitPaper(paper)"
                 >
-                  重新编辑
-                </el-button>
+                  <el-icon><EditPen /></el-icon>
+                  <span>重新编辑</span>
+                </button>
                 <!-- 撤回申请 -->
-                <el-button
+                <button
                   v-if="['pending', 'checking', 'auditing'].includes(paper.paperStatus)"
-                  type="warning"
-                  text
-                  :icon="RefreshLeft"
+                  class="action-button warning"
                   @click="withdrawPaper(paper)"
                 >
-                  申请撤回
-                </el-button>
+                  <el-icon><RefreshLeft /></el-icon>
+                  <span>申请撤回</span>
+                </button>
                 <!-- 申请修改 -->
-                <el-button
+                <button
                   v-if="paper.paperStatus === 'PASSED'"
-                  type="info"
-                  text
-                  :icon="EditPen"
+                  class="action-button info"
                   @click="requestModification(paper)"
                 >
-                  申请修改
-                </el-button>
-                <el-button text :icon="View" @click="viewPaperDetail(paper)">
-                  查看详情
-                </el-button>
-                <el-button text :icon="Download" @click="downloadPaper(paper)">
-                  下载
-                </el-button>
+                  <el-icon><EditPen /></el-icon>
+                  <span>申请修改</span>
+                </button>
+                <button class="action-button" @click="viewPaperDetail(paper)">
+                  <el-icon><View /></el-icon>
+                  <span>查看详情</span>
+                </button>
+                <button class="action-button" @click="downloadPaper(paper)">
+                  <el-icon><Download /></el-icon>
+                  <span>下载</span>
+                </button>
                 <!-- 查重功能按钮 -->
-                <el-button 
+                <button 
                   v-if="paper.paperStatus !== 'DRAFT'" 
-                  text 
-                  :icon="Document" 
+                  class="action-button"
                   @click="viewPlagiarismReport(paper.id)"
                 >
-                  查重报告
-                </el-button>
-                <el-button 
+                  <el-icon><Document /></el-icon>
+                  <span>查重报告</span>
+                </button>
+                <button 
                   v-if="paper.paperStatus !== 'DRAFT'" 
-                  text 
-                  :icon="Monitor" 
+                  class="action-button"
                   @click="monitorCheckProgress(paper.id)"
                 >
-                  查重监控
-                </el-button>
+                  <el-icon><Monitor /></el-icon>
+                  <span>查重监控</span>
+                </button>
+                <button 
+                  class="action-button danger"
+                  @click="deletePaper(paper)"
+                  :disabled="paper.paperStatus !== 'pending' && paper.paperStatus !== 'withdrawn'"
+                >
+                  <el-icon><Delete /></el-icon>
+                  <span>删除</span>
+                </button>
               </div>
             </div>
 
@@ -202,19 +218,17 @@
               <div class="meta-item">
                 <el-icon><User /></el-icon>
                 <span>论文类型：{{ getPaperTypeText(paper.paperType) }}</span>
-                <!-- 新增论文类型 -->
               </div>
               <div class="meta-item">
                 <el-icon><Files /></el-icon>
                 <span>相似度：{{ paper.similarityRate }}%</span>
-                <!-- 显示相似度 -->
               </div>
             </div>
 
             <div class="paper-status">
-              <el-tag :type="getStatusType(paper.paperStatus)" effect="light">
+              <span class="status-badge" :class="getStatusType(paper.paperStatus)">
                 {{ getStatusText(paper.paperStatus) }}
-              </el-tag>
+              </span>
               <span v-if="paper.feedback" class="feedback-brief">
                 {{ paper.feedback }}
               </span>
@@ -226,122 +240,169 @@
             <div class="versions-header">
               <h5>版本历史</h5>
             </div>
-            <el-timeline>
-              <el-timeline-item
+            <div class="timeline">
+              <div
                 v-for="version in paper.versions"
                 :key="version.id"
-                :timestamp="formatDate(version.submitTime)"
-                :type="version.isCurrent ? 'primary' : 'info'"
+                class="timeline-item"
               >
-                <div class="version-item">
-                  <span class="version-title">版本 v{{ version.version }}</span>
-                  <el-tag v-if="version.isCurrent" type="primary" size="small">
-                    当前版本
-                  </el-tag>
-                  <div class="version-actions">
-                    <el-checkbox 
-                      v-model="selectedVersionIds" 
-                      :label="version.id" 
-                      size="small"
-                      @change="handleVersionSelection"
-                    >
-                      对比
-                    </el-checkbox>
-                    <el-button
-                      text
-                      :icon="View"
-                      size="small"
-                      @click="viewVersionDetail(version)"
-                    >
-                      查看
-                    </el-button>
-                    <el-button
-                      text
-                      :icon="Download"
-                      size="small"
-                      @click="downloadVersion(version)"
-                    >
-                      下载
-                    </el-button>
+                <div class="timeline-node" :class="version.isCurrent ? 'current' : ''"></div>
+                <div class="timeline-content">
+                  <div class="timeline-timestamp">{{ formatDate(version.submitTime) }}</div>
+                  <div class="version-item">
+                    <div class="version-header">
+                      <span class="version-title">版本 v{{ version.version }}</span>
+                      <span v-if="version.isCurrent" class="current-badge">当前版本</span>
+                    </div>
+                    <div class="version-actions">
+                      <label class="checkbox-label">
+                        <input 
+                          type="checkbox" 
+                          v-model="selectedVersionIds" 
+                          :value="version.id" 
+                          @change="handleVersionSelection"
+                          class="checkbox-input"
+                        />
+                        <span class="checkbox-text">对比</span>
+                      </label>
+                      <button
+                        class="version-button"
+                        @click="viewVersionDetail(version)"
+                      >
+                        <el-icon><View /></el-icon>
+                        <span>查看</span>
+                      </button>
+                      <button
+                        class="version-button"
+                        @click="downloadVersion(version)"
+                      >
+                        <el-icon><Download /></el-icon>
+                        <span>下载</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </el-timeline-item>
-            </el-timeline>
+              </div>
+            </div>
           </div>
 
           <div class="paper-toggle">
-            <el-button
-              text
-              :icon="paper.showVersions ? 'ArrowUp' : 'ArrowDown'"
+            <button
+              class="toggle-button"
               @click="toggleVersions(paper.id)"
             >
-              {{ paper.showVersions ? "收起" : "展开" }}版本历史
-            </el-button>
+              <el-icon :is="paper.showVersions ? 'ArrowUp' : 'ArrowDown'" />
+              <span>{{ paper.showVersions ? "收起" : "展开" }}版本历史</span>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- 空状态 -->
       <div v-if="papers.length === 0" class="empty-state">
-        <el-empty description="暂无论文提交记录">
-          <el-button
-            type="primary"
-            :icon="UploadFilled"
-            @click="goToPaperSubmit"
-          >
-            立即提交论文
-          </el-button>
-        </el-empty>
+        <div class="empty-content">
+          <el-icon class="empty-icon"><Document /></el-icon>
+          <h3>暂无论文提交记录</h3>
+          <p>开始您的第一篇论文提交之旅</p>
+          <button class="primary-button" @click="goToPaperSubmit">
+            <el-icon><UploadFilled /></el-icon>
+            <span>立即提交论文</span>
+          </button>
+        </div>
       </div>
       <div v-if="papers.length > 0" class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
-          :page-sizes="[5, 10, 20, 50]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <div class="pagination">
+          <span class="page-info">共 {{ total }} 条记录</span>
+          <div class="page-controls">
+            <button 
+              class="page-button" 
+              @click="pagination.current > 1 && (pagination.current--, fetchPapers())"
+              :disabled="pagination.current === 1"
+            >
+              上一页
+            </button>
+            <span class="page-number">{{ pagination.current }} / {{ Math.ceil(total / pagination.size) }}</span>
+            <button 
+              class="page-button" 
+              @click="pagination.current < Math.ceil(total / pagination.size) && (pagination.current++, fetchPapers())"
+              :disabled="pagination.current >= Math.ceil(total / pagination.size)"
+            >
+              下一页
+            </button>
+            <select 
+              v-model="pagination.size" 
+              class="page-size-select"
+              @change="fetchPapers"
+            >
+              <option value="5">5条/页</option>
+              <option value="10">10条/页</option>
+              <option value="20">20条/页</option>
+              <option value="50">50条/页</option>
+            </select>
+          </div>
+        </div>
       </div>
-    </el-card>
+    </div>
 
     <!-- 论文详情对话框 -->
     <el-dialog v-model="detailDialogVisible" :title="paperTitle" width="800px">
       <div v-if="currentPaper" class="paper-detail">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="论文标题">
-            {{ currentPaper.paperTitle }}
-          </el-descriptions-item>
-          <el-descriptions-item label="提交时间">
-            {{ formatDateTime(currentPaper.submitTime) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="指导老师">
-            {{ currentPaper.advisorName || "待分配" }}
-          </el-descriptions-item>
-          <el-descriptions-item label="当前状态">
-            <el-tag :type="getStatusType(currentPaper.paperStatus)">
-              {{ getStatusText(currentPaper.paperStatus) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="论文摘要" :span="2">
-            {{ currentPaper.paperAbstract || "暂无摘要" }}
-          </el-descriptions-item>
-          <el-descriptions-item label="论文类型">
-            {{ getPaperTypeText(currentPaper.paperType) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="相似度">
-            {{ currentPaper.similarityRate }}%
-          </el-descriptions-item>
-          <el-descriptions-item label="查重结果">
-            {{ currentPaper.checkResult || "暂无结果" }}
-          </el-descriptions-item>
-          <el-descriptions-item label="审核意见" :span="2">
-            <div class="feedback-content">
-              {{ currentPaper.feedback || "暂无审核意见" }}
+        <div class="detail-section">
+          <div class="detail-row">
+            <div class="detail-item">
+              <div class="detail-label">论文标题</div>
+              <div class="detail-value">{{ currentPaper.paperTitle }}</div>
             </div>
-          </el-descriptions-item>
-        </el-descriptions>
+            <div class="detail-item">
+              <div class="detail-label">提交时间</div>
+              <div class="detail-value">{{ formatDateTime(currentPaper.submitTime) }}</div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-item">
+              <div class="detail-label">指导老师</div>
+              <div class="detail-value">{{ currentPaper.advisorName || "待分配" }}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">当前状态</div>
+              <div class="detail-value">
+                <span class="status-badge" :class="getStatusType(currentPaper.paperStatus)">
+                  {{ getStatusText(currentPaper.paperStatus) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="detail-row full-width">
+            <div class="detail-item full-width">
+              <div class="detail-label">论文摘要</div>
+              <div class="detail-value">{{ currentPaper.paperAbstract || "暂无摘要" }}</div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-item">
+              <div class="detail-label">论文类型</div>
+              <div class="detail-value">{{ getPaperTypeText(currentPaper.paperType) }}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">相似度</div>
+              <div class="detail-value">{{ currentPaper.similarityRate }}%</div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-item">
+              <div class="detail-label">查重结果</div>
+              <div class="detail-value">{{ currentPaper.checkResult || "暂无结果" }}</div>
+            </div>
+          </div>
+          <div class="detail-row full-width">
+            <div class="detail-item full-width">
+              <div class="detail-label">审核意见</div>
+              <div class="detail-value feedback-content">
+                {{ currentPaper.feedback || "暂无审核意见" }}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="file-attachments">
           <h4>附件列表</h4>
@@ -354,30 +415,28 @@
               <el-icon><Document /></el-icon>
               <span class="file-name">{{ file.name }}</span>
               <span class="file-size">{{ formatFileSize(file.size) }}</span>
-              <el-button 
-                type="primary" 
-                text 
-                :icon="Download" 
-                size="small"
+              <button 
+                class="attachment-button"
                 @click="downloadAttachment(file)"
               >
-                下载
-              </el-button>
+                <el-icon><Download /></el-icon>
+                <span>下载</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-        <el-button
+        <button class="secondary-button" @click="detailDialogVisible = false">关闭</button>
+        <button
           v-if="currentPaper?.paperStatus === 'rejected'"
-          type="primary"
-          :icon="Upload"
+          class="primary-button"
           @click="submitRevision(currentPaper.id)"
         >
-          提交修改版本
-        </el-button>
+          <el-icon><Upload /></el-icon>
+          <span>提交修改版本</span>
+        </button>
       </template>
     </el-dialog>
 
@@ -390,81 +449,88 @@
     >
       <div class="version-compare-container">
         <div class="compare-header">
-          <el-alert 
-            title="已选择以下两个版本进行对比" 
-            type="info" 
-            :closable="false" 
-            show-icon 
-          />
+          <div class="alert-info">
+            <el-icon><InfoFilled /></el-icon>
+            <span>已选择以下两个版本进行对比</span>
+          </div>
         </div>
 
         <div class="compare-content">
-          <el-row :gutter="20">
+          <div class="version-columns">
             <!-- 左侧：版本 A -->
-            <el-col :span="12">
-              <div class="version-column">
-                <h4>版本 A (v{{ compareVersions[0]?.version }})</h4>
-                <el-descriptions :column="1" border size="small">
-                  <el-descriptions-item label="提交时间">
-                    {{ formatDate(compareVersions[0]?.submitTime) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="相似度">
-                    {{ compareVersions[0]?.similarityRate }}%
-                  </el-descriptions-item>
-                  <el-descriptions-item label="字数">
-                    {{ compareVersions[0]?.wordCount }}字
-                  </el-descriptions-item>
-                </el-descriptions>
+            <div class="version-column">
+              <h4>版本 A (v{{ compareVersions[0]?.version }})</h4>
+              <div class="version-info">
+                <div class="info-item">
+                  <div class="info-label">提交时间</div>
+                  <div class="info-value">{{ formatDate(compareVersions[0]?.submitTime) }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">相似度</div>
+                  <div class="info-value">{{ compareVersions[0]?.similarityRate }}%</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">字数</div>
+                  <div class="info-value">{{ compareVersions[0]?.wordCount }}字</div>
+                </div>
               </div>
-            </el-col>
+            </div>
 
             <!-- 右侧：版本 B -->
-            <el-col :span="12">
-              <div class="version-column">
-                <h4>版本 B (v{{ compareVersions[1]?.version }})</h4>
-                <el-descriptions :column="1" border size="small">
-                  <el-descriptions-item label="提交时间">
-                    {{ formatDate(compareVersions[1]?.submitTime) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="相似度">
-                    {{ compareVersions[1]?.similarityRate }}%
-                  </el-descriptions-item>
-                  <el-descriptions-item label="字数">
-                    {{ compareVersions[1]?.wordCount }}字
-                  </el-descriptions-item>
-                </el-descriptions>
+            <div class="version-column">
+              <h4>版本 B (v{{ compareVersions[1]?.version }})</h4>
+              <div class="version-info">
+                <div class="info-item">
+                  <div class="info-label">提交时间</div>
+                  <div class="info-value">{{ formatDate(compareVersions[1]?.submitTime) }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">相似度</div>
+                  <div class="info-value">{{ compareVersions[1]?.similarityRate }}%</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">字数</div>
+                  <div class="info-value">{{ compareVersions[1]?.wordCount }}字</div>
+                </div>
               </div>
-            </el-col>
-          </el-row>
+            </div>
+          </div>
 
           <!-- 差异对比区域 -->
           <div class="diff-section">
             <h4>主要变化</h4>
-            <el-table :data="getDiffData()" border size="small">
-              <el-table-column prop="field" label="对比项" width="120" />
-              <el-table-column prop="before" label="版本 A" />
-              <el-table-column prop="after" label="版本 B" />
-              <el-table-column prop="change" label="变化" width="100">
-                <template #default="{ row }">
-                  <el-tag 
-                    :type="row.change > 0 ? 'danger' : 'success'" 
-                    size="small"
-                  >
+            <div class="diff-table">
+              <div class="table-header">
+                <div class="table-cell field">对比项</div>
+                <div class="table-cell before">版本 A</div>
+                <div class="table-cell after">版本 B</div>
+                <div class="table-cell change">变化</div>
+              </div>
+              <div 
+                v-for="(row, index) in getDiffData()" 
+                :key="index"
+                class="table-row"
+              >
+                <div class="table-cell field">{{ row.field }}</div>
+                <div class="table-cell before">{{ row.before }}</div>
+                <div class="table-cell after">{{ row.after }}</div>
+                <div class="table-cell change">
+                  <span class="change-badge" :class="row.change > 0 ? 'increase' : 'decrease'">
                     {{ row.change > 0 ? '+' : '' }}{{ row.change }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-            </el-table>
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <template #footer>
-        <el-button @click="versionCompareDialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="downloadCompareReport">
+        <button class="secondary-button" @click="versionCompareDialogVisible = false">关闭</button>
+        <button class="primary-button" @click="downloadCompareReport">
           <el-icon><Download /></el-icon>
-          下载对比报告
-        </el-button>
+          <span>下载对比报告</span>
+        </button>
       </template>
     </el-dialog>
   </div>
@@ -480,13 +546,16 @@ import {
   withdrawPaper as withdrawPaperApi, 
   requestModification as requestModificationApi,
   downloadPaper as downloadPaperApi,
+  deletePaper as deletePaperApi,
   batchDownloadPapers,
   batchDeletePapers,
   getVersionDetail,
   comparePaperVersions,
   downloadVersionCompare,
   downloadVersion as downloadVersionApi,
-  downloadAttachment as downloadAttachmentApi
+  downloadAttachment as downloadAttachmentApi,
+  getSimpleCheckReport,
+  createBatchCheckTasks
 } from "@/api/student.js";
 import { useUserStore } from "@/stores/user";
 
@@ -507,6 +576,7 @@ import {
   ArrowDown,
   RefreshLeft,
   EditPen,
+  InfoFilled
 } from "@element-plus/icons-vue";
 import useStore from "element-plus/es/components/table/src/store/index.mjs";
 
@@ -581,14 +651,27 @@ const fetchPapers = async () => {
     };
     // 调用真实后端接口
     const res = await getStudentPaperPage(queryParams);
-    papers.value = res.data; // 赋值后端返回的论文列表
-    papers.value = res.data.records; // 论文列表数据
-
-    total.value = res.data.total; // 论文总数
-    ElMessage.success(`查询成功${total.value}篇论文`);
+    if (res.data && res.data.records) {
+      papers.value = res.data.records; // 论文列表数据
+      total.value = Number(res.data.total); // 转换为数字类型
+      // 同步更新分页信息
+      if (res.data.current) {
+        pagination.current = Number(res.data.current);
+      }
+      if (res.data.size) {
+        pagination.size = Number(res.data.size);
+      }
+      ElMessage.success(`查询成功${total.value}篇论文`);
+    } else {
+      papers.value = [];
+      total.value = 0;
+      ElMessage.info("暂无论文数据");
+    }
   } catch (error) {
     ElMessage.error("查询论文失败，请重试");
     console.error("论文查询失败：", error);
+    papers.value = [];
+    total.value = 0;
   }
 };
 
@@ -861,28 +944,25 @@ const requestModification = async (paper) => {
 };
 
 // 查重功能相关方法
-const viewPlagiarismReport = (paperId) => {
-  router.push(`/student/plagiarism-report/${paperId}`);
-};
-
-const monitorCheckProgress = async (paperId) => {
+const viewPlagiarismReport = async (paperId) => {
   try {
-    // 先获取查重任务详情，获取 taskId
-    const taskRes = await getCheckTaskDetail(paperId);
-    if (taskRes.code === 200 && taskRes.data) {
-      const taskId = taskRes.data.taskId || taskRes.data.id;
-      if (taskId) {
-        router.push(`/student/check-monitor/${taskId}`);
-      } else {
-        ElMessage.error('未找到查重任务');
-      }
+    // 先获取该论文的查重报告列表
+    const res = await getSimpleCheckReport(paperId);
+    if (res.code === 200 && res.data && res.data.length > 0) {
+      // 获取最新的报告ID（假设列表按时间倒序）
+      const latestReport = res.data[0];
+      router.push(`/student/plagiarism-report/${latestReport.id}?paperId=${paperId}`);
     } else {
-      ElMessage.error('获取查重任务信息失败');
+      ElMessage.error('未找到查重报告');
     }
   } catch (error) {
-    console.error('获取查重任务失败:', error);
-    ElMessage.error('获取查重任务失败，请稍后重试');
+    console.error('获取查重报告失败:', error);
+    ElMessage.error('获取查重报告失败，请稍后重试');
   }
+};
+
+const monitorCheckProgress = (paperId) => {
+  router.push(`/student/check-monitor/${paperId}`);
 };
 
 // 版本对比相关方法
@@ -1094,6 +1174,43 @@ const downloadAttachment = async (attachment) => {
   }
 };
 
+// 删除单个论文
+const deletePaper = async (paper) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除论文《${paper.paperTitle}》吗？此操作不可恢复！`,
+      '删除论文',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'danger'
+      }
+    );
+    
+    // 调用删除接口
+    const res = await deletePaperApi(paper.id);
+    
+    if (res.code === 200) {
+      ElMessage.success('论文删除成功');
+      // 从列表中移除删除的论文
+      papers.value = papers.value.filter(p => p.id !== paper.id);
+      total.value = Math.max(0, total.value - 1);
+      
+      if (papers.value.length === 0 && pagination.current > 1) {
+        pagination.current--;
+        fetchPapers();
+      }
+    } else {
+      ElMessage.error(res.message || '删除失败，请稍后重试');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error);
+      ElMessage.error('删除失败，请稍后重试');
+    }
+  }
+};
+
 // 批量操作相关方法
 const handleSelectAll = (checked) => {
   if (checked) {
@@ -1165,6 +1282,15 @@ const batchCheckPlagiarism = async () => {
 
 const batchDelete = async () => {
   try {
+    // 检查选中的论文是否都是待分配状态或撤回状态
+    const selectedPapers = papers.value.filter(paper => selectedPaperIds.value.includes(paper.id));
+    const invalidPapers = selectedPapers.filter(paper => paper.paperStatus !== 'pending' && paper.paperStatus !== 'withdrawn');
+    
+    if (invalidPapers.length > 0) {
+      ElMessage.error('只能删除待分配状态和撤回状态的论文');
+      return;
+    }
+    
     await ElMessageBox.confirm(
       `确定要删除选中的 ${selectedPaperIds.value.length} 篇论文吗？此操作不可恢复！`,
       '批量删除',
@@ -1197,273 +1323,1103 @@ const batchDelete = async () => {
 </script>
 
 <style lang="scss" scoped>
+// 全局样式
 .my-papers-page {
-  padding: 0;
+  min-height: 100vh;
+  background: #f8fafc; // Slate-50
+  color: #0f172a; // Slate-900
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 24px 0;
 }
 
+// 页面头部
 .page-header {
-  margin-bottom: 1.5rem;
-
-  .page-title {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #2c3e50;
-  }
-
-  .page-desc {
-    margin: 0;
-    color: #7f8c8d;
-    font-size: 0.95rem;
-  }
-
-  .header-actions {
-    margin-top: 1rem;
-  }
-}
-
-.filter-card {
-  margin-bottom: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #f1f2f6;
-
-  :deep(.el-card__body) {
-    padding: 1.25rem;
-  }
-}
-
-.papers-card {
-  border-radius: 12px;
-  border: 1px solid #f1f2f6;
-
-  :deep(.el-card__header) {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #f1f2f6;
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .card-title {
+  margin-bottom: 32px;
+  
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .header-left {
+      .page-title {
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      
+      .page-desc {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+    }
+    
+    .header-actions {
+      .primary-button {
         display: flex;
         align-items: center;
-        font-weight: 600;
-        color: #2c3e50;
-
-        .el-icon {
-          margin-right: 0.5rem;
-          color: #667eea;
-        }
-      }
-
-      .card-extra {
-        color: #7f8c8d;
+        gap: 8px;
+        padding: 8px 16px;
+        background: #1e40af;
+        color: white;
+        border: none;
+        border-radius: 8px;
         font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #1e3a8a;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+        }
       }
     }
   }
 }
 
-.header-actions-group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+// 筛选卡片
+.filter-card {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
   
-  .batch-toolbar {
+  .filter-form {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: end;
+      
+      .form-group {
+        .form-label {
+          display: block;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #64748b;
+          margin-bottom: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .form-select {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            border-color: #cbd5e1;
+          }
+          
+          &:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+          }
+        }
+        
+        .form-control {
+          width: 100%;
+          
+          :deep(.el-input__wrapper) {
+            border-radius: 8px;
+            
+            &:hover {
+              box-shadow: none;
+              border-color: #cbd5e1;
+            }
+            
+            &.is-focus {
+              box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            }
+          }
+        }
+        
+        .search-input {
+          position: relative;
+          
+          .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+          }
+          
+          .input-field {
+            width: 100%;
+            padding-left: 36px;
+            
+            :deep(.el-input__wrapper) {
+              border-radius: 8px;
+              
+              &:hover {
+                box-shadow: none;
+                border-color: #cbd5e1;
+              }
+              
+              &.is-focus {
+                box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+              }
+            }
+          }
+        }
+      }
+      
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        
+        .primary-button {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          background: #1e40af;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            background: #1e3a8a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+          }
+        }
+        
+        .secondary-button {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          background: white;
+          color: #475569;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            transform: translateY(-1px);
+          }
+        }
+      }
+    }
+  }
+}
+
+// 论文卡片
+.papers-card {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  
+  .card-header {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+      
+      .el-icon {
+        color: #64748b;
+      }
+    }
+    
+    .card-extra {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+  }
+  
+  .header-actions-group {
     display: flex;
     align-items: center;
-    gap: 12px;
-    width: 100%;
+    gap: 16px;
     
-    .el-tag {
-      flex-shrink: 0;
-    }
-    
-    .el-button {
-      flex-shrink: 0;
-    }
-    
-    .el-divider {
-      margin: 0 8px;
-    }
-    
-    .el-checkbox {
-      margin-left: auto;
-    }
-  }
-}
-
-.papers-list {
-  .paper-item {
-    border: 1px solid #f1f2f6;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    display: flex;
-    gap: 1rem;
-
-    &:hover {
-      border-color: #667eea;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-    }
-
-    &.paper-selected {
-      border-color: #409eff;
-      background-color: rgba(64, 158, 255, 0.05);
-      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.15);
-    }
-
-    .paper-select {
+    .batch-toolbar {
       display: flex;
       align-items: center;
-      flex-shrink: 0;
-      padding-top: 8px;
-    }
-
-    &.paper-active {
-      border-color: #667eea;
-      background-color: #f8f9ff;
-    }
-
-    .paper-main {
-      padding: 1.25rem;
-    }
-
-    .paper-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-
-      .paper-title {
-        margin: 0;
-        color: #2c3e50;
-        font-size: 1.1rem;
-        flex: 1;
-        margin-right: 1rem;
+      gap: 12px;
+      
+      .selected-count {
+        padding: 4px 12px;
+        background: #f1f5f9;
+        color: #64748b;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 500;
       }
-
-      .paper-actions {
-        display: flex;
-        gap: 0.5rem;
-      }
-    }
-
-    .paper-meta {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1rem;
-
-      .meta-item {
+      
+      .primary-button,
+      .success-button,
+      .danger-button {
         display: flex;
         align-items: center;
-        color: #7f8c8d;
-        font-size: 0.875rem;
-
-        .el-icon {
-          margin-right: 0.5rem;
-          color: #667eea;
+        gap: 6px;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          transform: translateY(-1px);
+        }
+      }
+      
+      .primary-button {
+        background: #1e40af;
+        color: white;
+        
+        &:hover {
+          background: #1e3a8a;
+          box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+        }
+      }
+      
+      .success-button {
+        background: #10b981;
+        color: white;
+        
+        &:hover {
+          background: #059669;
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+        }
+      }
+      
+      .danger-button {
+        background: #ef4444;
+        color: white;
+        
+        &:hover {
+          background: #dc2626;
+          box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+        }
+      }
+      
+      .divider {
+        width: 1px;
+        height: 24px;
+        background: #e2e8f0;
+      }
+      
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        
+        .checkbox-input {
+          width: 16px;
+          height: 16px;
+        }
+        
+        .checkbox-text {
+          font-size: 0.75rem;
+          color: #64748b;
         }
       }
     }
-
-    .paper-status {
+  }
+  
+  .papers-list {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 24px;
+    
+    .paper-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      transition: all 0.2s ease;
       display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .feedback-brief {
-        color: #e74c3c;
-        font-size: 0.875rem;
-        font-style: italic;
+      gap: 16px;
+      background: white;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
       }
-    }
-
-    .paper-versions {
-      border-top: 1px solid #f1f2f6;
-      padding: 1rem 1.25rem;
-      background-color: #f8f9fa;
-
-      .versions-header {
-        margin-bottom: 1rem;
-
-        h5 {
-          margin: 0;
-          color: #2c3e50;
+      
+      &.paper-selected {
+        border-color: #0ea5e9;
+        background: rgba(14, 165, 233, 0.05);
+      }
+      
+      .paper-select {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        padding-top: 20px;
+        padding-left: 20px;
+        
+        .checkbox-label {
+          cursor: pointer;
+          
+          .checkbox-input {
+            width: 16px;
+            height: 16px;
+          }
         }
       }
-
-      .version-item {
+      
+      .paper-main {
+        padding: 20px;
+        flex: 1;
+      }
+      
+      .paper-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-
-        .version-title {
-          font-weight: 500;
-          color: #2c3e50;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        
+        .paper-title {
+          margin: 0;
+          color: #0f172a;
+          font-size: 1.125rem;
+          font-weight: 600;
+          flex: 1;
+          margin-right: 16px;
         }
-
-        .version-actions {
+        
+        .paper-actions {
           display: flex;
-          gap: 0.5rem;
+          gap: 8px;
+          flex-wrap: wrap;
+          
+          .action-button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              border-color: #cbd5e1;
+              color: #0f172a;
+              transform: translateY(-1px);
+            }
+            
+            &.primary {
+              background: #1e40af;
+              color: white;
+              border-color: #1e40af;
+              
+              &:hover {
+                background: #1e3a8a;
+                box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+              }
+            }
+            
+            &.warning {
+              background: #f59e0b;
+              color: white;
+              border-color: #f59e0b;
+              
+              &:hover {
+                background: #d97706;
+                box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);
+              }
+            }
+            
+            &.info {
+              background: #0ea5e9;
+              color: white;
+              border-color: #0ea5e9;
+              
+              &:hover {
+                background: #0284c7;
+                box-shadow: 0 4px 8px rgba(14, 165, 233, 0.2);
+              }
+            }
+            
+            &.danger {
+              background: #ef4444;
+              color: white;
+              border-color: #ef4444;
+              
+              &:hover {
+                background: #dc2626;
+                box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+              }
+              
+              &:disabled {
+                background: #fca5a5;
+                border-color: #fca5a5;
+                cursor: not-allowed;
+                
+                &:hover {
+                  transform: none;
+                  box-shadow: none;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      .paper-meta {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #64748b;
+          font-size: 0.875rem;
+          
+          .el-icon {
+            color: #94a3b8;
+          }
+        }
+      }
+      
+      .paper-status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 16px;
+          font-size: 0.75rem;
+          font-weight: 500;
+          
+          &.info {
+            background: #e0f2fe;
+            color: #0284c7;
+          }
+          &.warning {
+            background: #fef3c7;
+            color: #d97706;
+          }
+          &.primary {
+            background: #dbeafe;
+            color: #1e40af;
+          }
+          &.success {
+            background: #d1fae5;
+            color: #059669;
+          }
+          &.danger {
+            background: #fee2e2;
+            color: #dc2626;
+          }
+        }
+        
+        .feedback-brief {
+          color: #ef4444;
+          font-size: 0.875rem;
+          font-style: italic;
+        }
+      }
+      
+      .paper-versions {
+        border-top: 1px solid #e2e8f0;
+        padding: 20px;
+        background: #f8fafc;
+        
+        .versions-header {
+          margin-bottom: 16px;
+          
+          h5 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 600;
+          }
+        }
+        
+        .timeline {
+          position: relative;
+          padding-left: 24px;
+          
+          &::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+          }
+          
+          .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+            
+            .timeline-node {
+              position: absolute;
+              left: -24px;
+              top: 4px;
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              background: #cbd5e1;
+              border: 2px solid white;
+              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+              
+              &.current {
+                background: #0ea5e9;
+              }
+            }
+            
+            .timeline-content {
+              .timeline-timestamp {
+                font-size: 0.75rem;
+                color: #94a3b8;
+                margin-bottom: 8px;
+              }
+              
+              .version-item {
+                .version-header {
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  margin-bottom: 8px;
+                  
+                  .version-title {
+                    font-weight: 600;
+                    color: #0f172a;
+                    font-size: 0.875rem;
+                  }
+                  
+                  .current-badge {
+                    padding: 2px 8px;
+                    background: #0ea5e9;
+                    color: white;
+                    border-radius: 12px;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                  }
+                }
+                
+                .version-actions {
+                  display: flex;
+                  gap: 12px;
+                  
+                  .checkbox-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    cursor: pointer;
+                    
+                    .checkbox-input {
+                      width: 14px;
+                      height: 14px;
+                    }
+                    
+                    .checkbox-text {
+                      font-size: 0.75rem;
+                      color: #64748b;
+                    }
+                  }
+                  
+                  .version-button {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 8px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    background: white;
+                    color: #64748b;
+                    font-size: 0.75rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    
+                    &:hover {
+                      border-color: #cbd5e1;
+                      color: #0f172a;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      .paper-toggle {
+        border-top: 1px solid #e2e8f0;
+        padding: 16px 20px;
+        text-align: center;
+        background: #f8fafc;
+        
+        .toggle-button {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          background: transparent;
+          border: none;
+          color: #64748b;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+            border-radius: 6px;
+          }
         }
       }
     }
-
-    .paper-toggle {
-      border-top: 1px solid #f1f2f6;
-      padding: 0.75rem 1.25rem;
-      text-align: center;
-      background-color: #f8f9fa;
+  }
+  
+  .empty-state {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 64px 24px;
+    text-align: center;
+    
+    .empty-content {
+      .empty-icon {
+        font-size: 48px;
+        color: #94a3b8;
+        margin-bottom: 16px;
+      }
+      
+      h3 {
+        margin: 0 0 8px 0;
+        color: #0f172a;
+        font-size: 1.125rem;
+        font-weight: 600;
+      }
+      
+      p {
+        margin: 0 0 24px 0;
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+      
+      .primary-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: #1e40af;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #1e3a8a;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+        }
+      }
+    }
+  }
+  
+  .pagination-container {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 20px 24px;
+    
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .page-info {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+      
+      .page-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        
+        .page-button {
+          padding: 4px 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          background: white;
+          color: #64748b;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover:not(:disabled) {
+            border-color: #cbd5e1;
+            color: #0f172a;
+            transform: translateY(-1px);
+          }
+          
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+        
+        .page-number {
+          font-size: 0.875rem;
+          color: #64748b;
+        }
+        
+        .page-size-select {
+          padding: 4px 8px;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            border-color: #cbd5e1;
+          }
+        }
+      }
     }
   }
 }
 
-.empty-state {
-  padding: 3rem 0;
-}
-
+// 论文详情
 .paper-detail {
-  .feedback-content {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 4px;
-    border-left: 4px solid #667eea;
-  }
-
-  .file-attachments {
-    margin-top: 1.5rem;
-
-    h4 {
-      margin: 0 0 1rem 0;
-      color: #2c3e50;
+  .detail-section {
+    .detail-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+      
+      &.full-width {
+        grid-template-columns: 1fr;
+      }
+      
+      .detail-item {
+        .detail-label {
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #64748b;
+          margin-bottom: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .detail-value {
+          font-size: 0.875rem;
+          color: #0f172a;
+          
+          .status-badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            
+            &.info {
+              background: #e0f2fe;
+              color: #0284c7;
+            }
+            &.warning {
+              background: #fef3c7;
+              color: #d97706;
+            }
+            &.primary {
+              background: #dbeafe;
+              color: #1e40af;
+            }
+            &.success {
+              background: #d1fae5;
+              color: #059669;
+            }
+            &.danger {
+              background: #fee2e2;
+              color: #dc2626;
+            }
+          }
+        }
+        
+        &.full-width {
+          .detail-value {
+            line-height: 1.5;
+          }
+        }
+      }
     }
-
+  }
+  
+  .feedback-content {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #0ea5e9;
+    line-height: 1.5;
+  }
+  
+  .file-attachments {
+    margin-top: 24px;
+    
+    h4 {
+      margin: 0 0 16px 0;
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
     .attachment-list {
       .attachment-item {
         display: flex;
         align-items: center;
-        padding: 0.75rem;
-        border: 1px solid #f1f2f6;
-        border-radius: 6px;
-        margin-bottom: 0.5rem;
-
-        .el-icon {
-          margin-right: 0.5rem;
-          color: #667eea;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: white;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          border-color: #cbd5e1;
+          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
         }
-
+        
+        .el-icon {
+          color: #64748b;
+        }
+        
         .file-name {
           flex: 1;
-          color: #2c3e50;
-        }
-
-        .file-size {
-          margin: 0 1rem;
-          color: #7f8c8d;
+          color: #0f172a;
           font-size: 0.875rem;
+        }
+        
+        .file-size {
+          color: #64748b;
+          font-size: 0.75rem;
+        }
+        
+        .attachment-button {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 8px;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          background: white;
+          color: #64748b;
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            border-color: #cbd5e1;
+            color: #0f172a;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 版本对比
+.version-compare-container {
+  .compare-header {
+    margin-bottom: 24px;
+    
+    .alert-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #e0f2fe;
+      color: #0284c7;
+      border-radius: 8px;
+      
+      .el-icon {
+        font-size: 16px;
+      }
+    }
+  }
+  
+  .compare-content {
+    .version-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+      
+      .version-column {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        
+        h4 {
+          margin: 0 0 16px 0;
+          color: #0f172a;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+        
+        .version-info {
+          .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            
+            &:last-child {
+              border-bottom: none;
+            }
+            
+            .info-label {
+              font-size: 0.875rem;
+              color: #64748b;
+            }
+            
+            .info-value {
+              font-size: 0.875rem;
+              color: #0f172a;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+    
+    .diff-section {
+      h4 {
+        margin: 0 0 16px 0;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      
+      .diff-table {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        
+        .table-header {
+          display: grid;
+          grid-template-columns: 120px 1fr 1fr 100px;
+          background: #f8fafc;
+          padding: 12px 16px;
+          border-bottom: 1px solid #e2e8f0;
+          
+          .table-cell {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+        
+        .table-row {
+          display: grid;
+          grid-template-columns: 120px 1fr 1fr 100px;
+          padding: 12px 16px;
+          border-bottom: 1px solid #e2e8f0;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          .table-cell {
+            font-size: 0.875rem;
+            color: #0f172a;
+            
+            &.field {
+              font-weight: 500;
+            }
+            
+            &.change {
+              display: flex;
+              align-items: center;
+              
+              .change-badge {
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 500;
+                
+                &.increase {
+                  background: #fee2e2;
+                  color: #dc2626;
+                }
+                &.decrease {
+                  background: #d1fae5;
+                  color: #059669;
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -1471,56 +2427,186 @@ const batchDelete = async () => {
 }
 
 // 响应式设计
+@media (max-width: 1200px) {
+  .filter-card,
+  .papers-card {
+    padding: 0 16px;
+  }
+  
+  .page-header {
+    .header-content {
+      padding: 0 16px;
+    }
+  }
+}
+
 @media (max-width: 768px) {
-  .paper-header {
-    flex-direction: column;
-    align-items: flex-start !important;
-
-    .paper-title {
-      margin-right: 0 !important;
-      margin-bottom: 1rem;
-    }
-  }
-
-  .paper-meta {
-    flex-direction: column;
-    gap: 0.5rem !important;
-  }
-
-  .paper-actions {
-    width: 100%;
-    justify-content: flex-end;
+  .my-papers-page {
+    padding: 16px 0;
   }
   
-  // 版本对比样式
-  .version-compare-container {
-    .compare-header {
-      margin-bottom: 20px;
-    }
-  
-    .compare-content {
-      .version-column {
-        h4 {
-          margin-bottom: 16px;
-          color: #303133;
-          font-size: 16px;
+  .page-header {
+    margin-bottom: 24px;
+    
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      
+      .header-actions {
+        align-self: stretch;
+        
+        .primary-button {
+          width: 100%;
+          justify-content: center;
         }
+      }
+    }
+  }
   
-        :deep(.el-descriptions) {
-          .el-descriptions__label {
-            width: 100px;
+  .filter-card {
+    margin-bottom: 16px;
+    
+    .filter-form {
+      padding: 16px;
+      
+      .form-row {
+        grid-template-columns: 1fr;
+        
+        .form-actions {
+          flex-direction: column;
+          
+          .primary-button,
+          .secondary-button {
+            width: 100%;
+            justify-content: center;
           }
         }
       }
+    }
+  }
   
-      .diff-section {
-        margin-top: 24px;
-  
-        h4 {
-          margin-bottom: 16px;
-          color: #303133;
-          font-size: 16px;
+  .papers-card {
+    .card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      
+      .header-actions-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+        
+        .batch-toolbar {
+          flex-wrap: wrap;
+          width: 100%;
         }
+      }
+    }
+    
+    .papers-list {
+      padding: 16px;
+      
+      .paper-item {
+        flex-direction: column;
+        gap: 8px;
+        
+        .paper-select {
+          padding: 16px 16px 0;
+        }
+        
+        .paper-main {
+          padding: 16px;
+        }
+        
+        .paper-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+          
+          .paper-title {
+            margin-right: 0;
+          }
+          
+          .paper-actions {
+            width: 100%;
+            flex-wrap: wrap;
+            
+            .action-button {
+              flex: 1;
+              min-width: calc(50% - 4px);
+              justify-content: center;
+            }
+          }
+        }
+        
+        .paper-meta {
+          flex-direction: column;
+          gap: 8px;
+        }
+        
+        .paper-versions {
+          padding: 16px;
+        }
+        
+        .paper-toggle {
+          padding: 12px 16px;
+        }
+      }
+    }
+    
+    .pagination-container {
+      .pagination {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        
+        .page-controls {
+          justify-content: center;
+        }
+      }
+    }
+  }
+  
+  .version-compare-container {
+    .compare-content {
+      .version-columns {
+        grid-template-columns: 1fr;
+      }
+      
+      .diff-section {
+        .diff-table {
+          .table-header,
+          .table-row {
+            grid-template-columns: 100px 1fr;
+            
+            .table-cell.field {
+              grid-column: 1;
+            }
+            .table-cell.before {
+              grid-column: 2;
+              grid-row: 1;
+            }
+            .table-cell.after {
+              grid-column: 2;
+              grid-row: 2;
+            }
+            .table-cell.change {
+              grid-column: 1;
+              grid-row: 2;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .paper-detail {
+    .detail-section {
+      .detail-row {
+        grid-template-columns: 1fr;
       }
     }
   }

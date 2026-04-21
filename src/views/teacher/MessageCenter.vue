@@ -225,12 +225,28 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
+// API 导入
+import {
+  getMessageSessions,
+  getMessages,
+  sendMessage as sendMsgApi,
+  uploadMessageFile,
+  downloadMessageAttachment,
+  clearMessages as clearMsgApi,
+  exportChatHistory as exportHistoryApi,
+  getSharedFiles,
+  downloadSharedFile,
+  markMessagesAsRead,
+  recallMessage
+} from "@/api/teacher.js";
+
 // 图标导入
 import {
   Search, Bell, Phone, VideoCamera, More, Document, 
   Folder, Picture, Link, Check, ChatDotRound, UploadFilled
 } from '@element-plus/icons-vue'
 import { getAvatarUrl } from '@/utils/avatar'
+import { useMessageWebSocket } from '@/composables/useMessageWebSocket'
 
 // Store
 const userStore = useUserStore()
@@ -246,6 +262,7 @@ const isTyping = ref(false)
 const fileDialogVisible = ref(false)
 const selectedFiles = ref([])
 const messagesContainer = ref(null)
+const loadingMessages = ref(false)
 
 // 计算属性
 const currentUser = computed(() => ({
@@ -263,7 +280,7 @@ const filteredContacts = computed(() => {
 })
 
 const uploadUrl = computed(() => {
-  return '/api/message/upload'
+  return '/api/teacher/messages/upload'
 })
 
 const uploadHeaders = computed(() => {
@@ -287,33 +304,27 @@ const refreshMessages = async () => {
 
 const loadContacts = async () => {
   try {
-    // 模拟联系人数据
-    contacts.value = [
-      {
-        id: 1,
-        name: '张三',
-        role: '学生',
-        avatar: '',
-        status: '在线',
-        unreadCount: 3,
-        lastMessage: {
-          content: '老师，我的论文初稿已经完成了，请您帮忙看看。',
-          createTime: '2024-01-15T10:30:00'
-        }
-      },
-      {
-        id: 2,
-        name: '李四',
-        role: '学生',
-        avatar: '',
-        status: '离线',
-        unreadCount: 0,
-        lastMessage: {
-          content: '谢谢老师的指导意见！',
-          createTime: '2024-01-14T15:20:00'
-        }
-      }
-    ]
+    const res = await getMessageSessions();
+    if (res.code === 200) {
+      contacts.value = res.data.map(session => {
+        // 从会话成员中找到学生信息
+        const studentMember = session.members?.find(m => m.userRole === 'STUDENT');
+        return {
+          id: session.id,
+          studentId: studentMember?.userId,
+          name: session.name.replace('与', '').replace('的会话', ''),
+          role: '学生',
+          avatar: session.avatar,
+          status: '在线',
+          unreadCount: session.unreadCount || 0,
+          members: session.members,
+          lastMessage: {
+            content: session.lastMessage,
+            createTime: session.lastTime
+          }
+        };
+      });
+    }
   } catch (error) {
     console.error('加载联系人失败:', error)
   }
@@ -335,30 +346,12 @@ const selectContact = async (contact) => {
 }
 
 const loadMessages = async (contactId) => {
+  loadingMessages.value = true;
   try {
-    // 模拟消息数据
-    messages.value = [
-      {
-        id: 1,
-        senderId: contactId,
-        senderName: activeContact.value?.name,
-        senderAvatar: '',
-        content: '老师，我的论文初稿已经完成了，请您帮忙看看。',
-        createTime: '2024-01-15T10:30:00',
-        status: 'read',
-        attachments: []
-      },
-      {
-        id: 2,
-        senderId: currentUser.value.id,
-        senderName: currentUser.value.name,
-        senderAvatar: currentUser.value.avatar,
-        content: '好的，我这就查看一下。',
-        createTime: '2024-01-15T10:35:00',
-        status: 'read',
-        attachments: []
-      }
-    ]
+    const res = await getMessages(contactId, 1, 20);
+    if (res.code === 200) {
+      messages.value = res.data.records || [];
+    }
     
     // 滚动到底部
     nextTick(() => {
@@ -366,57 +359,65 @@ const loadMessages = async (contactId) => {
     })
   } catch (error) {
     console.error('加载消息失败:', error)
+  } finally {
+    loadingMessages.value = false;
   }
 }
 
 const sendMessage = async () => {
-  if (!messageContent.value.trim()) return
+  if (!messageContent.value.trim() && selectedFiles.value.length === 0) return
   
   try {
-    const newMessage = {
-      id: Date.now(),
-      senderId: currentUser.value.id,
-      senderName: currentUser.value.name,
-      senderAvatar: currentUser.value.avatar,
-      content: messageContent.value,
-      createTime: new Date().toISOString(),
-      status: 'sent',
-      attachments: selectedFiles.value
+    // 获取正确的学生ID作为接收者
+    const receiverId = activeContact.value?.studentId;
+    
+    if (!receiverId) {
+      ElMessage.error('无法获取接收者信息');
+      return;
     }
     
-    messages.value.push(newMessage)
-    messageContent.value = ''
-    selectedFiles.value = []
-    
-    // 滚动到底部
-    nextTick(() => {
-      scrollToBottom()
-    })
-    
-    // 发送消息到服务器
-    await sendToServer(newMessage)
-    
-    ElMessage.success('消息发送成功')
-  } catch (error) {
-    ElMessage.error('消息发送失败')
-  }
-}
+    const messageData = {
+      sessionId: activeContact.value?.id,
+      receiverId: receiverId,
+      content: messageContent.value,
+      attachmentIds: selectedFiles.value.map(att => att.id)
+    };
 
-const sendToServer = async (message) => {
-  // 实际的API调用
-  // await sendMessageAPI(message)
+    const res = await sendMsgApi(messageData);
+    
+    if (res.code === 200) {
+      // 直接将新消息添加到列表末尾
+      messages.value.push(res.data);
+      // 刷新会话列表，更新最后消息
+      await loadContacts();
+      await loadUnreadCount();
+      messageContent.value = '';
+      selectedFiles.value = [];
+      ElMessage.success('消息发送成功');
+      // 滚动到底部
+      nextTick(() => {
+        scrollToBottom();
+      });
+    } else {
+      ElMessage.error(res.message || '发送失败');
+    }
+  } catch (error) {
+    console.error('发送消息失败:', error);
+    ElMessage.error('发送失败');
+  }
 }
 
 const markAsRead = async (contactId) => {
   try {
-    // 标记消息为已读
-    const contact = contacts.value.find(c => c.id === contactId)
+    await markMessagesAsRead(contactId);
+    // 更新本地未读数
+    const contact = contacts.value.find(c => c.id === contactId);
     if (contact) {
-      contact.unreadCount = 0
-      await loadUnreadCount()
+      contact.unreadCount = 0;
+      await loadUnreadCount();
     }
   } catch (error) {
-    console.error('标记已读失败:', error)
+    console.error('标记已读失败:', error);
   }
 }
 
@@ -435,8 +436,38 @@ const showFilePicker = () => {
   fileDialogVisible.value = true
 }
 
-const showImagePicker = () => {
-  // 图片选择逻辑
+const showImagePicker = async () => {
+  try {
+    // 创建图片选择器
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      for (let file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+          const res = await uploadMessageFile(formData);
+          if (res.code === 200) {
+            selectedFiles.value.push(res.data);
+            ElMessage.success(`${file.name} 上传成功`);
+          }
+        } catch (error) {
+          console.error('图片上传失败:', error);
+          ElMessage.error(`${file.name} 上传失败`);
+        }
+      }
+    };
+    
+    input.click();
+  } catch (error) {
+    console.error('图片选择失败:', error);
+    ElMessage.error('图片选择失败');
+  }
 }
 
 const insertLink = () => {
@@ -455,8 +486,22 @@ const showContactInfo = () => {
   ElMessage.info('联系人详情功能开发中')
 }
 
-const downloadFile = (file) => {
-  // 文件下载逻辑
+const downloadFile = async (file) => {
+  try {
+    const res = await downloadMessageAttachment(file.id);
+    // 创建下载链接
+    const blob = new Blob([res.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    ElMessage.success(`正在下载：${file.name}`);
+  } catch (error) {
+    console.error('下载失败:', error);
+    ElMessage.error('下载失败');
+  }
 }
 
 const handleFileUploadSuccess = (response, file) => {
@@ -513,14 +558,29 @@ const formatMessage = (content) => {
 onMounted(() => {
   refreshMessages()
   
-  // 模拟WebSocket连接
-  const ws = new WebSocket('ws://localhost:8080/websocket')
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data)
-    if (data.type === 'new_message') {
-      // 处理新消息
+  // 连接WebSocket，监听实时消息
+  setTimeout(() => {
+    if (userStore.userInfo?.userId) {
+      try {
+        const { connect: connectWebSocket, isConnected: wsConnected } = useMessageWebSocket()
+        const handleNewMessage = (message) => {
+          console.log('处理新消息:', message)
+          // 如果是当前会话的消息，直接添加到消息列表
+          if (message.sessionId === activeContact.value?.id) {
+            messages.value.push(message)
+            scrollToBottom()
+          }
+          // 刷新会话列表，更新未读消息数
+          refreshMessages()
+        }
+        
+        connectWebSocket(userStore.userInfo.userId, handleNewMessage);
+      } catch (error) {
+        console.error('WebSocket 连接失败:', error);
+        ElMessage.warning('实时消息连接失败，不影响其他功能');
+      }
     }
-  }
+  }, 1000); // 延迟 1 秒连接
 })
 
 onUnmounted(() => {

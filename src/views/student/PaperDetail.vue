@@ -5,7 +5,7 @@
             <div class="header-content">
                 <div class="back-section">
                     <el-button :icon="ArrowLeft" text @click="goBack" class="back-btn">
-                        返回论文列表
+                        {{ getBackButtonText }}
                     </el-button>
                 </div>
 
@@ -144,6 +144,9 @@
                                 <el-tag v-if="checkTask" :type="getCheckStatusTag(checkTask.checkStatus)" size="small">
                                     {{ getCheckStatusText(checkTask.checkStatus) }}
                                 </el-tag>
+                                <el-tag v-else-if="paperDetails.similarityRate || paperDetails.similarity" type="success" size="small">
+                                    已检测
+                                </el-tag>
                                 <el-tag v-else type="info" size="small">未检测</el-tag>
                             </div>
                         </template>
@@ -197,7 +200,7 @@
                                         </el-button>
 
                                         <el-button type="success" :icon="View" size="small"
-                                            @click="viewSimilarityReport">
+                                            @click="viewSimilarityReport" :disabled="!checkTask">
                                             查看报告
                                         </el-button>
                                     </div>
@@ -317,64 +320,6 @@
 
                 <!-- 右侧：相关信息 -->
                 <el-col :xs="24" :lg="8">
-                    <!-- 指导老师 -->
-                    <el-card class="sidebar-card" shadow="hover">
-                        <template #header>
-                            <div class="section-header">
-                                <el-icon>
-                                    <UserFilled />
-                                </el-icon>
-                                <span class="section-title">指导老师</span>
-                            </div>
-                        </template>
-
-                        <div v-if="paperDetails.teacherName" class="advisor-info">
-                            <div class="advisor-avatar-section">
-                                <el-avatar :size="60" :src="getAvatarUrl(paperDetails.advisorAvatar)" class="advisor-avatar">
-                                    {{ paperDetails.advisorName?.charAt(0) }}
-                                </el-avatar>
-                                <div class="advisor-basic">
-                                    <h4 class="advisor-name">{{ paperDetails.teacherName }}</h4>
-                                    <p class="advisor-title">{{ paperDetails.advisorTitle || '教授' }}</p>
-                                </div>
-                            </div>
-
-                            <div class="advisor-contact">
-                                <div class="contact-item">
-                                    <el-icon>
-                                        <Phone />
-                                    </el-icon>
-                                    <span>{{ advisorInfo?.phone }}</span>
-                                </div>
-                                <div class="contact-item">
-                                    <el-icon>
-                                        <Message />
-                                    </el-icon>
-                                    <span>{{ advisorInfo?.email }}</span>
-                                </div>
-                                <div class="contact-item">
-                                    <el-icon>
-                                        <OfficeBuilding />
-                                    </el-icon>
-                                    <span>{{ paperDetails.advisorOffice || '--' }}</span>
-                                </div>
-                            </div>
-
-                            <div class="advisor-actions">
-                                <el-button type="primary" :icon="ChatDotRound" @click="contactAdvisor"
-                                    class="contact-btn">
-                                    联系导师
-                                </el-button>
-                            </div>
-                        </div>
-
-                        <div v-else class="no-advisor">
-                            <el-empty description="暂未分配指导老师" :image-size="60" />
-                            <p class="no-advisor-tips">系统将在论文提交后自动分配</p>
-                        </div>
-                    </el-card>
-
-
                     <!-- 论文附件 -->
                     <el-card class="sidebar-card" shadow="hover">
                         <template #header>
@@ -566,11 +511,10 @@ import { getAvatarUrl } from '@/utils/avatar'
 import {
     ArrowLeft, Edit, Download, Share, Printer, Delete, More,
     Calendar, Document, List, TrendCharts, InfoFilled, Timer,
-    ChatLineRound, ChatDotRound, UserFilled, Phone, Message,
-    OfficeBuilding, Paperclip, Plus, View, Refresh,
+    ChatLineRound, Paperclip, Plus, View, Refresh,
     DocumentChecked, DocumentAdd, Picture, VideoPlay, EditPen, FullScreen
 } from '@element-plus/icons-vue'
-import { getAdvisorInfo, getFileInfo } from "@/api/student.js"
+import { getFileInfo } from "@/api/student.js"
 import { getSubjectFieldTree } from '@/api/user.js'
 import { tr } from 'element-plus/es/locales.mjs'
 const props = defineProps({
@@ -586,12 +530,10 @@ const userStore = useUserStore()
 
 // 响应式数据
 const paperDetails = ref({})
-const advisorInfo = ref(null)
 const fileInfo = ref(null)
 const loading = ref(false)
 // 优先使用 props 传递的 ID，其次使用路由参数
 const paperId = computed(() => props.paperId || route.query.id)
-console.log('论文ID:', paperId.value)
 const subjectTree = ref([]); // 学科领域树形结构
 const checkTask = ref(null)  // 存储检测任务信息
 const checkTaskLoading = ref(false)
@@ -682,7 +624,6 @@ const previewFile = async (file) => {
 // iframe加载完成
 const onIframeLoad = () => {
     previewLoading.value = false
-    console.log('预览加载完成')
 }
 
 // iframe加载错误
@@ -759,23 +700,21 @@ const downloadFile = async (file) => {
 
 // 处理预览错误
 const handlePreviewError = (error) => {
-    console.error('预览失败:', error);
     previewLoading.value = false;
     previewError.value = true;
     errorMessage.value = error.message || '文件预览失败，请尝试下载文件查看';
 }
 
 const openSimilarityReport = async () => {
-    const paper = paperDetails.value
-    const checkTask = paper?.checkTask
-    if (!checkTask) {
+    const currentCheckTask = checkTask.value
+    if (!currentCheckTask) {
         ElMessage.warning('暂无检测记录')
         return
     }
-    if (checkTask.checkStatus !== 'completed') {
-        if (checkTask.checkStatus === 'checking') {
+    if (currentCheckTask.checkStatus.toLowerCase() !== 'completed') {
+        if (currentCheckTask.checkStatus.toLowerCase() === 'checking') {
             ElMessage.warning('检测正在进行中，请稍后再查看报告')
-        } else if (checkTask.checkStatus === 'failure') {
+        } else if (currentCheckTask.checkStatus.toLowerCase() === 'failure') {
             ElMessage.error(`检测失败`)
         } else {
             ElMessage.warning('请先完成相似度检测')
@@ -783,11 +722,7 @@ const openSimilarityReport = async () => {
         return
     }
     //2. 检查报告ID
-    // if (!checkTask.value.reportSummary.reportId) {
-    //     ElMessage.warning('报告生成中，请稍后重试')
-    //     return
-    // }
-    if (!checkTask.reportSummary?.reportId) {
+    if (!currentCheckTask.reportId) {
         ElMessage.warning('报告生成中，请稍后重试')
         return
     }
@@ -799,7 +734,6 @@ const openSimilarityReport = async () => {
 
     try {
         const currentPaperId = paperId.value
-        console.log('开始获取报告预览，论文ID:', currentPaperId)
         // 调用API获取预览URL
         const response = await getSimilarityReportPreview(currentPaperId)
 
@@ -822,8 +756,6 @@ const openSimilarityReport = async () => {
 // 获取相似度报告预览URL的API
 const getSimilarityReportPreview = async (paperIdParam) => {
     try {
-        console.log('获取报告预览，paperId:', paperIdParam);
-
         // 这个接口返回的是PDF文件，不是JSON
         const url = `/check/api/file/smartPreviewReport?paperId=${paperIdParam}`;
 
@@ -835,7 +767,6 @@ const getSimilarityReportPreview = async (paperIdParam) => {
         };
 
     } catch (error) {
-        console.error('API请求失败:', error);
         throw error;
     }
 };
@@ -844,7 +775,6 @@ const getSimilarityReportPreview = async (paperIdParam) => {
 const onReportIframeLoad = () => {
     reportLoading.value = false
     reportError.value = false
-    console.log('报告iframe加载完成')
 }
 
 // iframe加载错误
@@ -867,9 +797,6 @@ const retryReportPreview = () => {
 const downloadSimilarityReport = async () => {
     let loadingInstance = null
     try {
-        console.log('=== 下载报告开始 ===')
-        console.log('当前检测任务:', checkTask.value)
-
         // 1. 检查检测任务
         if (!checkTask.value) {
             ElMessage.warning('暂无检测记录，请先进行相似度检测')
@@ -889,13 +816,9 @@ const downloadSimilarityReport = async () => {
             return
         }
 
-        console.log('使用reportId下载:', reportId)
-
         // 4. 构建下载URL（根据后端接口）
         // 使用reportId
         const downloadUrl = `/check/api/file/downloadReport/${reportId}`
-
-        console.log('下载URL:', downloadUrl)
 
         // 5. 显示加载提示
         loadingInstance = ElLoading.service({
@@ -913,8 +836,6 @@ const downloadSimilarityReport = async () => {
                     // 'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                 }
             })
-
-            console.log('下载响应状态:', response.status)
 
             if (!response.ok) {
                 throw new Error(`下载失败: HTTP ${response.status}`)
@@ -943,7 +864,6 @@ const downloadSimilarityReport = async () => {
 
         } catch (fetchError) {
             loadingInstance.close()
-            console.error('Fetch下载失败:', fetchError)
 
             // 降级方案：直接打开
             window.open(downloadUrl, '_blank')
@@ -951,7 +871,6 @@ const downloadSimilarityReport = async () => {
         }
 
     } catch (error) {
-        console.error('下载报告失败:', error)
         ElMessage.error(`下载失败: ${error.message}`)
     }finally {
         // 关闭加载提示
@@ -987,43 +906,111 @@ const deleteFile = async (file) => {
             await loadPaperDetails()
         }
     } catch (error) {
-        console.log('删除文件失败:', error)
         ElMessage.error('网络错误，请检查连接后重试')
     }
 }
 
-const loadAdvisorData = async () => {
-    loading.value = true
+const replaceFile = async (file) => {
     try {
-        const [advisorRes] = await Promise.all([
-            getAdvisorInfo()
-        ])
-        if (advisorRes.code === 200) {
-            advisorInfo.value = advisorRes.data
-            // 如果没有导师信息，显示默认状态
-            if (!advisorInfo.value) {
-                advisorInfo.value = {
-                    name: '暂未分配',
-                    title: '待分配',
-                    researchField: '待分配导师后显示',
-                    phone: '',
-                    email: '',
-                    office: '待分配',
-                    avatar: '',
-                    expertise: []
+        // 创建一个文件选择器
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.doc,.docx,.pdf,.txt';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        
+        // 触发文件选择
+        input.click();
+        
+        // 监听文件选择事件
+        input.onchange = async (e) => {
+            const selectedFile = e.target.files[0];
+            if (selectedFile) {
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('userId', localStorage.getItem('userId') || 1);
+                
+                // 显示加载提示
+                const loading = ElLoading.service({
+                    lock: true,
+                    text: '正在上传文件...',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                
+                try {
+                    // 调用上传接口
+                    const uploadRes = await uploadFile(formData);
+                    if (uploadRes.code === 200) {
+                        // 上传成功后，调用替换文件接口
+                        const replaceRes = await updatePaperFile(paperId.value, uploadRes.data.fileId, uploadRes.data.md5);
+                        if (replaceRes.code === 200) {
+                            ElMessage.success('文件替换成功');
+                            // 重新加载论文详情
+                            await loadPaperDetails();
+                        } else {
+                            ElMessage.error(replaceRes.message || '文件替换失败');
+                        }
+                    } else {
+                        ElMessage.error(uploadRes.message || '文件上传失败');
+                    }
+                } catch (error) {
+            ElMessage.error('网络错误，请检查连接后重试');
+        } finally {
+                    // 关闭加载提示
+                    loading.close();
+                    // 移除临时创建的input元素
+                    document.body.removeChild(input);
                 }
             }
-        } else {
-            ElMessage.error(advisorRes.message || '获取导师信息失败')
-        }
+        };
     } catch (error) {
-        console.error('加载导师信息数据失败:', error)
-        ElMessage.error('网络错误，请检查连接后重试')
-    }
-    finally {
-        loading.value = false
+        console.error('文件替换失败:', error);
+        ElMessage.error('网络错误，请检查连接后重试');
     }
 }
+
+// 上传文件的API调用
+const uploadFile = async (formData) => {
+    try {
+        const response = await fetch('/check/api/file/upload', {
+            method: 'POST',
+            body: formData
+        });
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
+};
+
+// 更新论文文件的API调用
+const updatePaperFile = async (paperId, fileId, fileMd5) => {
+    try {
+        // 使用现有的updatePaper接口来更新论文文件
+        // 需要提供完整的论文信息
+        const response = await fetch(`/check/api/papers/${paperId}/update`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                subjectCode: paperDetails.value.subjectCode || '',
+                paperTitle: paperDetails.value.paperTitle || '',
+                collegeId: paperDetails.value.collegeId || 1,
+                majorId: paperDetails.value.majorId || 1,
+                paperType: paperDetails.value.paperType || 'graduation',
+                paperAbstract: paperDetails.value.paperAbstract || '',
+                fileId: fileId,
+                fileMd5: fileMd5
+            })
+        });
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
+};
+
+
 const loadPaperDetails = async () => {
     loading.value = true
     try {
@@ -1039,41 +1026,7 @@ const loadPaperDetails = async () => {
             ElMessage.error(res.message || '获取论文详情失败')
         }
     } catch (error) {
-        console.error('加载论文详情失败:', error)
         ElMessage.error('网络错误，请检查连接后重试')
-        // 使用模拟数据作为fallback
-        paperDetails.value = {
-            id: paperId.value,
-            subjectCode: '',
-            paperTitle: '',
-            paperStatus: '',
-            allocationStatus: '',
-            submitTime: '',
-            subject: '计算机科学',
-            paperType: '',
-            keywords: ['深度学习', '图像识别', '卷积神经网络'],
-            wordCount: '',
-            similarityRate: '',
-            paperAbstract: '',
-            teacherName: '',
-            advisorTitle: '计算机科学教授',
-            advisorEmail: 'zhang@university.edu',
-            advisorOffice: '信息楼 301室',
-            feedback: '论文结构合理，实验设计完整，但文献综述部分需要补充最新的研究成果。建议在第三章增加对比实验，进一步验证模型性能。',
-            feedbackTime: '2024-01-18T14:20:00',
-            fileFormat: '.docx',
-            fileSizeDesc: '',
-            reviewHistory: [
-                {
-                    id: 1,
-                    reviewerName: '张教授',
-                    reviewerAvatar: '',
-                    type: 'advisor',
-                    reviewTime: '2024-01-18T14:20:00',
-                    comments: '论文初审通过，部分内容需要修改'
-                }
-            ]
-        }
     } finally {
         loading.value = false
     }
@@ -1083,17 +1036,13 @@ const loadCheckTask = async () => {
     checkTaskLoading.value = true
     try {
         const res = await getCheckTaskDetail(paperId.value)
-        console.log('检测任务响应:', res)
 
         if (res.code === 200 && res.data) {
             checkTask.value = res.data
-            console.log('检测任务加载成功:', checkTask.value)
         } else {
-            console.warn('未找到检测任务:', res.message)
             checkTask.value = null
         }
     } catch (error) {
-        console.error('加载检测任务失败:', error)
         checkTask.value = null
     } finally {
         checkTaskLoading.value = false
@@ -1105,20 +1054,39 @@ const loadFileInfo = async (fileId) => {
         const fileRes = await getFileInfo(fileId)
         if (fileRes.code === 200 && fileRes.data) {
             fileInfo.value = fileRes.data
-            console.log('文件信息加载成功:', fileInfo.value)
         } else {
-            console.warn('获取文件信息失败:', fileRes.message)
             fileInfo.value = null
         }
     } catch (error) {
-        console.error('加载文件信息失败:', error)
         fileInfo.value = null
     }
 }
 
 const goBack = () => {
-    router.push('/student/my-papers')
+    const userStore = useUserStore()
+    if (userStore.isStudent) {
+        router.replace('/student/my-papers')
+    } else if (userStore.isTeacher) {
+        router.push('/teacher/paper-review/audit-records')
+    } else if (userStore.isAdmin) {
+        router.replace('/admin/paper-assignment')
+    } else {
+        router.replace('/')
+    }
 }
+
+const getBackButtonText = computed(() => {
+    const userStore = useUserStore()
+    if (userStore.isStudent) {
+        return '返回我的论文'
+    } else if (userStore.isTeacher) {
+        return '返回审核记录'
+    } else if (userStore.isAdmin) {
+        return '返回论文分配'
+    } else {
+        return '返回首页'
+    }
+})
 
 const editPaper = () => {
     if (paperDetails.value.status === 'rejected' || paperDetails.value.status === 'pending') {
@@ -1205,41 +1173,69 @@ const recheckSimilarity = async () => {
 
 const viewSimilarityReport = async () => {
     const idToUse = paperId.value
-    console.log('=== 查看相似度报告开始 ===', checkTask.value)
+    console.log('=== 查看相似度报告开始 ===', checkTask.value, 'paperId:', idToUse)
+    
+    // 检查paperId是否存在
+    if (!idToUse) {
+        ElMessage.error('论文ID不存在，无法查看报告')
+        return
+    }
+    
     if (!checkTask.value) {
-        ElMessage.warning('暂无检测记录，请先进行相似度检测')
-        return
-    }
-    if (checkTask.value.checkStatus !== 'completed') {
-        const statusMap = {
-            'checking': '检测正在进行中，请稍后再查看报告',
-            'failure': '检测失败，无法查看报告',
-            'pending': '检测排队中'
+        // 检查paperDetails中是否有相似度数据
+        if (paperDetails.value.similarityRate || paperDetails.value.similarity) {
+            // 尝试直接打开报告，基于paperId
+            similarityPreviewVisible.value = true
+            reportLoading.value = true
+            reportError.value = false
+            reportErrorMessage.value = ''
+            try {
+                console.log('基于paperId打开报告:', idToUse)
+                similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
+                ElMessage.success('报告加载成功');
+            } catch (error) {
+                console.error('打开相似度报告失败:', error)
+                reportError.value = true
+                reportErrorMessage.value = error.message || '报告加载失败，请稍后重试'
+                ElMessage.error('加载报告失败: ' + error.message)
+            } finally {
+                reportLoading.value = false
+            }
+        } else {
+            ElMessage.warning('暂无检测记录，请先进行相似度检测')
+            return
         }
-        ElMessage.warning(statusMap[checkTask.value.checkStatus] || '检测未完成')
-        return
-    }
-    if (!checkTask.value.reportSummary.reportId) {
+    } else if (checkTask.value.checkStatus.toLowerCase() !== 'completed') {
+            const statusMap = {
+                'checking': '检测正在进行中，请稍后再查看报告',
+                'failure': '检测失败，无法查看报告',
+                'pending': '检测排队中'
+            }
+            ElMessage.warning(statusMap[checkTask.value.checkStatus.toLowerCase()] || '检测未完成')
+            return
+        } else if (!checkTask.value.reportSummary?.reportId) {
         ElMessage.warning('报告生成中，请稍后重试')
         return
+    } else {
+        // 正常流程，基于checkTask打开报告
+        similarityPreviewVisible.value = true
+        reportLoading.value = true
+        reportError.value = false
+        reportErrorMessage.value = ''
+        try {
+            console.log('开始获取报告预览，reportId:', checkTask.value.reportSummary.reportId)
+            // 调用API获取预览URL
+            similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
+            ElMessage.success('报告加载成功');
+        } catch (error) {
+            console.error('打开相似度报告失败:', error)
+            reportError.value = true
+            reportErrorMessage.value = error.message || '报告加载失败，请稍后重试'
+            ElMessage.error('加载报告失败: ' + error.message)
+        } finally {
+            reportLoading.value = false
+        }
     }
-    similarityPreviewVisible.value = true
-    reportLoading.value = true
-    reportError.value = false
-    reportErrorMessage.value = ''
-    try {
-        console.log('开始获取报告预览，reportId:', checkTask.value.reportSummary.reportId)
-        // 调用API获取预览URL
-        similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
-        ElMessage.success('报告加载成功');
-    } catch (error) {
-    console.error('打开相似度报告失败:', error)
-    reportError.value = true
-    reportErrorMessage.value = error.message || '报告加载失败，请稍后重试'
-    ElMessage.error('加载报告失败: ' + error.message)
-} finally {
-    reportLoading.value = false
-}
 };
 const onSimilarityIframeLoad = () => {
     reportLoading.value = false
@@ -1380,6 +1376,12 @@ const getSimilarityTagType = (similarity) => {
 }
 
 const getSimilarityStatus = (similarity) => {
+    // 如果检测任务状态为已完成，即使相似度为0，也应该显示相应状态
+    if (checkTask.value?.checkStatus === 'completed') {
+        if (similarity < 15) return '通过'
+        if (similarity < 30) return '警告'
+        return '过高'
+    }
     if (!similarity) return '未检测'
     if (similarity < 15) return '通过'
     if (similarity < 30) return '警告'
@@ -1387,6 +1389,12 @@ const getSimilarityStatus = (similarity) => {
 }
 
 const getSimilarityTips = (similarity) => {
+    // 如果检测任务状态为已完成，即使相似度为0，也应该显示相应提示
+    if (checkTask.value?.checkStatus === 'completed') {
+        if (similarity < 15) return '相似度符合要求'
+        if (similarity < 30) return '相似度较高，建议修改'
+        return '相似度过高，需要大幅修改'
+    }
     if (!similarity) return '请进行相似度检测'
     if (similarity < 15) return '相似度符合要求'
     if (similarity < 30) return '相似度较高，建议修改'
@@ -1572,7 +1580,6 @@ const getCheckStatusIcon = (status) => {
 
 onMounted(() => {
     loadPaperDetails(),
-        loadAdvisorData(),
         subjectField()
 });
 </script>
@@ -1798,16 +1805,16 @@ onMounted(() => {
 .paper-details-container {
     padding: 20px;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea0d 0%, #764ba20d 100%);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
 }
 
 // 页面头部
 .paper-header {
     margin-bottom: 24px;
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
 
     .header-content {
         display: flex;
@@ -1817,11 +1824,11 @@ onMounted(() => {
         .back-section {
             .back-btn {
                 padding-left: 0;
-                color: #667eea;
+                color: rgba(255, 255, 255, 0.9);
                 font-weight: 500;
 
                 &:hover {
-                    color: #5a67d8;
+                    color: white;
                 }
             }
         }
@@ -1831,7 +1838,7 @@ onMounted(() => {
                 margin: 0 0 16px 0;
                 font-size: 1.75rem;
                 font-weight: 700;
-                color: #2c3e50;
+                color: white;
                 line-height: 1.3;
             }
 
@@ -1855,10 +1862,10 @@ onMounted(() => {
                         align-items: center;
                         gap: 6px;
                         font-size: 14px;
-                        color: #5a6c7d;
+                        color: rgba(255, 255, 255, 0.8);
 
                         .el-icon {
-                            color: #667eea;
+                            color: rgba(255, 255, 255, 0.9);
                         }
                     }
                 }
@@ -1877,18 +1884,21 @@ onMounted(() => {
 // 主要内容区域
 .paper-content {
     .section-card {
-        margin-bottom: 16px;
+        margin-bottom: 24px;
         border-radius: 12px;
         border: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
 
         &:hover {
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
 
         :deep(.el-card__header) {
             padding: 16px 20px;
             border-bottom: 1px solid #f1f2f6;
+            background: #f8f9fa;
         }
 
         :deep(.el-card__body) {
@@ -1897,13 +1907,21 @@ onMounted(() => {
     }
 
     .sidebar-card {
-        margin-bottom: 16px;
+        margin-bottom: 24px;
         border-radius: 12px;
         border: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
 
         :deep(.el-card__header) {
             padding: 16px;
             border-bottom: 1px solid #f1f2f6;
+            background: #f8f9fa;
         }
 
         :deep(.el-card__body) {
@@ -1918,7 +1936,7 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #1a365d;
 
     .el-icon {
         color: #667eea;
@@ -1934,7 +1952,10 @@ onMounted(() => {
     line-height: 1.6;
     color: #5a6c7d;
     margin-bottom: 20px;
-    padding: 8px 0;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
 }
 
 .abstract-footer {
@@ -1943,9 +1964,13 @@ onMounted(() => {
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+        padding: 12px;
+        background: #f0f7ff;
+        border-radius: 8px;
 
         .count-label {
             color: #7f8c8d;
+            font-weight: 500;
         }
 
         .count-value {
@@ -1976,14 +2001,18 @@ onMounted(() => {
         display: flex;
         align-items: center;
         gap: 8px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
 
         .detail-label {
             color: #7f8c8d;
             white-space: nowrap;
+            font-weight: 500;
         }
 
         .detail-value {
-            color: #2c3e50;
+            color: #1a365d;
             font-weight: 500;
         }
     }
@@ -1993,20 +2022,27 @@ onMounted(() => {
     display: flex;
     align-items: flex-start;
     gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
 
     .keywords-label {
         color: #7f8c8d;
         white-space: nowrap;
         padding-top: 4px;
+        font-weight: 500;
     }
 
     .keywords-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 8px;
 
         .keyword-tag {
             font-size: 12px;
+            background: #e6f7ff;
+            border-color: #91d5ff;
+            color: #1890ff;
         }
 
         .no-keywords {
@@ -2023,6 +2059,14 @@ onMounted(() => {
             display: flex;
             align-items: center;
             gap: 24px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+
+            @media (max-width: 768px) {
+                flex-direction: column;
+                text-align: center;
+            }
 
             .similarity-value {
                 flex-shrink: 0;
@@ -2057,7 +2101,11 @@ onMounted(() => {
 
                 .similarity-actions {
                     display: flex;
-                    gap: 8px;
+                    gap: 12px;
+
+                    .el-button {
+                        flex: 1;
+                    }
                 }
             }
         }
@@ -2066,7 +2114,9 @@ onMounted(() => {
 
 // 审核进度部分
 .progress-section {
-    padding: 8px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
 
     :deep(.el-steps) {
         .el-step__head {
@@ -2080,6 +2130,7 @@ onMounted(() => {
         .el-step__title {
             font-size: 14px;
             font-weight: 600;
+            color: #1a365d;
         }
 
         .el-step__description {
@@ -2122,9 +2173,10 @@ onMounted(() => {
     .feedback-content {
         line-height: 1.6;
         color: #5a6c7d;
-        padding: 16px;
+        padding: 20px;
         background: #f8f9fa;
         border-radius: 8px;
+        border-left: 4px solid #667eea;
         margin-bottom: 20px;
     }
 
@@ -2142,6 +2194,9 @@ onMounted(() => {
         align-items: center;
         gap: 16px;
         margin-bottom: 20px;
+        padding: 16px;
+        background: #f0f7ff;
+        border-radius: 8px;
 
         .advisor-avatar {
             flex-shrink: 0;
@@ -2153,7 +2208,8 @@ onMounted(() => {
             .advisor-name {
                 margin: 0 0 4px 0;
                 font-size: 1.125rem;
-                color: #2c3e50;
+                color: #1a365d;
+                font-weight: 600;
             }
 
             .advisor-title {
@@ -2166,6 +2222,9 @@ onMounted(() => {
 
     .advisor-contact {
         margin-bottom: 20px;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
 
         .contact-item {
             display: flex;
@@ -2265,11 +2324,14 @@ onMounted(() => {
 // 审核历史部分
 .review-history {
     .review-item {
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f2f6;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
 
-        &:last-child {
-            border-bottom: none;
+        &:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .review-header {
@@ -2289,7 +2351,7 @@ onMounted(() => {
 
                 .reviewer-name {
                     font-weight: 500;
-                    color: #2c3e50;
+                    color: #1a365d;
                 }
             }
 

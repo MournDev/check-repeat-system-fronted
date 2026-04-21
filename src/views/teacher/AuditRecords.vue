@@ -112,7 +112,7 @@
       >
         <el-table-column type="index" label="序号" width="60" align="center" />
         
-        <el-table-column prop="studentName" label="学生信息" width="180">
+        <el-table-column prop="studentName" label="学生信息" min-width="200">
           <template #default="{ row }">
             <div class="student-info">
               <div class="student-name">{{ row.paperBaseInfo?.studentName  }}</div>
@@ -124,13 +124,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="paperTitle" label="论文信息" min-width="200">
+        <el-table-column prop="paperTitle" label="论文信息" min-width="250">
           <template #default="{ row }">
             <div class="paper-info">
               <div class="paper-title">{{  row.paperBaseInfo?.paperTitle }}</div>
               <div class="paper-meta">
                 <span class="version">V{{ row.version || row.paperBaseInfo?.version || row.paperBaseInfo?.paperVersion || 1 }}</span>
-                <span class="submit-time">{{ formatTime(row.submitTime || row.paperBaseInfo?.submitTime || row.paperBaseInfo?.createTime || row.createTime) }}</span>
+                <span class="submit-time">{{ formatDateTime(row.submitTime, 'YYYY-MM-DD HH:mm:ss') }}</span>
               </div>
             </div>
           </template>
@@ -163,13 +163,13 @@
 
         <el-table-column prop="reviewTime" label="审核时间" width="160" sortable>
           <template #default="{ row }">
-            {{ formatTime(row.reviewOperateInfo?.reviewTime || row.reviewTime || row.reviewOpinion?.reviewTime || row.createTime) }}
+            {{ formatDateTime(row.reviewOperateInfo?.reviewTime , 'YYYY-MM-DD HH:mm:ss') }}
           </template>
         </el-table-column>
 
         <el-table-column prop="reviewDuration" label="审核时长" width="100" sortable>
           <template #default="{ row }">
-            {{ row.reviewOperateInfo?.reviewDuration || row.reviewDuration || row.reviewOpinion?.reviewDuration ? (row.reviewOperateInfo?.reviewDuration || row.reviewDuration || row.reviewOpinion?.reviewDuration) + '分钟' : '--' }}
+            {{ (row.reviewDuration || row.reviewOperateInfo?.reviewDuration || 0) + '分钟' }}
           </template>
         </el-table-column>
 
@@ -242,6 +242,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import PaperDetail from '@/views/student/PaperDetail.vue'
 import { getReviewedList } from '@/api/teacher.js'
 import { getStatusText, getStatusType } from '@/utils/reviewStatus.js'
+import { formatDateTime } from '@/utils/dataType.js'
 import {
   Refresh,
   Search,
@@ -286,14 +287,6 @@ const getSimilarityClass = (similarity) => {
   if (similarity < 15) return 'similarity-low'
   if (similarity < 30) return 'similarity-medium'
   return 'similarity-high'
-}
-
-// 使用统一的状态处理工具
-// getStatusText 和 getStatusType 已从 '@/utils/reviewStatus.js' 导入
-
-const formatTime = (time) => {
-  if (!time) return '--'
-  return time.replace(' ', '  ')
 }
 
 // 事件处理
@@ -366,7 +359,7 @@ const fetchReviewData = async () => {
 
 const viewPaperDetail = (row) => {
   // 兼容不同字段名的ID
-  currentPaperId.value = row.paperBaseInfo?.paperId 
+  currentPaperId.value = row.paperId || row.paperBaseInfo?.paperId || row.id || row.paperBaseInfo?.id
   detailDialogVisible.value = true
 }
 
@@ -410,7 +403,6 @@ onMounted(() => {
 
 <style scoped>
 .teacher-review {
-  padding: 20px;
   background-color: #f5f7fa;
 }
 

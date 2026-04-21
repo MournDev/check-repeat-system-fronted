@@ -1,378 +1,531 @@
 <template>
   <div class="teacher-dashboard">
     <!-- 页面标题和快速操作 -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">审核工作台</h1>
-        <p class="page-desc">欢迎回来，{{ userStore.userInfo?.realName || '老师' }}！这里是您的论文审核中心</p>
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <div class="welcome-left">
+          <h1 class="welcome-title">审核工作台</h1>
+          <p class="welcome-subtitle">欢迎回来，{{ userStore.userInfo?.realName || '老师' }}！这里是您的论文审核中心</p>
+        </div>
+        <div class="welcome-actions">
+          <button class="primary-button" @click="goToPaperReview">
+            <el-icon><EditPen /></el-icon>
+            开始审核
+          </button>
+          <button class="secondary-button" @click="refreshData">
+            <el-icon><Refresh /></el-icon>
+            刷新数据
+          </button>
+          <el-dropdown @command="handleSettingCommand">
+            <button class="icon-button">
+              <el-icon><Setting /></el-icon>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="theme">
+                  {{ isDarkMode ? '切换到浅色模式' : '切换到深色模式' }}
+                </el-dropdown-item>
+                <el-dropdown-item command="layout">
+                  布局设置
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </div>
-      <div class="quick-actions">
-        <el-button type="primary" :icon="EditPen" @click="goToPaperReview">
-          开始审核
-        </el-button>
-        <el-button :icon="Refresh" @click="refreshData">
-          刷新数据
-        </el-button>
+      
+      <!-- 今日统计 -->
+      <div class="today-stats" v-if="stats.todayStats">
+        <div class="today-stat-item">
+          <div class="stat-value">{{ stats.todayStats.todayReviewed || 0 }}</div>
+          <div class="stat-label">今日审核</div>
+        </div>
+        <div class="today-stat-item">
+          <div class="stat-value">{{ stats.todayStats.todayPassed || 0 }}</div>
+          <div class="stat-label">今日通过</div>
+        </div>
+        <div class="today-stat-item">
+          <div class="stat-value">{{ stats.todayStats.todayNewSubmissions || 0 }}</div>
+          <div class="stat-label">新提交</div>
+        </div>
       </div>
     </div>
 
     <!-- 统计卡片 -->
-    <el-row :gutter="16" class="stats-cards" v-loading="loading">
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-              <el-icon><UserFilled /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.studentCount || 0 }}</div>
-              <div class="stat-label">指导学生</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
-              <el-icon><Clock /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.pendingCount || 0 }}</div>
-              <div class="stat-label">待审核</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
-              <el-icon><Check /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.reviewedCount || 0 }}</div>
-              <div class="stat-label">已审核</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
-              <el-icon><TrendCharts /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.passRate || 0 }}%</div>
-              <div class="stat-label">通过率</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <div class="stats-grid">
+      <div class="stat-card" v-loading="loading.stats">
+        <div class="stat-icon student-icon">
+          <el-icon><UserFilled /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.studentCount || 0 }}</div>
+          <div class="stat-label">指导学生</div>
+        </div>
+        <div class="stat-trend positive">
+          <el-icon><ArrowUp /></el-icon>
+          <span>12%</span>
+        </div>
+      </div>
+      <div class="stat-card" v-loading="loading.stats">
+        <div class="stat-icon pending-icon">
+          <el-icon><Clock /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.pendingCount || 0 }}</div>
+          <div class="stat-label">待审核</div>
+        </div>
+        <div class="stat-trend" :class="(stats.pendingCount || 0) > 5 ? 'negative' : 'positive'">
+          <el-icon v-if="(stats.pendingCount || 0) > 5"><ArrowUp /></el-icon>
+          <el-icon v-else><ArrowDown /></el-icon>
+          <span>{{ (stats.pendingCount || 0) > 5 ? '高压' : '低压' }}</span>
+        </div>
+      </div>
+      <div class="stat-card" v-loading="loading.stats">
+        <div class="stat-icon reviewed-icon">
+          <el-icon><Check /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.reviewedCount || 0 }}</div>
+          <div class="stat-label">已审核</div>
+        </div>
+        <div class="stat-trend positive">
+          <el-icon><ArrowUp /></el-icon>
+          <span>8%</span>
+        </div>
+      </div>
+      <div class="stat-card" v-loading="loading.stats">
+        <div class="stat-icon rate-icon">
+          <el-icon><TrendCharts /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.passRate || 0 }}%</div>
+          <div class="stat-label">通过率</div>
+        </div>
+        <div class="stat-trend" :class="(stats.passRate || 0) < 80 ? 'negative' : 'positive'">
+          <el-icon v-if="(stats.passRate || 0) < 80"><ArrowDown /></el-icon>
+          <el-icon v-else><ArrowUp /></el-icon>
+          <span>{{ (stats.passRate || 0) < 80 ? '需关注' : '良好' }}</span>
+        </div>
+      </div>
+    </div>
 
-    <el-row :gutter="16" class="dashboard-content">
+    <!-- 待办事项提醒 -->
+    <div class="section" v-if="stats.todoItems && stats.todoItems.length > 0">
+      <div class="section-header">
+        <div class="section-title">
+          <el-icon><Bell /></el-icon>
+          待办事项
+        </div>
+      </div>
+      <div class="todo-list">
+        <div 
+          v-for="(item, index) in stats.todoItems" 
+          :key="index"
+          class="todo-item"
+          :class="item.priority.toLowerCase()"
+        >
+          <div class="todo-icon">
+            <el-icon v-if="item.type === 'PENDING_REVIEW'">
+              <Document />
+            </el-icon>
+            <el-icon v-else-if="item.type === 'NEW_SUBMISSION'">
+              <Notification />
+            </el-icon>
+            <el-icon v-else>
+              <User />
+            </el-icon>
+          </div>
+          <div class="todo-content">
+            <div class="todo-title">{{ item.title }}</div>
+            <div class="todo-desc">{{ item.description }}</div>
+          </div>
+          <div class="todo-meta">
+            <span class="priority-badge" :class="item.priority.toLowerCase()">
+              {{ item.priority === 'HIGH' ? '高' : item.priority === 'MEDIUM' ? '中' : '低' }}优先级
+            </span>
+            <span class="todo-count">{{ item.count }}项</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
       <!-- 左侧：待办事项和学生进度 -->
-      <el-col :xs="24" :lg="16">
+      <div class="main-left">
         <!-- 待审核论文 -->
-        <el-card class="pending-papers-card" shadow="never" v-loading="loading">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><Document /></el-icon>
-                待审核论文
-                <el-tag v-if="stats.pendingCount > 0" type="danger" size="small">
-                  {{ stats.pendingCount }}
-                </el-tag>
-              </span>
-              <el-button text :icon="More" @click="goToPaperReview"></el-button>
+        <div class="card" v-loading="loading.pending">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><Document /></el-icon>
+              待审核论文
+              <span v-if="stats.pendingCount > 0" class="badge danger">{{ stats.pendingCount }}</span>
             </div>
-          </template>
+            <button class="text-button" @click="goToPaperReview">
+              <el-icon><More /></el-icon>
+              查看全部
+            </button>
+          </div>
           
           <div class="pending-list">
             <div 
               v-for="paper in pendingPapers" 
               :key="paper.id" 
               class="pending-item"
+              :class="paper.priority"
             >
               <div class="paper-info">
                 <div class="paper-header">
-                  <h4 class="paper-title">{{ paper.title }}</h4>
-                  <el-tag type="warning" size="small">待审核</el-tag>
+                  <h4 class="paper-title">{{ paper.paperTitle || paper.title }}</h4>
+                  <div class="paper-tags">
+                    <span class="tag warning">待审核</span>
+                    <span v-if="paper.priority" :class="'tag ' + (paper.priority === 'urgent' ? 'danger' : paper.priority === 'high' ? 'warning' : 'info')">
+                      {{ paper.priority === 'urgent' ? '紧急' : paper.priority === 'high' ? '高' : '普通' }}
+                    </span>
+                    <span v-if="paper.similarity" :class="'tag ' + (paper.similarity > 30 ? 'danger' : paper.similarity > 15 ? 'warning' : 'success')">
+                      {{ paper.similarity }}%相似
+                    </span>
+                  </div>
                 </div>
                 <div class="paper-meta">
-                  <span class="student-name">
+                  <span class="meta-item">
                     <el-icon><User /></el-icon>
                     {{ paper.studentName }}
                   </span>
-                  <span class="submit-time">
+                  <span class="meta-item">
                     <el-icon><Clock /></el-icon>
                     {{ formatTime(paper.submitTime) }}
                   </span>
-                  <span class="paper-version">
+                  <span class="meta-item" v-if="paper.waitingTime">
+                    <el-icon><Timer /></el-icon>
+                    等待{{ paper.waitingTime }}天
+                  </span>
+                  <span class="meta-item">
                     <el-icon><Files /></el-icon>
                     版本 v{{ paper.version }}
                   </span>
                 </div>
+                <div class="paper-details" v-if="paper.college">
+                  <span class="college">{{ paper.college }}</span>
+                  <span class="word-count" v-if="paper.wordCount">
+                    <el-icon><Reading /></el-icon>
+                    {{ paper.wordCount }}字
+                  </span>
+                </div>
               </div>
               <div class="paper-actions">
-                <el-button type="primary" text :icon="View" @click="reviewPaper(paper.id)">
+                <button class="primary-button" @click="reviewPaper(paper.id || paper.paperId)">
+                  <el-icon><View /></el-icon>
                   审核
-                </el-button>
-                <el-button text :icon="Download" @click="downloadPaperFile(paper.id)">
+                </button>
+                <button class="secondary-button" @click="downloadPaperFile(paper.id || paper.paperId)">
+                  <el-icon><Download /></el-icon>
                   下载
-                </el-button>
+                </button>
               </div>
             </div>
           </div>
           
-          <div v-if="pendingPapers.length === 0" class="empty-pending">
-            <el-empty description="暂无待审核论文" :image-size="80" />
+          <div v-if="pendingPapers.length === 0" class="empty-state">
+            <div class="empty-icon">
+              <el-icon><Document /></el-icon>
+            </div>
+            <h4>暂无待审核论文</h4>
+            <p>所有论文都已审核完成</p>
           </div>
-        </el-card>
+        </div>
 
         <!-- 审核进度统计 -->
-        <el-card class="progress-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><DataLine /></el-icon>
-                审核进度统计
-              </span>
+        <div class="card" v-loading="loading.review || loading.college">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><DataLine /></el-icon>
+              审核进度统计
             </div>
-          </template>
-          
-          <div class="progress-charts">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <div class="chart-container">
-                  <div class="chart-title">论文状态分布</div>
-                  <div class="pie-chart">
-                    <div class="chart-placeholder" v-if="reviewChartData && hasValidData(reviewChartData)">
-                      <!-- ECharts饼图容器 -->
-                      <div 
-                        ref="statusChartRef" 
-                        class="echarts-container"
-                        style="width: 300px; height: 300px;"
-                      ></div>
-                      <!-- 状态详情 -->
-                      <div class="status-details" v-if="reviewStatusDistribution.length > 0">
-                        <div 
-                          v-for="item in reviewStatusDistribution" 
-                          :key="item.status"
-                          class="status-detail-item"
-                        >
-                          <div class="status-info-wrapper">
-                            <span 
-                              class="status-color-indicator" 
-                              :style="{ backgroundColor: item.color }"
-                            ></span>
-                            <span class="status-name">{{ item.statusName }}</span>
-                          </div>
-                          <div class="status-metrics">
-                            <span class="status-count">{{ item.count }}</span>
-                            <span class="status-percentage">{{ item.percentage }}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="chart-placeholder" v-else>
-                      <!-- 无有效数据时的提示 -->
-                      <div class="no-data-placeholder">
-                        <div class="no-data-icon">📊</div>
-                        <div class="no-data-text">暂无审核数据</div>
-                        <div class="no-data-subtext">还没有审核记录</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-col>
-              <el-col :span="12">
-                <div class="chart-container">
-                  <div class="chart-title">各专业审核情况</div>
-                  <div class="bar-chart">
-                    <div class="chart-placeholder" v-if="collegeDistribution.length > 0">
-                      <div 
-                        v-for="item in collegeDistribution.slice(0, 5)" 
-                        :key="item.label"
-                        class="bar-item"
-                      >
-                        <span class="bar-label">{{ item.label }}</span>
-                        <el-progress 
-                          :percentage="calculateCollegePercentage(item.value, collegeDistribution)" 
-                          :show-text="false" 
-                        />
-                        <span class="bar-value">{{ item.value }}</span>
-                      </div>
-                    </div>
-                    <div class="chart-placeholder" v-else>
-                      <div class="bar-item">
-                        <span class="bar-label">计算机</span>
-                        <el-progress :percentage="80" :show-text="false" />
-                      </div>
-                      <div class="bar-item">
-                        <span class="bar-label">软件工程</span>
-                        <el-progress :percentage="65" :show-text="false" />
-                      </div>
-                      <div class="bar-item">
-                        <span class="bar-label">人工智能</span>
-                        <el-progress :percentage="90" :show-text="false" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-col>
-            </el-row>
           </div>
-        </el-card>
-      </el-col>
+          
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-title">论文状态分布</div>
+              <div class="chart-container" v-if="reviewChartData && hasValidData(reviewChartData)">
+                <!-- ECharts饼图容器 -->
+                <div 
+                  ref="statusChartRef" 
+                  class="echarts-container"
+                ></div>
+                <!-- 状态详情 -->
+                <div class="status-details" v-if="reviewStatusDistribution.length > 0">
+                  <div 
+                    v-for="item in reviewStatusDistribution" 
+                    :key="item.status"
+                    class="status-detail-item"
+                  >
+                    <div class="status-info">
+                      <span 
+                        class="status-color" 
+                        :style="{ backgroundColor: item.color }"
+                      ></span>
+                      <span class="status-name">{{ item.statusName }}</span>
+                    </div>
+                    <div class="status-metrics">
+                      <span class="status-count">{{ item.count }}</span>
+                      <span class="status-percentage">{{ item.percentage }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-container" v-else>
+                <!-- 无有效数据时的提示 -->
+                <div class="empty-chart">
+                  <div class="empty-icon">
+                    <el-icon><DataLine /></el-icon>
+                  </div>
+                  <div class="empty-text">暂无审核数据</div>
+                  <div class="empty-subtext">还没有审核记录</div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">各专业审核情况</div>
+              <div class="chart-container">
+                <div v-if="collegeDistribution.length > 0">
+                  <div 
+                    v-for="item in collegeDistribution.slice(0, 5)" 
+                    :key="item.label"
+                    class="bar-item"
+                  >
+                    <span class="bar-label">{{ item.label }}</span>
+                    <div class="bar-container">
+                      <div class="bar-fill" :style="{ width: calculateCollegePercentage(item.value, collegeDistribution) + '%' }"></div>
+                    </div>
+                    <span class="bar-value">{{ item.value }}</span>
+                  </div>
+                </div>
+                <div v-else class="empty-chart">
+                  <div class="empty-icon">
+                    <el-icon><Histogram /></el-icon>
+                  </div>
+                  <div class="empty-text">暂无专业数据</div>
+                  <div class="empty-subtext">还没有审核记录</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- 右侧：学生统计和快速操作 -->
-      <el-col :xs="24" :lg="8">
+      <div class="main-right">
         <!-- 学生状态统计 -->
-        <el-card class="students-card" shadow="never" v-loading="loading">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><UserFilled /></el-icon>
-                学生状态
-              </span>
+        <div class="card" v-loading="loading.student">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><UserFilled /></el-icon>
+              学生状态
             </div>
-          </template>
+          </div>
           
           <div class="students-stats">
+            <!-- 已提交 -->
             <div class="status-item">
               <div class="status-info">
                 <div class="status-value">{{ studentStats.submitted }}</div>
                 <div class="status-label">已提交</div>
+                <div class="status-percentage">{{ studentStats.total > 0 ? Math.min(Math.round((studentStats.submitted / studentStats.total) * 100), 100) : 0 }}%</div>
               </div>
-              <el-progress :percentage="(studentStats.submitted / studentStats.total) * 100" />
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: (studentStats.total > 0 ? Math.min((studentStats.submitted / studentStats.total) * 100, 100) : 0) + '%' }"></div>
+              </div>
             </div>
+            
+            <!-- 审核中 -->
             <div class="status-item">
               <div class="status-info">
                 <div class="status-value">{{ studentStats.reviewing }}</div>
                 <div class="status-label">审核中</div>
+                <div class="status-percentage">{{ studentStats.total > 0 ? Math.round((studentStats.reviewing / studentStats.total) * 100) : 0 }}%</div>
               </div>
-              <el-progress 
-                v-if="studentStats.reviewing > 0" 
-                :percentage="(studentStats.reviewing / studentStats.total) * 100" 
-              />
+              <div v-if="studentStats.reviewing > 0" class="progress-bar">
+                <div class="progress-fill warning" :style="{ width: (studentStats.total > 0 ? Math.min((studentStats.reviewing / studentStats.total) * 100, 100) : 0) + '%' }"></div>
+              </div>
               <div v-else class="empty-progress">无进行中审核</div>
             </div>
+            
+            <!-- 已通过 -->
             <div class="status-item">
               <div class="status-info">
                 <div class="status-value">{{ studentStats.approved }}</div>
                 <div class="status-label">已通过</div>
+                <div class="status-percentage">{{ studentStats.total > 0 ? Math.round((studentStats.approved / studentStats.total) * 100) : 0 }}%</div>
               </div>
-              <el-progress :percentage="(studentStats.approved / studentStats.total) * 100" />
+              <div class="progress-bar">
+                <div class="progress-fill success" :style="{ width: (studentStats.total > 0 ? Math.min((studentStats.approved / studentStats.total) * 100, 100) : 0) + '%' }"></div>
+              </div>
             </div>
+            
+            <!-- 需修改 -->
             <div class="status-item">
               <div class="status-info">
                 <div class="status-value">{{ studentStats.rejected }}</div>
                 <div class="status-label">需修改</div>
+                <div class="status-percentage">{{ studentStats.total > 0 ? Math.min(Math.round((studentStats.rejected / studentStats.total) * 100), 100) : 0 }}%</div>
               </div>
-              <el-progress 
-                v-if="studentStats.rejected > 0" 
-                type="exception" 
-                :percentage="(studentStats.rejected / studentStats.total) * 100" 
-              />
+              <div v-if="studentStats.rejected > 0" class="progress-bar">
+                <div class="progress-fill danger" :style="{ width: (studentStats.total > 0 ? Math.min((studentStats.rejected / studentStats.total) * 100, 100) : 0) + '%' }"></div>
+              </div>
               <div v-else class="empty-progress">无需修改论文</div>
             </div>
           </div>
-        </el-card>
+        </div>
 
         <!-- 快速操作 -->
-        <el-card class="quick-actions-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><Operation /></el-icon>
-                快速操作
-              </span>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><Operation /></el-icon>
+              快速操作
             </div>
-          </template>
+          </div>
           
           <div class="action-buttons">
-            <el-button 
-              type="primary" 
-              :icon="EditPen" 
-              class="action-button"
+            <button 
+              class="action-button primary"
               @click="goToPaperReview"
             >
+              <el-icon><EditPen /></el-icon>
               论文审核
-            </el-button>
-            <el-button 
-              :icon="UserFilled" 
+            </button>
+            <button 
               class="action-button"
               @click="goToStudentManagement"
             >
+              <el-icon><UserFilled /></el-icon>
               学生管理
-            </el-button>
-            <el-button 
-              :icon="TrendCharts" 
+            </button>
+            <button 
               class="action-button"
               @click="goToStatistics"
             >
+              <el-icon><TrendCharts /></el-icon>
               数据统计
-            </el-button>
-            <el-button 
-              :icon="Download" 
+            </button>
+            <button 
               class="action-button"
               @click="exportData"
             >
+              <el-icon><Download /></el-icon>
               导出数据
-            </el-button>
+            </button>
+            <button 
+              class="action-button"
+              @click="goToMessageCenter"
+            >
+              <el-icon><Message /></el-icon>
+              消息中心
+            </button>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+
+        <!-- 审核效率 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><Timer /></el-icon>
+              审核效率
+            </div>
+          </div>
+          
+          <div class="efficiency-stats" v-if="stats.todayStats">
+            <div class="efficiency-item">
+              <div class="efficiency-label">平均审核时间</div>
+              <div class="efficiency-value">{{ stats.todayStats.averageReviewTime || 0 }}分钟</div>
+            </div>
+            <div class="efficiency-item">
+              <div class="efficiency-label">今日审核量</div>
+              <div class="efficiency-value">{{ stats.todayStats.todayReviewed || 0 }}篇</div>
+            </div>
+            <div class="efficiency-item">
+              <div class="efficiency-label">审核通过率</div>
+              <div class="efficiency-value">
+                {{ stats.todayStats.todayReviewed > 0 ? Math.round((stats.todayStats.todayPassed / stats.todayStats.todayReviewed) * 100) : 0 }}%
+              </div>
+            </div>
+          </div>
+          <div class="empty-state" v-else>
+            <div class="empty-icon">
+              <el-icon><Timer /></el-icon>
+            </div>
+            <p>暂无效率数据</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 // ECharts 通过 CDN 引入，全局 window.echarts 可用
+import { getPaperStatusText, getPaperStatusType } from '@/utils/dataType'
 
 // API 接口导入
 import {
   getTeacherDashboardStats,
   getPendingReviewList,
   getStudentStats,
-  doReview,
   downloadPaper,
   exportTeacherData,
   getReviewStats,
   getCollegeDistribution
 } from '@/api/teacher.js'
 
-import {
-  getMessageList,
-  markAsRead
-} from '@/api/user.js'
+
 
 // 图标引入
 import {
   EditPen, Refresh, UserFilled, Clock, Check, TrendCharts,
   Document, More, User, Files, View, Download, DataLine,
-  Operation, Histogram
+  Operation, Histogram, Setting, ArrowUp, ArrowDown, Bell,
+  Timer, Reading
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 // 响应式数据
-const stats = ref({})
+const stats = reactive({})
 const pendingPapers = ref([])
-const studentStats = ref({})
+const studentStats = reactive({})
 const reviewStatusDistribution = ref([])
 const reviewChartData = ref(null) // 新增：存储图表数据
 const collegeDistribution = ref([])
 const recentActivities = ref([])
-const loading = ref(false)
+const isDarkMode = ref(false)
+const loading = reactive({
+  stats: false,
+  pending: false,
+  student: false,
+  review: false,
+  college: false
+})
+
+// 计算属性：检查是否有任何加载状态为 true
+const isLoading = computed(() => {
+  return Object.values(loading).some(value => value)
+})
+
+// 监听图表数据变化，自动更新图表
+watch(reviewChartData, () => {
+  if (reviewChartData.value) {
+    if (statusChartInstance) {
+      updateStatusChart()
+    } else {
+      initStatusChart()
+    }
+  }
+}, { deep: true })
 
 // 图表引用
 const statusChartRef = ref(null)
@@ -381,42 +534,51 @@ let statusChartInstance = null
 // 方法
 const refreshData = async () => {
   try {
-    loading.value = true
+    loading.stats = true
     await loadDashboardData()
     ElMessage.success('数据已刷新')
   } catch (error) {
     ElMessage.error('刷新失败')
   } finally {
-    loading.value = false
+    loading.stats = false
   }
 }
 
 const loadDashboardData = async () => {
+  // 设置所有加载状态为 true
+  Object.keys(loading).forEach(key => {
+    loading[key] = true
+  })
+  
   try {
     const teacherId = userStore.userInfo?.userId
     if (!teacherId) {
-      throw new Error('未获取到教师信息')
+      throw new Error('未获取到教师信息，请重新登录')
     }
 
-    // 并行请求多个接口
-    const [dashboardRes, pendingRes, studentRes, reviewStatsRes, collegeDistRes, messageRes] = await Promise.all([
+    // 并行请求多个接口，使用更优雅的错误处理
+    const [dashboardRes, pendingRes, studentRes, reviewStatsRes] = await Promise.all([
       getTeacherDashboardStats(teacherId),
-      getPendingReviewList(),
+      getPendingReviewList(1, 10),
       getStudentStats(teacherId),
-      getReviewStats(teacherId, 'all'), // 获取所有历史数据
-      getCollegeDistribution(teacherId, 'month'),
-      getMessageList({ userId: teacherId, pageNum: 1, pageSize: 5 })
+      getReviewStats({ teacherId, timeRange: 'all' })
     ])
+    
+    // 学院分布数据从审核统计数据中获取
+    const collegeDistRes = reviewStatsRes
 
     // 处理仪表盘统计数据
     if (dashboardRes.code === 200) {
-      stats.value = {
+      Object.assign(stats, {
         studentCount: dashboardRes.data.totalStudents || 0,
         pendingCount: dashboardRes.data.pendingPapers || 0,
         reviewedCount: dashboardRes.data.reviewedPapers || 0,
-        passRate: dashboardRes.data.passRate || 0
-      }
+        passRate: dashboardRes.data.passRate || 0,
+        todoItems: dashboardRes.data.todoItems || [],
+        todayStats: dashboardRes.data.todayStats || {}
+      })
     }
+    loading.stats = false
 
     // 处理待审核论文列表
     if (pendingRes.code === 200) {
@@ -425,20 +587,27 @@ const loadDashboardData = async () => {
         title: item.paperBaseInfo?.paperTitle || item.paperTitle || item.title,
         studentName: item.paperBaseInfo?.studentName || item.studentName,
         submitTime: item.taskBaseInfo?.checkEndTime || item.submitTime,
-        version: item.version || 1
+        version: item.version || 1,
+        waitingTime: item.waitingTime,
+        priority: item.priority,
+        similarity: item.similarity,
+        college: item.college,
+        wordCount: item.wordCount
       }))
     }
+    loading.pending = false
 
     // 处理学生状态统计
     if (studentRes.code === 200) {
-      studentStats.value = {
+      Object.assign(studentStats, {
         total: studentRes.data.totalStudents || 0,
         submitted: studentRes.data.submittedPapers || 0,
         reviewing: studentRes.data.auditingPapers || 0,
         approved: studentRes.data.passedPapers || 0,
         rejected: studentRes.data.needModifyPapers || 0
-      }
+      })
     }
+    loading.student = false
 
     // 处理审核统计数据（用于论文状态分布图表）
     if (reviewStatsRes.code === 200) {
@@ -457,33 +626,34 @@ const loadDashboardData = async () => {
       
       // 存储图表数据
       reviewChartData.value = reviewStatsRes.data.chartData || null
-      console.log('审核统计图表数据:', reviewStatsRes.data.chartData)
       
       // 初始化或更新图表
-      setTimeout(() => {
-        if (reviewChartData.value) {
-          if (statusChartInstance) {
-            updateStatusChart()
-          } else {
-            initStatusChart()
-          }
+      if (reviewChartData.value) {
+        if (statusChartInstance) {
+          updateStatusChart()
+        } else {
+          initStatusChart()
         }
-      }, 100)
+      }
     }
+    loading.review = false
 
     // 处理学院分布数据（用于各专业审核情况图表）
     if (collegeDistRes.code === 200) {
-      collegeDistribution.value = collegeDistRes.data || []
+      collegeDistribution.value = collegeDistRes.data?.collegeDistribution || []
     }
+    loading.college = false
 
-    // 处理近期活动（从消息中提取）
-    if (messageRes.code === 200) {
-      recentActivities.value = (messageRes.data?.records || []).slice(0, 3).map(msg => ({}))
-    }
+
 
   } catch (error) {
     console.error('加载仪表盘数据失败:', error)
     ElMessage.error('数据加载失败，请稍后重试')
+  } finally {
+    // 确保所有加载状态都被设置为 false
+    Object.keys(loading).forEach(key => {
+      loading[key] = false
+    })
   }
 }
 
@@ -505,6 +675,34 @@ const reviewPaper = (paperId) => {
   router.push(`/teacher/paper-review?paperId=${paperId}`)
 }
 
+// 处理设置命令
+const handleSettingCommand = (command) => {
+  switch (command) {
+    case 'theme':
+      toggleDarkMode()
+      break
+    case 'layout':
+      openLayoutSettings()
+      break
+    default:
+      break
+  }
+}
+
+// 切换深色模式
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value
+  // 这里可以添加深色模式的实现逻辑
+  // 例如：document.documentElement.classList.toggle('dark')
+  ElMessage.success(`已切换到${isDarkMode.value ? '深色' : '浅色'}模式`)
+}
+
+// 打开布局设置对话框
+const openLayoutSettings = () => {
+  // 这里可以添加布局设置对话框的实现逻辑
+  ElMessage.info('布局设置功能开发中')
+}
+
 const downloadPaperFile = async (paperId) => {
   try {
     const response = await downloadPaper(paperId)
@@ -519,7 +717,7 @@ const downloadPaperFile = async (paperId) => {
     ElMessage.success('论文下载成功')
   } catch (error) {
     console.error('下载失败:', error)
-    ElMessage.error('论文下载失败')
+    ElMessage.error(`论文下载失败: ${error.message || '网络错误'}`)
   }
 }
 
@@ -527,7 +725,7 @@ const exportData = async () => {
   try {
     const teacherId = userStore.userInfo?.userId
     if (!teacherId) {
-      ElMessage.warning('未获取到教师信息')
+      ElMessage.warning('未获取到教师信息，请重新登录')
       return
     }
     
@@ -543,7 +741,7 @@ const exportData = async () => {
     ElMessage.success('数据导出成功')
   } catch (error) {
     console.error('导出失败:', error)
-    ElMessage.error('数据导出失败')
+    ElMessage.error(`数据导出失败: ${error.message || '网络错误'}`)
   }
 }
 
@@ -602,11 +800,22 @@ const initStatusChart = () => {
   const option = {
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
+      formatter: function(params) {
+        return `${params.seriesName}<br/>${params.name}: ${params.value} (${params.percent}%)`
+      },
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      borderColor: '#667eea',
+      borderWidth: 1,
+      textStyle: {
+        color: '#1a365d'
+      }
     },
     legend: {
       orient: 'vertical',
-      left: 'left'
+      left: 'left',
+      textStyle: {
+        color: '#1a365d'
+      }
     },
     series: [
       {
@@ -622,7 +831,13 @@ const initStatusChart = () => {
           label: {
             show: true,
             fontSize: '16',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            color: '#1a365d'
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
         },
         labelLine: {
@@ -632,7 +847,8 @@ const initStatusChart = () => {
           value: reviewChartData.value.values[index],
           name: label,
           itemStyle: {
-            color: reviewChartData.value.colors[index]
+            color: reviewChartData.value.colors[index],
+            borderRadius: 4
           }
         })).filter(item => item.value > 0) // 过滤掉值为0的数据项
       }
@@ -645,6 +861,14 @@ const initStatusChart = () => {
   // 添加点击事件
   statusChartInstance.on('click', function(params) {
     console.log('点击了:', params.name, params.value)
+    // 可以根据点击的状态跳转到相应的页面
+    // 例如：router.push(`/teacher/paper-review?status=${params.name}`)
+  })
+  
+  // 添加鼠标悬停事件
+  statusChartInstance.on('mouseover', function(params) {
+    // 可以添加悬停效果，例如显示更详细的信息
+    console.log('悬停:', params.name, params.value)
   })
 }
 
@@ -690,163 +914,488 @@ const calculateCollegePercentage = (value, allData) => {
 }
 
 onMounted(() => {
-  loadDashboardData()
+  // 确保 userStore.token 存在
+  if (userStore.token) {
+    loadDashboardData()
+  } else {
+    // 等待一段时间后再尝试
+    setTimeout(() => {
+      if (userStore.token) {
+        loadDashboardData()
+      } else {
+        ElMessage.error('登录状态未初始化，请刷新页面')
+      }
+    }, 500)
+  }
 })
 </script>
 
 <style lang="scss" scoped>
+// 全局样式
 .teacher-dashboard {
-  padding: 0;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f8fafc; // Slate-50
+  color: #0f172a; // Slate-900
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
+// 欢迎区域
+.welcome-section {
+  margin-bottom: 32px;
   
-  .header-content {
-    .page-title {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: #2c3e50;
+  .welcome-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    
+    .welcome-left {
+      
+      .welcome-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+        line-height: 1.2;
+      }
+      
+      .welcome-subtitle {
+        font-size: 1rem;
+        color: #64748b;
+        margin: 0;
+      }
     }
     
-    .page-desc {
-      margin: 0;
-      color: #7f8c8d;
-      font-size: 0.95rem;
+    .welcome-actions {
+      display: flex;
+      gap: 12px;
     }
   }
   
-  .quick-actions {
-    display: flex;
-    gap: 0.75rem;
-  }
-}
-
-.stats-cards {
-  margin-bottom: 1.5rem;
-  
-  .stat-card {
-    border: none;
+  // 今日统计
+  .today-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
     
-    .stat-content {
+    .today-stat-item {
+      text-align: center;
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+      }
+      
+      .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+      }
+    }
+  }
+}
+
+// 统计卡片
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    
+    &.student-icon {
+      background: #f0f9ff;
+      color: #0ea5e9;
+    }
+    
+    &.pending-icon {
+      background: #fef3c7;
+      color: #f59e0b;
+    }
+    
+    &.reviewed-icon {
+      background: #d1fae5;
+      color: #10b981;
+    }
+    
+    &.rate-icon {
+      background: #ede9fe;
+      color: #8b5cf6;
+    }
+  }
+  
+  .stat-content {
+    flex: 1;
+    
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+  }
+  
+  .stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    
+    &.positive {
+      color: #10b981;
+    }
+    
+    &.negative {
+      color: #ef4444;
+    }
+    
+    .el-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+// 通用区域样式
+.section {
+  margin-bottom: 32px;
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    
+    .section-title {
       display: flex;
       align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
       
-      .stat-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        margin-right: 1rem;
-        
-        .el-icon {
-          color: white;
-          font-size: 1.5rem;
-        }
-      }
-      
-      .stat-info {
-        .stat-value {
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #2c3e50;
-          line-height: 1;
-        }
-        
-        .stat-label {
-          font-size: 0.875rem;
-          color: #7f8c8d;
-          margin-top: 0.25rem;
-        }
+      .el-icon {
+        color: #64748b;
       }
     }
   }
 }
 
-.dashboard-content {
-  .el-card {
+// 待办事项
+.todo-list {
+  display: grid;
+  gap: 16px;
+  
+  .todo-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
-    border: 1px solid #f1f2f6;
-    margin-bottom: 1rem;
+    transition: all 0.2s ease;
     
-    :deep(.el-card__header) {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid #f1f2f6;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+    
+    &.high {
+      border-left: 4px solid #ef4444;
+    }
+    
+    &.medium {
+      border-left: 4px solid #f59e0b;
+    }
+    
+    &.low {
+      border-left: 4px solid #10b981;
+    }
+    
+    .todo-icon {
+      margin-right: 16px;
       
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      .el-icon {
+        font-size: 20px;
+        color: #64748b;
+      }
+    }
+    
+    .todo-content {
+      flex: 1;
+      
+      .todo-title {
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 4px;
+      }
+      
+      .todo-desc {
+        font-size: 0.875rem;
+        color: #64748b;
+      }
+    }
+    
+    .todo-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      
+      .priority-badge {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 500;
         
-        .card-title {
-          display: flex;
-          align-items: center;
-          font-weight: 600;
-          color: #2c3e50;
-          
-          .el-icon {
-            margin-right: 0.5rem;
-            color: #667eea;
-          }
+        &.high {
+          background: #fee2e2;
+          color: #ef4444;
+        }
+        
+        &.medium {
+          background: #fef3c7;
+          color: #f59e0b;
+        }
+        
+        &.low {
+          background: #d1fae5;
+          color: #10b981;
+        }
+      }
+      
+      .todo-count {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+      }
+    }
+  }
+}
+
+// 主要内容区域
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 通用卡片样式
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+      
+      .el-icon {
+        color: #64748b;
+      }
+      
+      .badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        
+        &.danger {
+          background: #fee2e2;
+          color: #ef4444;
         }
       }
     }
   }
 }
 
+// 待审核论文
 .pending-list {
   .pending-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid #f1f2f6;
-    border-radius: 8px;
-    margin-bottom: 0.75rem;
-    transition: all 0.3s ease;
+    align-items: flex-start;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
     
     &:hover {
-      border-color: #667eea;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &.urgent {
+      border-left: 4px solid #ef4444;
+    }
+    
+    &.high {
+      border-left: 4px solid #f59e0b;
+    }
+    
+    &.normal {
+      border-left: 4px solid #10b981;
     }
     
     .paper-info {
       flex: 1;
+      margin-right: 20px;
       
       .paper-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 0.5rem;
+        margin-bottom: 16px;
         
         .paper-title {
           margin: 0;
-          color: #2c3e50;
-          font-size: 1rem;
+          color: #0f172a;
+          font-size: 1.125rem;
+          font-weight: 600;
           flex: 1;
-          margin-right: 1rem;
+          margin-right: 16px;
+          line-height: 1.4;
+        }
+        
+        .paper-tags {
+          display: flex;
+          gap: 8px;
+          
+          .tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            
+            &.warning {
+              background: #fef3c7;
+              color: #f59e0b;
+            }
+            
+            &.danger {
+              background: #fee2e2;
+              color: #ef4444;
+            }
+            
+            &.info {
+              background: #e0f2fe;
+              color: #0284c7;
+            }
+            
+            &.success {
+              background: #d1fae5;
+              color: #10b981;
+            }
+          }
         }
       }
       
       .paper-meta {
         display: flex;
-        gap: 1rem;
+        flex-wrap: wrap;
+        gap: 16px;
         font-size: 0.875rem;
-        color: #7f8c8d;
+        color: #64748b;
+        margin-bottom: 16px;
         
-        span {
+        .meta-item {
           display: flex;
           align-items: center;
+          gap: 6px;
           
           .el-icon {
-            margin-right: 0.25rem;
+            font-size: 14px;
+            color: #94a3b8;
+          }
+        }
+      }
+      
+      .paper-details {
+        display: flex;
+        gap: 16px;
+        font-size: 0.875rem;
+        color: #64748b;
+        
+        .college {
+          font-weight: 500;
+        }
+        
+        .word-count {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          
+          .el-icon {
+            font-size: 14px;
+            color: #94a3b8;
           }
         }
       }
@@ -854,306 +1403,511 @@ onMounted(() => {
     
     .paper-actions {
       display: flex;
-      gap: 0.5rem;
+      flex-direction: column;
+      gap: 12px;
+      
+      @media (max-width: 768px) {
+        flex-direction: row;
+      }
     }
   }
 }
 
-.empty-pending {
-  padding: 2rem 0;
+// 空状态
+.empty-state {
+  padding: 40px 0;
   text-align: center;
+  
+  .empty-icon {
+    font-size: 48px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+  
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
 }
 
-.progress-charts {
+// 图表区域
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  
+  .chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 16px;
+  }
+  
   .chart-container {
-    .chart-title {
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
     
-    .chart-placeholder {
+  }
+  
+  .echarts-container {
+    width: 100%;
+    height: 300px;
+    margin-bottom: 16px;
+  }
+  
+  .status-details {
+    
+    .status-detail-item {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      min-height: 350px;
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
       
-      .echarts-container {
-        margin-bottom: 1rem;
+      &:hover {
+        background-color: #f8fafc;
+        border-radius: 8px;
       }
       
-      .loading-placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 300px;
-        
-        .loading-text {
-          color: #7f8c8d;
-          font-size: 1rem;
-        }
+      &:last-child {
+        border-bottom: none;
       }
       
-      .no-data-placeholder {
+      .status-info {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        height: 300px;
-        color: #7f8c8d;
+        gap: 8px;
         
-        .no-data-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
+        .status-color {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          flex-shrink: 0;
         }
         
-        .no-data-text {
-          font-size: 1.2rem;
+        .status-name {
+          color: #0f172a;
+          font-size: 0.875rem;
           font-weight: 500;
-          margin-bottom: 0.5rem;
-        }
-        
-        .no-data-subtext {
-          font-size: 0.9rem;
         }
       }
       
-      .progress-text {
-        text-align: center;
-        
-        .progress-value {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #2c3e50;
-        }
-        
-        .progress-label {
-          font-size: 0.875rem;
-          color: #7f8c8d;
-        }
-      }
-      
-      .status-details {
-        margin-top: 1rem;
-        width: 100%;
-        
-        .status-detail-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem;
-          border-bottom: 1px solid #f1f2f6;
-          
-          &:last-child {
-            border-bottom: none;
-          }
-          
-          .status-info-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            
-            .status-color-indicator {
-              width: 12px;
-              height: 12px;
-              border-radius: 50%;
-              flex-shrink: 0;
-            }
-            
-            .status-name {
-              color: #2c3e50;
-              font-size: 0.9rem;
-              font-weight: 500;
-            }
-          }
-          
-          .status-metrics {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            
-            .status-count {
-              color: #667eea;
-              font-weight: 700;
-              font-size: 1rem;
-              min-width: 20px;
-              text-align: right;
-            }
-            
-            .status-percentage {
-              color: #7f8c8d;
-              font-size: 0.8rem;
-              background-color: #f8f9fa;
-              padding: 0.25rem 0.5rem;
-              border-radius: 4px;
-              min-width: 40px;
-              text-align: center;
-            }
-          }
-        }
-      }
-      
-      .bar-item {
-        margin-bottom: 1rem;
+      .status-metrics {
         display: flex;
+        gap: 16px;
         align-items: center;
-        gap: 0.5rem;
         
-        .bar-label {
-          display: block;
-          min-width: 80px;
-          color: #2c3e50;
-          font-size: 0.875rem;
-        }
-        
-        .bar-value {
-          min-width: 30px;
-          text-align: right;
-          color: #667eea;
+        .status-count {
+          color: #0f172a;
           font-weight: 600;
           font-size: 0.875rem;
         }
+        
+        .status-percentage {
+          color: #64748b;
+          font-size: 0.75rem;
+          background-color: #f8fafc;
+          padding: 4px 12px;
+          border-radius: 12px;
+        }
       }
+    }
+  }
+  
+  .bar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .bar-label {
+      min-width: 100px;
+      font-size: 0.875rem;
+      color: #0f172a;
+      font-weight: 500;
+    }
+    
+    .bar-container {
+      flex: 1;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      
+      .bar-fill {
+        height: 100%;
+        background: #0ea5e9;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+      }
+    }
+    
+    .bar-value {
+      min-width: 40px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #0f172a;
+      text-align: right;
+    }
+  }
+  
+  .empty-chart {
+    padding: 40px 0;
+    text-align: center;
+    
+    .empty-icon {
+      font-size: 48px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    
+    .empty-text {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    
+    .empty-subtext {
+      font-size: 0.875rem;
+      color: #64748b;
     }
   }
 }
 
+// 学生状态统计
 .students-stats {
   .status-item {
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
     
     .status-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 12px;
       
       .status-value {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #0f172a;
       }
       
       .status-label {
-        color: #7f8c8d;
         font-size: 0.875rem;
+        color: #64748b;
+      }
+      
+      .status-percentage {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #0f172a;
+      }
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      
+      .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+        
+        &.warning {
+          background: #f59e0b;
+        }
+        
+        &.success {
+          background: #10b981;
+        }
+        
+        &.danger {
+          background: #ef4444;
+        }
+        
+        &:not(.warning):not(.success):not(.danger) {
+          background: #0ea5e9;
+        }
       }
     }
     
     .empty-progress {
       height: 6px;
-      background-color: #f5f5f5;
+      background: #e2e8f0;
       border-radius: 3px;
       font-size: 0.75rem;
-      color: #909399;
+      color: #94a3b8;
       text-align: center;
       line-height: 6px;
-      margin-top: 4px;
-    }
-    
-    // 确保进度条正确显示
-    :deep(.el-progress) {
-      .el-progress-bar {
-        .el-progress-bar__outer {
-          background-color: #e4e7ed;
-          border-radius: 100px;
-          overflow: hidden;
-        }
-        
-        .el-progress-bar__inner {
-          background-color: #667eea;
-          border-radius: 100px;
-          transition: width 0.3s ease;
-        }
-      }
-      
-      // 审核中状态使用警告色
-      &:nth-child(2) {
-        .el-progress-bar__inner {
-          background-color: #e6a23c;
-        }
-      }
-      
-      // 已通过状态使用成功色
-      &:nth-child(3) {
-        .el-progress-bar__inner {
-          background-color: #67c23a;
-        }
-      }
-      
-      // 需修改状态使用错误色
-      &:nth-child(4) {
-        .el-progress-bar__inner {
-          background-color: #f56c6c;
-        }
-      }
     }
   }
 }
 
+// 快速操作
 .action-buttons {
   display: grid;
-  gap: 0.75rem;
+  gap: 12px;
   
   .action-button {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
     border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
     
     &:hover {
-      background-color: #f8f9fa;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.1);
+    }
+    
+    &.primary {
+      background: #1e40af;
+      color: white;
+      border: none;
+      
+      &:hover {
+        background: #1e3a8a;
+      }
+    }
+    
+    &:not(.primary) {
+      background: #f8fafc;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      
+      &:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+      }
+    }
+    
+    .el-icon {
+      font-size: 16px;
     }
   }
 }
 
-.activity-item {
-  .activity-content {
-    .activity-title {
-      font-weight: 500;
-      color: #2c3e50;
+// 审核效率
+.efficiency-stats {
+  display: grid;
+  gap: 16px;
+  
+  .efficiency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    
+    .efficiency-label {
+      font-size: 0.875rem;
+      color: #64748b;
     }
     
-    .activity-desc {
-      margin: 0.25rem 0 0 0;
-      color: #7f8c8d;
-      font-size: 0.875rem;
+    .efficiency-value {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #0f172a;
     }
+  }
+}
+
+// 按钮样式
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #1e40af;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #1e3a8a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  
+  .el-icon {
+    font-size: 14px;
+  }
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  
+  .el-icon {
+    font-size: 16px;
   }
 }
 
 // 响应式设计
 @media (max-width: 768px) {
-  .page-header {
+  .teacher-dashboard {
+    padding: 16px;
+  }
+  
+  .welcome-content {
     flex-direction: column;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .welcome-actions {
+    width: 100%;
     
-    .quick-actions {
-      width: 100%;
-      
-      .el-button {
-        flex: 1;
-      }
+    .primary-button,
+    .secondary-button {
+      flex: 1;
+      justify-content: center;
     }
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .today-stats {
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .pending-item {
     flex-direction: column;
-    align-items: flex-start !important;
+    align-items: flex-start;
     
     .paper-actions {
       width: 100%;
+      flex-direction: row;
       justify-content: flex-end;
-      margin-top: 1rem;
+      margin-top: 16px;
     }
   }
   
-  .progress-charts {
-    .el-col {
-      margin-bottom: 1rem;
-    }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .today-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem !important;
+  }
+  
+  .card {
+    padding: 20px;
   }
 }
 </style>

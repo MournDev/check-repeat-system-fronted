@@ -7,6 +7,7 @@ export const useUserStore = defineStore("user", {
     token: Cookies.get("token") || "", // 从Cookie读取令牌（持久化）
     role: Cookies.get("role") || "", // 角色（STUDENT/TEACHER/ADMIN）
     userInfo: JSON.parse(localStorage.getItem("userInfo")) || null, // 用户信息
+    lastActivityTime: Date.now(), // 最后活动时间
   }),
   actions: {
     // 登录：存储令牌和角色
@@ -33,20 +34,23 @@ export const useUserStore = defineStore("user", {
         introduce: res.data.introduce,
         avatar: res.data.avatar,
         lastLoginTime: res.data.lastLoginTime,
-        // title: res.data.title,
-        // collegeId: res.data.collegeId,
-        // researchFields: res.data.researchFields,
-        // office: res.data.office,
-        // officeHours: res.data.officeHours,
-        // maxReviewCount: res.data.maxReviewCount,
-        // remainingReviewCount: res.data.remainingReviewCount,
         expireDate: res.data.expireDate,
         expireTime: res.data.expireTime,
       };
       // 持久化存储（防止页面刷新丢失）
-      Cookies.set("token", this.token, { expires: 1 }); // 有效期1天
-      Cookies.set("role", this.role, { expires: 1 });
+      const isDevelopment = import.meta.env.DEV;
+      Cookies.set("token", this.token, { 
+        expires: 1, // 有效期1天
+        secure: !isDevelopment, // 仅在非开发环境使用HTTPS
+        sameSite: "strict" // 防止CSRF
+      });
+      Cookies.set("role", this.role, { 
+        expires: 1,
+        secure: !isDevelopment,
+        sameSite: "strict"
+      });
       localStorage.setItem("userInfo", JSON.stringify(this.userInfo));
+      this.lastActivityTime = Date.now();
       return res;
     },
     // 添加注册方法
@@ -68,6 +72,7 @@ export const useUserStore = defineStore("user", {
       this.token = "";
       this.role = "";
       this.userInfo = null;
+      this.lastActivityTime = 0;
       Cookies.remove("token");
       Cookies.remove("role");
       localStorage.removeItem("userInfo");
@@ -85,11 +90,32 @@ export const useUserStore = defineStore("user", {
       try {
         const s = localStorage.getItem("userInfo");
         if (s) this.userInfo = JSON.parse(s);
-        const t = localStorage.getItem("token");
+        const t = Cookies.get("token");
         if (t) this.token = t;
+        const r = Cookies.get("role");
+        if (r) this.role = r;
+        this.lastActivityTime = Date.now();
       } catch (e) {
         /* ignore */
       }
+    },
+    // 检查token是否有效
+    isTokenValid() {
+      if (!this.token) return false;
+      // 检查活动时间，超过30分钟无活动需要重新验证
+      const now = Date.now();
+      const thirtyMinutes = 30 * 60 * 1000;
+      return now - this.lastActivityTime < thirtyMinutes;
+    },
+    // 更新活动时间
+    updateActivityTime() {
+      this.lastActivityTime = Date.now();
+    },
+    // 敏感操作验证
+    async verifySensitiveOperation() {
+      // 这里可以实现二次验证逻辑，如密码验证或短信验证
+      // 目前简单实现为检查token有效性
+      return this.isTokenValid();
     },
   },
   getters: {

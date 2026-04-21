@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { ElMessage } from "element-plus";
-import component from "element-plus/es/components/tree-select/src/tree-select-option.mjs";
-import { pa } from "element-plus/es/locales.mjs";
+import Cookies from "js-cookie";
 
 // 静态路由（无需权限）
 const constantRoutes = [
@@ -61,12 +60,6 @@ const asyncRoutes = [
         component: () => import("@/views/admin/Dashboard.vue"),
         meta: { role: "ADMIN", title: "管理员仪表盘" },
       },
-      {
-        path: "/message-center",
-        name: "MessageCenter",
-        component: () => import("@/components/MessageCenter.vue"),
-        meta: { title: "消息中心" },
-      },
     ],
   },
 
@@ -89,7 +82,7 @@ const asyncRoutes = [
   {
     path: "/student",
     component: () => import("@/components/layout/MainLayout.vue"),
-    meta: { requiresAuth: true, role: "STUDENT" },
+    meta: { requiresAuth: true, roles: ["STUDENT", "TEACHER", "ADMIN"] },
     children: [
       {
         path: "paper-submit",
@@ -97,12 +90,7 @@ const asyncRoutes = [
         component: () => import("@/views/student/PaperSubmit.vue"),
         meta: { title: "论文提交" },
       },
-      {
-        path: "paper-details",
-        name: "PaperDetail",
-        component: () => import("@/views/student/PaperDetail.vue"),
-        meta: { title: "论文详情" },
-      },
+      {        path: "paper-details",        name: "PaperDetail",        component: () => import("@/views/student/PaperDetail.vue"),        meta: { title: "论文详情", roles: ["STUDENT", "TEACHER", "ADMIN"] },      },
       {
         path: "my-papers",
         name: "MyPapers",
@@ -151,6 +139,12 @@ const asyncRoutes = [
         name: "CheckHistory",
         component: () => import("@/views/student/CheckHistory.vue"),
         meta: { title: "查重历史详情" },
+      },
+      {
+        path: "student-check-with-websocket",
+        name: "StudentCheckWithWebSocket",
+        component: () => import("@/views/student/StudentCheckWithWebSocket.vue"),
+        meta: { title: "查重管理" },
       },
       {
         path: "academic-integrity",
@@ -222,6 +216,36 @@ const asyncRoutes = [
         component: () => import("@/views/teacher/Profile.vue"),
         meta: { title: "个人中心" },
       },
+      {
+        path: "review-templates",
+        name: "ReviewTemplates",
+        component: () => import("@/views/teacher/ReviewTemplates.vue"),
+        meta: { title: "审核意见模板" },
+      },
+      {
+        path: "student-groups",
+        name: "StudentGroups",
+        component: () => import("@/views/teacher/StudentGroups.vue"),
+        meta: { title: "学生分组管理" },
+      },
+      {
+        path: "similarity-thresholds",
+        name: "SimilarityThresholds",
+        component: () => import("@/views/teacher/SimilarityThreshold.vue"),
+        meta: { title: "相似度阈值设置" },
+      },
+      {
+        path: "review-workflow",
+        name: "ReviewWorkflow",
+        component: () => import("@/views/teacher/ReviewWorkflow.vue"),
+        meta: { title: "审核工作流配置" },
+      },
+      {
+        path: "chat-center",
+        name: "ChatCenter",
+        component: () => import("@/views/teacher/ChatCenter.vue"),
+        meta: { title: "在线聊天" },
+      },
     ],
   },
   // 管理员核心路由
@@ -290,6 +314,12 @@ const asyncRoutes = [
         component: () => import("@/views/admin/PaperLibrary.vue"),
         meta: { title: "论文库管理" },
       },
+      {
+        path: "report-management",
+        name: "ReportManagement",
+        component: () => import("@/views/admin/ReportManagement.vue"),
+        meta: { title: "报告管理" },
+      },
     ],
   },
   {
@@ -309,24 +339,37 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 设置页面标题
   document.title = `${to.meta.title} - ${import.meta.env.VITE_SYSTEM_NAME}`;
-  const userStore = useUserStore();
-  const requiresAuth = to.meta.requiresAuth === true;
+  const token = Cookies.get('token') || localStorage.getItem('token');
+  const role = Cookies.get('role') || localStorage.getItem('role');
+
+  // 不需要认证的路径
+  const noAuthPaths = ['/login', '/register', '/reset', '/verify-email', '/404', '/401'];
+  
+  if (noAuthPaths.includes(to.path)) {
+    next();
+    return;
+  }
+
+  // 检查是否需要认证
+  const requiresAuth = to.meta.requiresAuth !== false;
+  const allowedRoles = to.meta.roles || (to.meta.role ? [to.meta.role] : []);
 
   if (requiresAuth) {
     // 未登录，跳转到登录页
-    if (!userStore.token) {
+    if (!token) {
       next("/login");
       ElMessage.warning("请先登录");
     } else {
       // 验证角色权限
-      if (to.meta.role) {
-        if (userStore.role === to.meta.role) {
+      if (allowedRoles.length > 0) {
+        if (allowedRoles.includes(role)) {
           next();
         } else {
           ElMessage.error("无权限访问该页面");
           next(from.path); // 回退到之前的页面
         }
       } else {
+        // 如果当前路由没有权限配置，认为有权限
         next();
       }
     }

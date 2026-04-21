@@ -55,63 +55,47 @@
     </el-alert>
 
     <!-- 统计卡片 -->
-    <el-row :gutter="16" class="stats-row">
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-              <el-icon><Clock /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-number">{{ stats.totalPending }}</div>
-              <div class="stat-label">待审核总数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon pending-icon">
+          <el-icon><Clock /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.totalPending }}</div>
+          <div class="stat-label">待审核总数</div>
+        </div>
+      </div>
 
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-              <el-icon><Warning /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-number">{{ stats.urgentPending }}</div>
-              <div class="stat-label">紧急待审</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+      <div class="stat-card">
+        <div class="stat-icon urgent-icon">
+          <el-icon><Warning /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.urgentPending }}</div>
+          <div class="stat-label">紧急待审</div>
+        </div>
+      </div>
 
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-              <el-icon><Timer /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-number">{{ stats.avgWaitingTime }}天</div>
-              <div class="stat-label">平均等待时间</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+      <div class="stat-card">
+        <div class="stat-icon time-icon">
+          <el-icon><Timer /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.avgWaitingTime }}天</div>
+          <div class="stat-label">平均等待时间</div>
+        </div>
+      </div>
 
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-              <el-icon><Check /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-number">{{ stats.todayReviewed }}</div>
-              <div class="stat-label">今日已审</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+      <div class="stat-card">
+        <div class="stat-icon reviewed-icon">
+          <el-icon><Check /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.todayReviewed }}</div>
+          <div class="stat-label">今日已审</div>
+        </div>
+      </div>
+    </div>
 
     <!-- 筛选和操作栏 -->
     <el-card class="action-card" shadow="never">
@@ -174,14 +158,9 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="studentName" label="学生信息" width="220">
+        <el-table-column prop="studentName" label="学生信息" min-width="250">
           <template #default="{ row }">
             <div class="student-info-enhanced">
-              <div class="student-avatar">
-                <el-avatar :size="32" :src="getAvatarUrl(row.avatar)">
-                  {{ row.studentName.charAt(0) }}
-                </el-avatar>
-              </div>
               <div class="student-details">
                 <div class="student-main-info">
                   <span class="student-name">{{ row.studentName }}</span>
@@ -202,7 +181,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="paperTitle" label="论文信息" min-width="280">
+        <el-table-column prop="paperTitle" label="论文信息" min-width="320">
           <template #default="{ row }">
             <div class="paper-info-enhanced">
               <div class="paper-title-section">
@@ -213,7 +192,7 @@
                   <el-tag size="small" type="primary" effect="dark">V{{ row.version }}</el-tag>
                   <el-tag size="small" type="success" effect="plain">
                     <el-icon><Calendar /></el-icon>
-                    {{ formatDate(row.submitTime) }}
+                    {{ formatDateTime(row.submitTime, 'YYYY-MM-DD HH:mm:ss') }}
                   </el-tag>
                 </div>
               </div>
@@ -231,7 +210,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="similarity" label="查重结果" width="200">
+        <el-table-column prop="similarity" label="查重结果" min-width="220">
           <template #default="{ row }">
             <div class="similarity-info-enhanced">
               <div class="similarity-header">
@@ -310,7 +289,7 @@
         <el-table-column prop="deadline" label="截止时间" width="150">
           <template #default="{ row }">
             <div class="deadline-cell">
-              <div>{{ formatDateTime(row.deadline) }}</div>
+              <div>{{ formatDateTime(row.deadline, 'YYYY-MM-DD HH:mm:ss') }}</div>
               <div v-if="isOverdue(row)" class="deadline-overdue">
                 <el-icon><Warning /></el-icon>
                 <span>已超时</span>
@@ -419,8 +398,9 @@
     <ReviewDialog
       v-model="reviewDialogVisible"
       :paper-id="currentPaperId"
-      :selected-papers="selectedPapers"
-      @review-completed="handleReviewCompleted"
+      :is-batch="selectedPapers.length > 1"
+      :papers="selectedPapers"
+      @review-complete="handleReviewCompleted"
     />
 
     <!-- 相似度报告对话框 -->
@@ -544,15 +524,852 @@
   </div>
 </template>
 
+<style scoped>
+.teacher-pending {
+  min-height: 100vh;
+  background: #f8fafc; /* Slate-50 */
+  color: #0f172a; /* Slate-900 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+}
+
+.page-title {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.urgent-alert {
+  margin-bottom: 24px;
+  
+  :deep(.el-alert) {
+    border-radius: 8px;
+    border-left-width: 4px;
+  }
+  
+  :deep(.el-alert__content) {
+    font-size: 0.875rem;
+  }
+  
+  :deep(.el-alert__closebtn) {
+    font-size: 16px;
+  }
+  
+  :deep(.el-button) {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 6px;
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    
+    &.pending-icon {
+      background: #fef3c7;
+      color: #f59e0b;
+    }
+    
+    &.urgent-icon {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    
+    &.time-icon {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    &.reviewed-icon {
+      background: #d1fae5;
+      color: #10b981;
+    }
+  }
+  
+  .stat-content {
+    flex: 1;
+    
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+  }
+}
+
+.action-card {
+  margin-bottom: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+}
+
+.action-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.action-left, .action-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  
+  @media (max-width: 1200px) {
+    width: 100%;
+  }
+}
+
+:deep(.el-select) {
+  width: 180px;
+  
+  :deep(.el-input__wrapper) {
+    border-radius: 8px;
+    
+    &:hover {
+      box-shadow: none;
+      border-color: #cbd5e1;
+    }
+    
+    &.is-focus {
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+  }
+}
+
+:deep(.el-button) {
+  border-radius: 8px;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &.el-button--primary {
+    background: #1e40af;
+    border-color: #1e40af;
+    
+    &:hover {
+      background: #1e3a8a;
+      border-color: #1e3a8a;
+    }
+  }
+}
+
+.list-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+}
+
+:deep(.el-table) {
+  border-radius: 12px;
+  overflow: hidden;
+  
+  .el-table__header-wrapper {
+    .el-table__header {
+      background: #f8fafc;
+      
+      th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+    }
+  }
+  
+  .el-table__body-wrapper {
+    .el-table__row {
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #f8fafc !important;
+      }
+      
+      td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.875rem;
+        color: #0f172a;
+      }
+    }
+  }
+  
+  .el-table__empty-block {
+    padding: 64px 0;
+    
+    .el-empty__description {
+      color: #64748b;
+    }
+    
+    .el-button {
+      border-radius: 8px;
+      
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+.student-info-enhanced {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.student-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-main-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  
+  @media (max-width: 1200px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+.student-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  
+  @media (max-width: 1200px) {
+    max-width: 100%;
+  }
+}
+
+:deep(.el-tag) {
+  border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  
+  &.el-tag--info {
+    background: #e0f2fe;
+    border-color: #e0f2fe;
+    color: #0284c7;
+  }
+  
+  &.el-tag--primary {
+    background: #dbeafe;
+    border-color: #dbeafe;
+    color: #1e40af;
+  }
+  
+  &.el-tag--success {
+    background: #d1fae5;
+    border-color: #d1fae5;
+    color: #059669;
+  }
+  
+  &.el-tag--warning {
+    background: #fef3c7;
+    border-color: #fef3c7;
+    color: #d97706;
+  }
+  
+  &.el-tag--danger {
+    background: #fee2e2;
+    border-color: #fee2e2;
+    color: #dc2626;
+  }
+}
+
+.student-secondary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.college-tag, .contact-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #64748b;
+  
+  .el-icon {
+    font-size: 14px;
+  }
+}
+
+.paper-info-enhanced {
+  padding: 8px 0;
+}
+
+.paper-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+.paper-title {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  flex: 1;
+  min-width: 0;
+}
+
+.paper-tags {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    align-self: flex-start;
+  }
+}
+
+.paper-meta-enhanced {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 16px;
+  
+  .el-icon {
+    font-size: 14px;
+  }
+}
+
+.similarity-info-enhanced {
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.similarity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.similarity-score-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.similarity-percentage {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  
+  &.high {
+    color: #ef4444;
+  }
+  
+  &.medium {
+    color: #f59e0b;
+  }
+  
+  &.low {
+    color: #10b981;
+  }
+}
+
+.similarity-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:deep(.el-progress) {
+  width: 100%;
+  
+  .el-progress__bar {
+    border-radius: 3px;
+    
+    .el-progress__inner {
+      border-radius: 3px;
+    }
+  }
+}
+
+.similarity-indicators {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.2s ease;
+  
+  &.active {
+    transform: scale(1.2);
+  }
+  
+  &.current {
+    transform: scale(1.4);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 0 4px currentColor;
+  }
+}
+
+.similarity-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+:deep(.el-button--small) {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.waiting-time {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: center;
+  padding: 8px 0;
+  
+  &.urgent {
+    color: #ef4444;
+  }
+  
+  &.high {
+    color: #f59e0b;
+  }
+  
+  &.normal {
+    color: #10b981;
+  }
+}
+
+.deadline-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.deadline-overdue, .deadline-warning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+  
+  .el-icon {
+    font-size: 14px;
+  }
+}
+
+.deadline-overdue {
+  color: #ef4444;
+}
+
+.deadline-warning {
+  color: #f59e0b;
+}
+
+.action-buttons-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+:deep(.el-button-group) {
+  @media (max-width: 768px) {
+    width: 100%;
+    
+    .el-button {
+      flex: 1;
+      text-align: center;
+    }
+  }
+}
+
+.more-dropdown {
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    
+    .more-btn {
+      width: 100%;
+    }
+  }
+}
+
+:deep(.el-dropdown-menu) {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  border: 1px solid #e2e8f0;
+  
+  .el-dropdown-menu__item {
+    font-size: 0.875rem;
+    padding: 8px 16px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+  }
+}
+
+.batch-actions {
+  padding: 16px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.preview-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+  
+  :deep(.el-dialog__header) {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 20px 24px;
+    
+    .el-dialog__title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    
+    .el-dialog__headerbtn {
+      top: 20px;
+      
+      .el-dialog__close {
+        font-size: 20px;
+        color: #64748b;
+        
+        &:hover {
+          color: #0f172a;
+        }
+      }
+    }
+  }
+  
+  :deep(.el-dialog__body) {
+    padding: 0;
+  }
+}
+
+.preview-container {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  min-height: 500px;
+}
+
+.preview-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+.loading-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.error-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 48px;
+  
+  .el-icon {
+    font-size: 48px;
+    color: #94a3b8;
+  }
+  
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+  
+  ul {
+    text-align: left;
+    margin: 16px 0;
+    padding-left: 24px;
+  }
+  
+  li {
+    margin-bottom: 8px;
+  }
+}
+
+.report-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+  
+  :deep(.el-dialog__header) {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 20px 24px;
+    
+    .el-dialog__title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  }
+  
+  :deep(.el-dialog__body) {
+    padding: 0;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  
+  :deep(.el-button) {
+    font-size: 0.875rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .action-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .action-left, .action-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .teacher-pending {
+    padding: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-left, .action-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  :deep(.el-select) {
+    width: 100%;
+  }
+  
+  :deep(.el-button) {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .preview-container {
+    height: 60vh;
+    min-height: 400px;
+  }
+}
+</style>
+
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import ReviewDialog from '@/views/teacher/ReviewDialog.vue'
-import PlagiarismReportViewer from '@/views/teacher/PlagiarismReportViewer.vue'
-// import SimilarityReportDialog from './components/SimilarityReportDialog.vue'
+import PlagiarismReportViewer from '@/views/teacher/PlagiarismReportViewer.vue'// import SimilarityReportDialog from './components/SimilarityReportDialog.vue'
 import PriorityBadge from '@/views/teacher/PriorityBadge.vue'
-import { getAvatarUrl } from '@/utils/avatar'
+import { formatDateTime } from '@/utils/dataType.js'
+
 import { 
   getPendingReviewList, 
   doReview, 
@@ -586,7 +1403,9 @@ import {
   Download,
   User,
   DocumentChecked,
-  ArrowDown
+  ArrowDown,
+  FullScreen,
+  OfficeBuilding
 } from '@element-plus/icons-vue'
 
 // 统计数据
@@ -1010,20 +1829,7 @@ const urgentPapers = computed(() => {
   return papers.value.filter(p => !isOverdue(p) && isUrgent(p))
 })
 
-const formatDate = (dateString) => {
-  const datePart = dateString?.split(' ')[0];
-  return datePart ?? '-';
-};
-
-const formatDateTime = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+// 使用导入的 formatDateTime 函数
 
 const truncateText = (text, maxLength = 50) => {
   if (text == null) return '';
@@ -1057,26 +1863,25 @@ const refreshList = async () => {
     
     const raw = listResponse?.data?.records || []
 
-    // 将 paperBaseInfo 展平并做字段兜底
+    // 增强的 normalize 函数，支持从嵌套结构中获取字段
     const normalize = (item) => {
+      // 从嵌套结构中获取数据
       const base = item?.paperBaseInfo || {}
-      const submit = item.submitTime ?? base.submitTime ?? base.createTime ?? null
-      const backendDeadline = item.deadline ?? base.deadline ?? item.taskBaseInfo?.deadline ?? item.reviewOperateInfo?.deadline ?? null
-      const reviewDays = item.reviewDays ?? base.reviewDays ?? 7
-      const finalDeadline = backendDeadline ?? computeDeadlineFromSubmit(submit, reviewDays)
-
+      const task = item?.taskBaseInfo || {}
+      
       return {
         ...item,
-        paperId: item.paperId ?? base.paperId ?? base.paperId ?? null,
-        paperTitle: item.paperTitle ?? base.paperTitle ?? base.paperName ?? '',
-        studentName: item.studentName ?? base.studentName ?? base.realName ?? '',
-        studentId: item.studentId ?? base.studentId ?? base.studentNo ?? item.studentNo ?? '',
+        // 保持兼容性，确保所有字段都有合理的默认值
+        paperId: item.paperId ?? base.paperId ?? item.id ?? null,
+        paperTitle: item.paperTitle ?? base.paperTitle ?? '',
+        studentName: item.studentName ?? base.studentName ?? '',
+        studentId: item.studentId ?? base.studentId ?? '',
         studentNo: item.studentNo ?? base.studentNo ?? '',
-        submitTime: submit,
-        similarity: item.similarity ?? base.similarity ?? base.similarityRate ?? 0,
-        waitingTime: item.waitingTime ?? item.daysWaiting ?? 0,
+        submitTime: item.submitTime ?? base.submitTime ?? null,
+        similarity: item.similarity ?? task.checkRate ?? 0,
+        waitingTime: item.waitingTime ?? 0,
         priority: item.priority ?? 'normal',
-        deadline: finalDeadline,
+        deadline: item.deadline ?? null,
         college: item.college ?? base.college ?? '未知学院',
         email: item.email ?? base.email ?? ''
       }
@@ -1395,44 +2200,22 @@ const getTodayReviewedCountLocal = async () => {
 
 const handleReviewCompleted = async (reviewResult) => {
   try {
-    // 如果有审核结果，则调用doReview接口
-    if (reviewResult) {
-      // 根据是否有选中论文来决定是单个审核还是批量审核
-      let paperIds = []
-      
-      if (selectedPapers.value.length > 1) {
-        // 批量审核：使用选中的论文ID
-        paperIds = selectedPapers.value.map(paper => paper.paperId || paper.id)
-      } else {
-        // 单个审核：使用当前论文ID
-        paperIds = [currentPaperId.value]
-      }
-      
-      const reviewData = {
-        paperIds: paperIds,
-        reviewStatus: convertToBackendStatus(statusValue), // 统一转换为后端期望的整型状态
-        reviewOpinion: reviewResult.opinion || '',
-        reviewAttach: reviewResult.attach || null
-      }
-      
-      await doReview(reviewData)
-      
-      if (paperIds.length > 1) {
-        ElMessage.success(`成功审核 ${paperIds.length} 篇论文`)
-        // 批量审核后清空选择
-        clearSelection()
-      } else {
-        ElMessage.success('论文审核成功')
-      }
-    }
-    
     // 刷新列表并关闭对话框
     await refreshList()
     reviewDialogVisible.value = false
+    
+    // 批量审核后清空选择
+    if (reviewResult && reviewResult.batch) {
+      clearSelection()
+    }
   } catch (error) {
     console.error('审核操作失败:', error)
     ElMessage.error('审核操作失败，请重试')
   }
+}
+
+const loadPendingPapers = async () => {
+  await refreshList()
 }
 
 onMounted(async () => {
@@ -1447,14 +2230,25 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+$primary-color: #1a365d;
+$secondary-color: #63b3ed;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$danger-color: #f56c6c;
+$gray-color: #666;
+$light-gray: #f5f7fa;
+$border-color: #e4e7ed;
+
 .teacher-pending {
-  padding: 20px;
-  background-color: #f5f7fa;
+  min-height: 100vh;
+  background-color: $light-gray;
+  padding: 2rem 0;
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .header-content {
@@ -1463,31 +2257,61 @@ onUnmounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .header-left .page-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.75rem;
   font-weight: 600;
-  color: #303133;
+  color: white;
 }
 
 .header-left .page-subtitle {
   margin: 8px 0 0;
-  font-size: 14px;
-  color: #909399;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.header-right .el-button {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .urgent-alert {
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .stats-row {
-  margin-bottom: 16px;
+  margin-bottom: 2rem;
 }
 
 .stat-card {
   height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  :deep(.el-card__body) {
+    padding: 20px;
+  }
 }
 
 .stat-content {
@@ -1497,14 +2321,15 @@ onUnmounted(() => {
 }
 
 .stat-icon-wrapper {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 24px;
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .stat-info {
@@ -1512,20 +2337,28 @@ onUnmounted(() => {
 }
 
 .stat-number {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  color: #303133;
+  color: $primary-color;
   line-height: 1.2;
+  margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 14px;
-  color: #909399;
-  margin: 4px 0;
+  color: $gray-color;
+  margin: 0;
 }
 
 .action-card {
-  margin-bottom: 16px;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  
+  :deep(.el-card__body) {
+    padding: 20px;
+  }
 }
 
 .action-content {
@@ -1541,148 +2374,65 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+  
+  .el-button {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .el-select {
+    min-width: 120px;
+  }
 }
 
 .list-card {
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+  
+  :deep(.el-card__body) {
+    padding: 0;
+  }
 }
 
-.student-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.student-main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.student-name {
-  font-weight: 500;
-  color: #303133;
-}
-
-.student-college {
-  font-size: 12px;
-  color: #909399;
-}
-
-.student-contact {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #606266;
-}
-
-.paper-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.paper-title {
-  font-weight: 500;
-  color: #303133;
-  line-height: 1.4;
-  cursor: pointer;
-}
-
-.paper-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #909399;
-}
-
-.similarity-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.similarity-score {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.similarity-bar {
-  flex: 1;
-}
-
-.similarity-value {
-  min-width: 45px;
-  text-align: right;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.similarity-low {
-  color: #52c41a;
-}
-
-.similarity-medium {
-  color: #faad14;
-}
-
-.similarity-high {
-  color: #ff4d4f;
-}
-
-.similarity-detail {
-  text-align: right;
-}
-
-.waiting-time {
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.waiting-short {
-  color: #52c41a;
-}
-
-.waiting-medium {
-  color: #faad14;
-}
-
-.waiting-long {
-  color: #ff4d4f;
-}
-
-.deadline-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.deadline-warning {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #ff4d4f;
-  font-size: 12px;
-}
-
-.enhanced-table-card {
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-}
-
-.enhanced-table .table-row:hover {
-  background-color: #f5f7fa;
-  transition: background-color 0.3s ease;
+.enhanced-table {
+  width: 100%;
+  
+  :deep(.el-table__header-wrapper) {
+    background-color: $light-gray;
+    
+    th {
+      color: $primary-color;
+      font-weight: 600;
+      border-bottom: 2px solid $primary-color;
+      padding: 12px 16px;
+    }
+  }
+  
+  :deep(.el-table__row:hover) {
+    background-color: rgba(26, 54, 93, 0.05);
+    transition: background-color 0.3s ease;
+  }
+  
+  :deep(.el-table__row) {
+    transition: all 0.3s ease;
+    padding: 16px 0;
+  }
+  
+  :deep(.el-table__row.el-table__row--striped) {
+    background-color: rgba(26, 54, 93, 0.02);
+  }
+  
+  :deep(.el-table__cell) {
+    padding: 16px;
+  }
 }
 
 /* 学生信息增强样式 */
@@ -1690,11 +2440,18 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #f0f7ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
-.student-avatar {
-  flex-shrink: 0;
-}
+
 
 .student-details {
   flex: 1;
@@ -1705,13 +2462,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .student-name {
   font-weight: 600;
-  color: #303133;
+  color: $primary-color;
   font-size: 14px;
+  font-weight: 600;
 }
 
 .student-secondary-info {
@@ -1719,13 +2477,17 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
-  color: #909399;
+  color: $gray-color;
 }
 
 .college-tag, .contact-info {
   display: flex;
   align-items: center;
   gap: 4px;
+  
+  .el-icon {
+    color: $secondary-color;
+  }
 }
 
 /* 论文信息增强样式 */
@@ -1737,37 +2499,54 @@ onUnmounted(() => {
 
 .paper-title-section {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .paper-title {
-  font-weight: 600;
-  color: #303133;
-  font-size: 14px;
+  font-weight: 500;
+  color: $primary-color;
   line-height: 1.4;
+  cursor: pointer;
+  flex: 1;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: $secondary-color;
+    background: #f0f7ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .paper-tags {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .paper-meta-enhanced {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .meta-chip {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  background-color: #f0f2f5;
-  border-radius: 12px;
   font-size: 12px;
-  color: #606266;
+  color: $gray-color;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 12px;
+  
+  .el-icon {
+    color: $secondary-color;
+  }
 }
 
 /* 相似度信息增强样式 */
@@ -1775,6 +2554,14 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .similarity-header {
@@ -1786,100 +2573,206 @@ onUnmounted(() => {
 .similarity-score-display {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .similarity-percentage {
-  font-size: 18px;
   font-weight: 700;
-  transition: all 0.3s ease;
-}
-
-.similarity-low {
-  color: #67c23a;
-}
-
-.similarity-medium {
-  color: #e6a23c;
-}
-
-.similarity-high {
-  color: #f56c6c;
+  font-size: 18px;
+  padding: 4px 12px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .similarity-visual {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .similarity-progress {
-  border-radius: 6px;
+  :deep(.el-progress__bar) {
+    border-radius: 6px;
+  }
+  
+  :deep(.el-progress__text) {
+    display: none;
+  }
+  
+  :deep(.el-progress__bar__outer) {
+    background: #e4e7ed;
+    border-radius: 6px;
+  }
 }
 
 .similarity-indicators {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
+  align-items: center;
+  padding: 0 4px;
 }
 
 .indicator-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  opacity: 0.3;
   transition: all 0.3s ease;
-}
-
-.indicator-dot.active {
-  opacity: 1;
-  transform: scale(1.2);
-}
-
-.indicator-dot.current {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+  
+  &.active {
+    transform: scale(1.2);
+  }
+  
+  &.current {
+    transform: scale(1.5);
+    box-shadow: 0 0 0 4px rgba(26, 54, 93, 0.1);
+  }
 }
 
 .similarity-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
-.report-btn, .recheck-btn {
-  flex: 1;
-  justify-content: center;
+.report-btn,
+.recheck-btn {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 
-/* 操作按钮增强样式 */
+/* 等待时间样式 */
+.waiting-time {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.waiting-short {
+  color: $success-color;
+}
+
+.waiting-medium {
+  color: $warning-color;
+}
+
+.waiting-long {
+  color: $danger-color;
+}
+
+/* 截止时间样式 */
+.deadline-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.deadline-warning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: $warning-color;
+  font-size: 12px;
+  
+  .el-icon {
+    color: $warning-color;
+  }
+}
+
+.deadline-overdue {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: $danger-color;
+  font-size: 12px;
+  
+  .el-icon {
+    color: $danger-color;
+  }
+}
+
+/* 操作按钮样式 */
 .action-buttons-enhanced {
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .action-btn {
   transition: all 0.3s ease;
+  border-radius: 6px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 
-.primary-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+.primary-action {
+  background-color: $primary-color;
+  border-color: $primary-color;
+  
+  &:hover {
+    background-color: darken($primary-color, 10%);
+    border-color: darken($primary-color, 10%);
+  }
 }
 
-.secondary-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(103, 194, 58, 0.3);
+.secondary-action {
+  background-color: $secondary-color;
+  border-color: $secondary-color;
+  
+  &:hover {
+    background-color: darken($secondary-color, 10%);
+    border-color: darken($secondary-color, 10%);
+  }
 }
 
 .more-dropdown {
-  margin-left: 8px;
+  .el-button {
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    
+    &:hover {
+      color: $primary-color;
+      background-color: #f0f7ff;
+    }
+  }
 }
 
-.more-btn {
-  transition: all 0.3s ease;
-}
-
-.more-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* 批量操作样式 */
+.batch-actions {
+  padding: 20px;
+  border-top: 1px solid $border-color;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  
+  span {
+    font-weight: 600;
+    color: $primary-color;
+    font-size: 14px;
+  }
+  
+  .el-button {
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
 }
 
 /* 报告对话框样式 */
@@ -1898,8 +2791,8 @@ onUnmounted(() => {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid #e6e8eb;
-  background: #f5f7fa;
+  border-top: 1px solid $border-color;
+  background: $light-gray;
 }
 
 /* 论文预览对话框样式 */
@@ -1939,7 +2832,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #909399;
+  color: $gray-color;
 }
 
 .error-placeholder p {
@@ -1947,72 +2840,60 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
-.batch-actions {
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  margin-top: 20px;
-  border: 1px solid #ebeef5;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .teacher-pending {
-    padding: 12px;
+    padding: 1rem;
+  }
+  
+  .page-header {
+    margin-bottom: 1.5rem;
   }
   
   .header-content {
     flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .header-right {
-    display: flex;
-    justify-content: center;
+    align-items: flex-start;
   }
   
   .action-content {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
   
   .action-left,
   .action-right {
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
   }
   
-  .action-buttons {
+  .paper-title-section {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .paper-meta-enhanced {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .similarity-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .action-buttons-enhanced {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
   }
   
   .batch-actions {
-    padding: 12px;
-  }
-  
-  .batch-actions .el-space {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
     gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .student-main,
-  .paper-meta {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .similarity-score {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  
-  .similarity-bar {
-    width: 100%;
   }
 }
 </style>

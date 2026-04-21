@@ -275,7 +275,11 @@ const loadData = async () => {
 
 const loadStats = async () => {
   try {
-    const res = await getReviewStats(userStore.userInfo?.userId, timeRange.value)
+    const params = {
+      teacherId: userStore.userInfo?.userId,
+      timeRange: timeRange.value
+    }
+    const res = await getReviewStats(params)
     if (res.code === 200) {
       stats.value = {
         totalReviews: res.data.totalReviews || 0,
@@ -401,7 +405,11 @@ const initStatusDistributionChart = async () => {
   if (!statusDistributionChart.value) return
   
   try {
-    const res = await getReviewStatusDistribution(userStore.userInfo?.userId, timeRange.value)
+    const params = {
+      teacherId: userStore.userInfo?.userId,
+      timeRange: timeRange.value
+    }
+    const res = await getReviewStatusDistribution(params)
     if (res.code === 200) {
       const chart = echarts.init(statusDistributionChart.value)
       chartInstances.value.statusDistribution = chart
@@ -474,7 +482,11 @@ const initSimilarityChart = async () => {
   if (!similarityChart.value) return
   
   try {
-    const res = await getSimilarityDistribution(userStore.userInfo?.userId, timeRange.value)
+    const params = {
+      teacherId: userStore.userInfo?.userId,
+      timeRange: timeRange.value
+    }
+    const res = await getSimilarityDistribution(params)
     if (res.code === 200) {
       const chart = echarts.init(similarityChart.value)
       chartInstances.value.similarity = chart
@@ -541,7 +553,11 @@ const initCollegeChart = async () => {
   if (!collegeChart.value) return
   
   try {
-    const res = await getCollegeDistribution(userStore.userInfo?.userId, timeRange.value)
+    const params = {
+      teacherId: userStore.userInfo?.userId,
+      timeRange: timeRange.value
+    }
+    const res = await getCollegeDistribution(params)
     if (res.code === 200) {
       const chart = echarts.init(collegeChart.value)
       chartInstances.value.college = chart

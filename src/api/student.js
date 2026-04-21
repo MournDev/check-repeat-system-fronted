@@ -101,31 +101,28 @@ export const manualAssignAdvisor = (paperId, teacherId) => {
   });
 };
 
-export const getLatestPaper = (token) => {
+export const getLatestPaper = () => {
   return request({
     url: '/api/student/dashboard/latest-paper',
-    method: 'get',
-    params: {token},
+    method: 'get'
   })
 }
 
 /**
  * 获取学生仪表盘统计数据
- * @param token 用户令牌
  */
-export const getStudentDashboardStats = (token) => {
+export const getStudentDashboardStats = () => {
   return request({
     url: '/api/student/dashboard/stats',
-    method: 'get',
-    params: {token},
+    method: 'get'
   })
 }
 
-export const getAdvisorInfo = (token) => {
+export const getAdvisorInfo = (params) => {
   return request({
     url: '/api/student/dashboard/advisor',
     method: 'get',
-    params: {token},
+    params: params
   })
 }
 
@@ -286,7 +283,7 @@ export const onlinePreview = (fileId, fileType) => {
  */
 export const getPaperReport = (reportId) => {
   return request({
-    url: '/api/student/reports/preview',
+    url: '/api/student/reports/data',
     method: "get",
     params: { reportId }
   });
@@ -664,7 +661,15 @@ export const getMessageSessions = () => {
  * @param pageNum 页码
  * @param pageSize 每页数量
  */
-export const getMessages = (sessionId, pageNum = 1, pageSize = 20) => {
+export const getMessages = (params) => {
+  let sessionId, pageNum = 1, pageSize = 20;
+  if (typeof params === 'object' && params !== null) {
+    sessionId = params.sessionId;
+    pageNum = params.pageNum || 1;
+    pageSize = params.pageSize || 20;
+  } else {
+    sessionId = params;
+  }
   return request({
     url: '/api/student/messages/list',
     method: 'get',
@@ -747,7 +752,8 @@ export const getSharedFiles = (sessionId) => {
   return request({
     url: '/api/student/messages/shared-files',
     method: 'get',
-    params: { sessionId }
+    params: { sessionId },
+    _skipLoginRedirect: true // 跳过重定向，避免401时清除token和跳转
   });
 };
 
@@ -767,7 +773,13 @@ export const downloadSharedFile = (fileId) => {
  * 标记消息已读
  * @param sessionId 会话ID
  */
-export const markMessagesAsRead = (sessionId) => {
+export const markMessagesAsRead = (params) => {
+  let sessionId;
+  if (typeof params === 'object' && params !== null) {
+    sessionId = params.sessionId;
+  } else {
+    sessionId = params;
+  }
   return request({
     url: `/api/student/messages/session/${sessionId}/read`,
     method: 'put'

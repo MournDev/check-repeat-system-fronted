@@ -3,21 +3,30 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import '@/assets/scss/index.scss' // 全局样式
+import '@/styles/global-styles.scss' // 统一设计风格样式
 //导入Element Plus
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css' // Element Plus样式
 // // 导入 Element Plus 图标
 import * as ElementPlusIcons from '@element-plus/icons-vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
+// 导入权限指令
+import { registerPermissionDirective } from '@/directives/permission'
 
 const app = createApp(App)
 // 全局注册所有 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIcons)) {
   app.component(key, component)
 }
+// 注册权限指令
+registerPermissionDirective(app)
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus,{
   locale: zhCn,
 })
+// 恢复用户状态
+import { useUserStore } from './stores/user'
+const userStore = useUserStore()
+userStore.restoreFromStorage()
 app.mount('#app')
