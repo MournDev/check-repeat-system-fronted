@@ -459,8 +459,6 @@ const handleForgotPassword = () => {
   color: #374151;
 }
 
-
-
 .submit-btn {
   width: 100%;
   height: 48px !important;

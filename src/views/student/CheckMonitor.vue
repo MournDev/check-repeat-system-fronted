@@ -54,7 +54,7 @@
         />
         <div class="progress-stages">
           <div 
-            v-for="(stage, index) in checkStages" 
+            v-for="stage in checkStages"
             :key="stage.key"
             class="stage-item"
             :class="{
@@ -266,6 +266,30 @@ const updateStatus = (data) => {
   if (data.status === 'completed') {
     finalSimilarity.value = data.finalSimilarity || 23.5
     showCompletionDialog.value = true
+  }
+}
+
+const updateStatusFromHook = (progressData) => {
+  const statusMap = {
+    'STARTED': 'processing',
+    'PROCESSING': 'processing',
+    'COMPLETED': 'completed',
+    'FAILED': 'failed'
+  }
+  
+  currentStatus.value = {
+    ...currentStatus.value,
+    status: statusMap[progressData.stage] || 'processing',
+    overallProgress: progressData.percent,
+    estimatedRemainingTime: progressData.estimatedRemainingSeconds
+  }
+  
+  // 更新阶段状态
+  if (progressData.stage === 'COMPLETED') {
+    checkStages.value.forEach(stage => {
+      stage.status = 'completed'
+      stage.progress = 100
+    })
   }
 }
 

@@ -76,3 +76,29 @@ export const refreshAssignmentData = () => {
     method: 'post'
   })
 }
+
+// 以下为兼容PaperAssignment.vue的导出
+
+// 获取待分配学生列表（兼容别名）
+export const getPendingStudents = (params) => {
+  return getUnassignedStudents(params)
+}
+
+// 获取可用导师列表（兼容别名）
+export const getAvailableAdvisors = (params) => {
+  return getAvailableTeachers(params)
+}
+
+// 自动分配
+export const autoAssign = (data) => {
+  return request({
+    url: '/api/admin/auto-assignment/start',
+    method: 'post',
+    data
+  })
+}
+
+// 手动分配
+export const manualAssign = (data) => {
+  return assignSingleStudent(data)
+}

@@ -152,7 +152,7 @@
     </div>
 
     <div class="pagination" v-if="total > 0">
-      <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :total="total"
+      <el-pagination :current-page="currentPage" :page-size="pageSize" :total="total"
         :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange"
         @current-change="handleCurrentChange" />
     </div>
@@ -240,6 +240,7 @@ import {
   getMessageList, markAsRead as markAsReadApi, batchMarkAsRead as batchMarkAsReadApi, deleteMessage as deleteMessageApi, deleteAllMessages,
   confirmPaper, rejectPaper as rejectAssignment, getPendingPapers, getPaperDetail
 } from '@/api/user.js'
+import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const props = defineProps({
   onMessageClick: {
@@ -251,6 +252,35 @@ const props = defineProps({
 const router = useRouter()
 const userStore = useUserStore()
 const messageStore = useMessageStore()
+
+// WebSocket连接
+const { connect: wsConnect, disconnect: wsDisconnect, isConnected } = useCheckProgress()
+
+// 连接WebSocket接收实时通知
+const connectWebSocket = () => {
+  const userId = userStore.userInfo?.userId
+  if (!userId) return
+  
+  wsConnect(
+    `notification-${userId}`,
+    (data) => {
+      if (data.type === 'notification') {
+        // 收到新通知
+        ElMessage.success(`收到新消息: ${data.data.title}`)
+        // 重新加载消息列表
+        loadMessages()
+      }
+    },
+    (error) => {
+      console.error('WebSocket连接失败:', error)
+    }
+  )
+}
+
+// 断开WebSocket连接
+const disconnectWebSocket = () => {
+  wsDisconnect()
+}
 
 // 数据
 const loading = ref(false)
@@ -759,6 +789,20 @@ const clearAllRead = async () => {
     loading.value = false
   }
 }
+
+// 生命周期钩子
+onMounted(async () => {
+  await loadMessages()
+  await loadPendingPapers()
+  // 连接WebSocket接收实时通知
+  connectWebSocket()
+})
+
+onUnmounted(() => {
+  // 断开WebSocket连接
+  disconnectWebSocket()
+  // 清理资源
+})
 
 const batchMarkAsRead = async () => {
   const selectedIds = notifications.value

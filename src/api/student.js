@@ -67,7 +67,7 @@ export const createCheckTask = (paperId) => {
  */
 export const createBatchCheckTasks = (paperIds) => {
   return request({
-    url: "/api/student/check-tasks/batch-create",
+    url: "/api/student/batch-check/create",
     method: "post",
     data: {
       paperIds: paperIds
@@ -118,11 +118,10 @@ export const getStudentDashboardStats = () => {
   })
 }
 
-export const getAdvisorInfo = (params) => {
+export const getAdvisorInfo = () => {
   return request({
     url: '/api/student/dashboard/advisor',
-    method: 'get',
-    params: params
+    method: 'get'
   })
 }
 

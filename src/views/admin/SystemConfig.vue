@@ -331,7 +331,8 @@
       </el-card>
     </div>
 
-      <!-- 右侧配置说明 -->
+    <!-- 右侧配置说明 -->
+    <el-row :gutter="16">
       <el-col :span="8">
         <el-card class="help-card" shadow="never">
           <template #header>

@@ -190,23 +190,33 @@
               </div>
               
               <div 
-                v-for="message in currentMessages" 
+                v-for="(message, index) in currentMessages" 
                 :key="message.id"
-                class="message-item"
-                :class="{
-                  'message-sent': message.senderId === userStore.userInfo?.userId,
-                  'message-received': message.senderId !== userStore.userInfo?.userId
-                }"
               >
-                <div class="message-avatar">
-                  <el-avatar :size="36" :src="getAvatarUrl(message.senderAvatar)" :alt="message.senderName">
-                    {{ message.senderName?.charAt(0) }}
-                  </el-avatar>
-                </div>
-                <div class="message-content">
-                  <div class="message-info">
-                    <span class="message-sender">{{ message.senderName }}</span>
-                    <span class="message-time">{{ formatMessageTime(message.sendTime) }}</span>
+                <div v-if="shouldShowTimeSeparator(index, message)" class="time-separator">{{ formatMessageTime(message.time) }}</div>
+                <div
+                  class="message-item"
+                  :class="{
+                    'message-sent': message.senderId === userStore.userInfo?.userId,
+                    'message-received': message.senderId !== userStore.userInfo?.userId
+                  }"
+                >
+                  <div class="message-avatar">
+                    <el-avatar
+                      :size="36"
+                      :src="getAvatarUrl(userMap[message.senderId]?.avatar || message.avatar || message.senderAvatar)"
+                      :alt="userMap[message.senderId]?.realName || message.senderName"
+                    >
+                      {{ (userMap[message.senderId]?.realName || message.senderName)?.charAt(0) }}
+                    </el-avatar>
+                  </div>
+                  <div class="message-content">
+                    <div class="message-info">
+                      <span v-if="message.senderId !== userStore.userInfo?.userId" class="message-sender">
+                        {{ userMap[message.senderId]?.realName || message.senderName || '未知用户' }}
+                      </span>
+                      <span class="message-time">{{ formatMessageTime(message.time || message.sendTime) }}</span>
+                    </div>
                   </div>
                   <div class="message-bubble">
                     <div class="message-text">{{ message.content }}</div>
@@ -266,7 +276,7 @@
               v-model="newMessage"
               type="textarea"
               :rows="3"
-              placeholder="输入消息内容，按 Ctrl+Enter 发送..."
+              placeholder="输入消息内容，按 Ctrl+Enter 发送.."
               resize="none"
               @keydown.ctrl.enter.exact="sendMessage"
             />
@@ -274,7 +284,7 @@
               <div class="input-info">
                 <span v-if="attachments.length > 0" class="attachment-count">
                   <el-icon><Paperclip /></el-icon>
-                  已添加 {{ attachments.length }} 个附件
+                  已添加{{ attachments.length }} 个附件
                 </span>
               </div>
               <el-button 
@@ -433,9 +443,13 @@ const loadingMessages = ref(false)
 const showEmojiPicker = ref(false)
 const fileSearch = ref('')
 const chatContainerRef = ref(null)
+const chatContainer = ref(null)
 const currentPage = ref(1)
 const totalMessages = ref(0)
 const hasMoreMessages = ref(true)
+
+// 用户信息Map（userId→用户信息）
+const userMap = ref({})
 
 // 表情列表
 const emojiList = [
@@ -482,11 +496,14 @@ const filteredFiles = computed(() => {
 const getSessionAvatar = (session) => {
   if (!session || !session.members) return undefined
   
-  // 找到不是当前用户的成员（即导师/联系人）
+  // 找到不是当前用户的成员（即导师联系人）
   const otherMember = session.members.find(member => member.userId !== userStore.userInfo?.userId)
   
   // 如果有其他成员，返回其头像；否则返回第一个成员的头像
   const avatar = otherMember ? otherMember.avatar : session.members[0]?.avatar
+  
+  // 如果 avatar 为空、null 或undefined，返回undefined（让 el-avatar 显示插槽内容)
+  if (!avatar || avatar === 'null' || avatar === 'undefined') return undefined
   
   // 使用导入的 getAvatarUrl 函数处理头像 URL
   return getAvatarUrl(avatar)
@@ -499,16 +516,54 @@ const loadAdvisorData = async () => {
     const advisorRes = await getAdvisorInteractionInfo();
     if (advisorRes.code === 200 && advisorRes.data) {
       advisorInfo.value = advisorRes.data;
+      // 收集导师信息到userMap
+      if (advisorInfo.value.userId) {
+        userMap.value[advisorInfo.value.userId] = {
+          userId: advisorInfo.value.userId,
+          realName: advisorInfo.value.name,
+          avatar: advisorInfo.value.avatar
+        }
+      }
+      // 确保当前用户信息也存在于 userMap（用于渲染自己发送的消息）
+      if (userStore.userInfo?.userId && !userMap.value[userStore.userInfo.userId]) {
+        userMap.value[userStore.userInfo.userId] = {
+          userId: userStore.userInfo.userId,
+          realName: userStore.userInfo.realName || userStore.userInfo.username,
+          avatar: userStore.userInfo.avatar
+        }
+      }
+      console.log('设置 advisorInfo:', advisorInfo.value);
     } else {
       console.warn('获取导师信息失败或未分配导师:', advisorRes.message);
-      // API 成功但没有数据，说明未分配导师
       advisorInfo.value = null;
     }
-    
     // 获取消息会话列表
     const sessionsRes = await getMessageSessions();
     if (sessionsRes.code === 200) {
       messageSessions.value = sessionsRes.data;
+      // 收集会话成员到userMap
+      sessionsRes.data.forEach(session => {
+        if (session.members) {
+          session.members.forEach(member => {
+            if (member.userId) {
+              userMap.value[member.userId] = {
+                userId: member.userId,
+                realName: member.name || member.realName || member.username,
+                avatar: member.avatar
+              }
+            }
+          })
+        }
+      })
+      // 补全会话的显示信息（avatar/name/lastTime），保证左侧列表与消息区一致
+      messageSessions.value.forEach(session => {
+        // 优先使用已有字段，否则从成员中取
+        const otherMember = (session.members || []).find(m => m.userId !== userStore.userInfo?.userId) || session.members?.[0];
+        session.avatar = session.avatar || getSessionAvatar(session) || otherMember?.avatar;
+        session.name = session.name || session.displayName || otherMember?.name || otherMember?.realName || otherMember?.username || '会话';
+        // 兼容多种后端时间字段：lastTime, updatedAt, lastMessageTime, lastMessage?.time
+        session.lastTime = session.lastTime || session.updatedAt || session.lastMessageTime || session.lastMessage?.time || session.updatedTime || null;
+      })
     } else {
       console.warn('获取会话列表失败:', sessionsRes.message);
       messageSessions.value = [];
@@ -528,7 +583,7 @@ const loadAdvisorData = async () => {
     }
   } catch (error) {
     console.error('加载导师数据失败:', error);
-    ElMessage.error('加载数据失败：' + (error.message || '未知错误'));
+    ElMessage.error('加载数据失败' + (error.message || '未知错误'));
   }
 };
 
@@ -558,6 +613,32 @@ const loadMessages = async (sessionId, isPrepend = false) => {
         currentPage.value = 1;
       }
       
+      // 收集消息发送者到 userMap，并补全消息的 senderName/avatar
+      currentMessages.value.forEach(msg => {
+        const sid = msg.senderId;
+        if (sid && !userMap.value[sid]) {
+          userMap.value[sid] = {
+            userId: sid,
+            realName: msg.senderName || msg.realName || msg.username || '未知用户',
+            avatar: msg.avatar
+          }
+        }
+        // 优先使用 userMap 中的信息渲染消息
+        if (sid) {
+          msg.senderName = (userMap.value[sid] && userMap.value[sid].realName) || msg.senderName || '未知用户';
+          msg.avatar = (userMap.value[sid] && userMap.value[sid].avatar) || msg.avatar;
+        }
+        // 如果 API 使用其他字段表示发送者，兼容处理
+        if (!msg.senderId && (msg.fromUserId || msg.from)) {
+          const altId = msg.fromUserId || msg.from;
+          msg.senderId = altId;
+          if (altId && userMap.value[altId]) {
+            msg.senderName = userMap.value[altId].realName || msg.senderName;
+            msg.avatar = userMap.value[altId].avatar || msg.avatar;
+          }
+        }
+      });
+      
       hasMoreMessages.value = currentMessages.value.length < totalMessages.value;
       
       if (!isPrepend) {
@@ -571,6 +652,10 @@ const loadMessages = async (sessionId, isPrepend = false) => {
             const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
             if (sessionIndex !== -1) {
               messageSessions.value[sessionIndex].unreadCount = 0;
+              // 更新该会话的最后时间和预览信息，使用最新一条消息的时间和内容
+              const latestMsg = currentMessages.value.length ? currentMessages.value[currentMessages.value.length - 1] : null;
+              messageSessions.value[sessionIndex].lastTime = latestMsg?.time || messageSessions.value[sessionIndex].lastTime;
+              messageSessions.value[sessionIndex].lastMessage = latestMsg?.content || messageSessions.value[sessionIndex].lastMessage;
             }
           }
         } catch (error) {
@@ -594,8 +679,37 @@ const loadMessages = async (sessionId, isPrepend = false) => {
     ElMessage.error('加载消息失败');
   } finally {
     loadingMessages.value = false;
+    await nextTick()
+    scrollToBottom()
   }
 };
+
+const scrollToBottom = () => {
+  if (chatContainerRef.value) {
+    chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight
+  }
+}
+
+const handleMessagesScroll = async (e) => {
+  const target = e.target;
+  if (!target) return;
+  
+  const isNearTop = target.scrollTop < 50;
+  
+  if (isNearTop && hasMoreMessages.value && !loadingMessages.value) {
+    await loadMessages(activeSessionId.value, true);
+  }
+}
+
+const getMessageSenderName = (message) => {
+  if (!message) return ''
+  const sid = message.senderId
+  const nameFromMap = sid ? (userMap.value[sid] && userMap.value[sid].realName) : null
+  if (nameFromMap && nameFromMap !== '未知用户') return nameFromMap
+  if (message.senderName && message.senderName !== '未知用户') return message.senderName
+  // fallback to current session name (conversation partner)
+  return currentSession.value?.name || ''
+}
 
 const switchSession = (sessionId) => {
   activeSessionId.value = sessionId;
@@ -625,52 +739,73 @@ const sendNewMessage = () => {
 }
 
 const sendMessage = async () => {
-    if (!newMessage.value.trim() && attachments.length === 0) return;
+  if (!newMessage.value.trim() && attachments.length === 0) return;
 
-    try {
-      // 从会话成员中找到非当前用户的成员（即导师）
-      const otherMember = currentSession.value?.members?.find(member => member.userId !== userStore.userInfo?.userId);
-      const receiverId = otherMember?.userId;
-      
-      if (!receiverId) {
-        ElMessage.error('无法获取接收者信息');
-        return;
-      }
-      
-      const messageData = {
-        sessionId: activeSessionId.value,
-        receiverId: receiverId,
-        content: newMessage.value,
-        attachmentIds: attachments.value.map(att => att.id)
-      };
-
-      const res = await sendMsgApi(messageData);
-      
-      if (res.code === 200) {
-        // 直接将新消息添加到列表末尾，并添加发送者的头像信息
-        const newMsg = res.data;
-        // 确保消息包含发送者的头像
-        if (!newMsg.senderAvatar) {
-          newMsg.senderAvatar = userStore.userInfo?.avatar;
-        }
-        currentMessages.value.push(newMsg);
-        // 刷新会话列表，更新最后消息
-        await loadAdvisorData();
-        newMessage.value = '';
-        attachments.value = [];
-        ElMessage.success('消息发送成功');
-        // 滚动到底部
-        nextTick(() => {
-          scrollToBottom();
-        });
-      } else {
-        ElMessage.error(res.message || '发送失败');
-      }
-    } catch (error) {
-      console.error('发送消息失败:', error);
-      ElMessage.error('发送失败');
+  try {
+    // 从会话成员中找到非当前用户的成员（即导师）
+    const otherMember = currentSession.value?.members?.find(member => member.userId !== userStore.userInfo?.userId);
+    const receiverId = otherMember?.userId;
+    
+    if (!receiverId) {
+      ElMessage.error('无法获取接收者信息');
+      return;
     }
-  };
+    
+    // 确保当前用户信息存在于 userMap，便于立即渲染自己的头像和姓名
+    if (userStore.userInfo?.userId && !userMap.value[userStore.userInfo.userId]) {
+      userMap.value[userStore.userInfo.userId] = {
+        userId: userStore.userInfo.userId,
+        realName: userStore.userInfo.realName || userStore.userInfo.username,
+        avatar: userStore.userInfo.avatar
+      }
+    }
+    
+    const messageData = {
+      sessionId: activeSessionId.value,
+      receiverId: receiverId,
+      senderId: userStore.userInfo?.userId,
+      content: newMessage.value,
+      attachmentIds: attachments.value.map(att => att.id),
+      senderName: userStore.userInfo?.realName || userStore.userInfo?.username || '未知用户'
+    };
+
+    const res = await sendMsgApi(messageData);
+    
+    if (res.code === 200) {
+      // 立即将本条消息加入本地消息列表，改善感知延迟
+      try {
+        const localMsg = {
+          id: res.data?.id || Date.now(),
+          senderId: userStore.userInfo?.userId,
+          senderName: userStore.userInfo?.realName || userStore.userInfo?.username || '我',
+          avatar: userStore.userInfo?.avatar,
+          content: newMessage.value,
+          time: new Date().toISOString(),
+          attachments: attachments.value
+        }
+        currentMessages.value.push(localMsg);
+        // 更新会话的 lastTime/lastMessage，保证左侧时间即时更新
+        const sIndex = messageSessions.value.findIndex(s => s.id === activeSessionId.value);
+        if (sIndex !== -1) {
+          messageSessions.value[sIndex].lastTime = localMsg.time;
+          messageSessions.value[sIndex].lastMessage = localMsg.content;
+        }
+      } catch (e) {
+        // ignore local push error
+      }
+      // 发送成功后刷新消息列表
+      await loadMessages(activeSessionId.value);
+      newMessage.value = '';
+      attachments.value = [];
+      ElMessage.success('消息发送成功');
+    } else {
+      ElMessage.error(res.message || '发送失败');
+    }
+  } catch (error) {
+    console.error('发送消息失败', error);
+    ElMessage.error('发送失败');
+  }
+};
 
 // 快捷回复
 const insertQuickReply = (text) => {
@@ -702,8 +837,6 @@ const refreshMessages = async () => {
     loadingMessages.value = false
   }
 }
-
-
 
 // 查看导师主页
 const viewAdvisorProfile = () => {
@@ -745,64 +878,12 @@ const downloadAttachment = async (file) => {
     link.download = file.name;
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success(`正在下载：${file.name}`);
+    ElMessage.success(`正在下载${file.name}`);
   } catch (error) {
     console.error('下载失败:', error);
     ElMessage.error('下载失败');
   }
-};
-
-// 清空消息
-const clearMessages = async () => {
-  try {
-    await ElMessageBox.confirm('确定要清空当前会话的消息吗？此操作不可恢复', '警告', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    });
-    
-    const res = await clearMsgApi(activeSessionId.value);
-    if (res.code === 200) {
-      currentMessages.value = [];
-      ElMessage.success('消息已清空');
-    } else {
-      ElMessage.error(res.message || '清空失败');
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('清空失败:', error);
-      ElMessage.error('清空失败');
-    }
-  }
-};
-
-// 导出聊天记录
-const exportChatHistory = async () => {
-  try {
-    const exportData = {
-      sessionId: activeSessionId.value,
-      format: 'pdf',
-      startTime: '2024-01-01',
-      endTime: new Date().toISOString().split('T')[0]
-    };
-    
-    const res = await exportHistoryApi(exportData);
-    
-    // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `聊天记录_${new Date().getTime()}.pdf`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-    
-    ElMessage.success('聊天记录已导出');
-  } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出失败');
-  }
-};
+}
 
 const attachFile = async () => {
   try {
@@ -884,7 +965,7 @@ const getFileIcon = (fileType) => {
   return iconMap[fileType] || 'Document'
 }
 
-// 格式化消息时间 - 更详细的时间显示
+// 格式化消息时间- 更详细的时间显示
 const formatMessageTime = (date) => {
   if (!date) return ''
   const now = new Date()
@@ -898,12 +979,12 @@ const formatMessageTime = (date) => {
   }
   // 昨天
   else if (diff < oneDay * 2 && diff >= oneDay) {
-    return `昨天 ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+    return '昨天 ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
   // 本周内
   else if (diff < oneDay * 7) {
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    return `${weekdays[target.getDay()]} ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+    return weekdays[target.getDay()] + ' ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
   // 更早
   else {
@@ -925,20 +1006,20 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-const scrollToBottom = () => {
-  if (chatContainerRef.value) {
-    chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight
-  }
-}
-
-const handleMessagesScroll = async (e) => {
-  const target = e.target;
-  if (!target) return;
-  
-  const isNearTop = target.scrollTop < 50;
-  
-  if (isNearTop && hasMoreMessages.value && !loadingMessages.value) {
-    await loadMessages(activeSessionId.value, true);
+// 是否在两条消息之间显示居中时间分隔（例如相邻消息间隔 >= 5 分钟）
+const shouldShowTimeSeparator = (index, message) => {
+  try {
+    if (!message) return false
+    if (index === 0) return true
+    const prev = currentMessages.value[index - 1]
+    if (!prev || !prev.time) return true
+    const tPrev = new Date(prev.time).getTime()
+    const tCurr = new Date(message.time).getTime()
+    if (isNaN(tPrev) || isNaN(tCurr)) return false
+    const diffMinutes = Math.abs(tCurr - tPrev) / 60000
+    return diffMinutes >= 5 // 5 分钟阈值，可根据需求调整
+  } catch (e) {
+    return false
   }
 }
 
@@ -1385,22 +1466,47 @@ onMounted(() => {
   }
   
   .messages-area {
+      .time-separator {
+        display: inline-block;
+        margin: 10px auto;
+        padding: 4px 10px;
+        background: #eef6ff;
+        color: #6b7785;
+        font-size: 12px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      }
     .message-item {
         display: flex;
         margin-bottom: 1rem;
-        animation: fadeIn 0.3s ease-in-out;
+        animation: messageSlideIn 0.18s ease-out;
+        align-items: flex-end;
+        gap: 8px;
+      
+        @keyframes messageSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
       
       &.message-sent {
         flex-direction: row-reverse;
-        
+
+        .message-avatar {
+          margin-left: 8px;
+          margin-right: 0;
+        }
+
         .message-content {
           align-items: flex-end;
-          
-          .message-info {
-            justify-content: flex-end;
-          }
         }
-        
+
         .message-bubble {
           background: #07C160;
           color: white;
@@ -1408,6 +1514,8 @@ onMounted(() => {
           border: none;
           position: relative;
           max-width: 80%;
+          border-radius: 14px 14px 4px 14px;
+          padding: 10px 14px;
           
           &::after {
             content: '';
@@ -1424,31 +1532,51 @@ onMounted(() => {
           .message-time {
             color: rgba(255, 255, 255, 0.7);
           }
+          
+          .message-text { font-size: 14px; color: white; }
         }
       }
-      
+
       &.message-received {
+        flex-direction: row;
+
+        .message-avatar {
+          margin-right: 8px;
+          margin-left: 0;
+        }
+
+        .message-content {
+          align-items: flex-start;
+        }
+
         .message-bubble {
-          background: white;
-          border: 1px solid #e8ecf1;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          background: #ffffff;
+          color: #333;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          border: 1px solid #e6e6e6;
           position: relative;
           max-width: 80%;
-          
+          border-radius: 14px 14px 14px 4px;
+          padding: 10px 14px;
+
           &::after {
             content: '';
             position: absolute;
-            bottom: 8px;
             left: -8px;
+            bottom: 8px;
             width: 0;
             height: 0;
-            border-right: 8px solid white;
+            border-right: 8px solid #ffffff;
             border-top: 8px solid transparent;
             border-bottom: 8px solid transparent;
+            border-left: 1px solid #e6e6e6;
+            box-shadow: 1px 1px 0 rgba(0,0,0,0.02);
           }
+
+          .message-text { font-size: 14px; color: #222; }
         }
       }
-      
+
       .message-avatar {
         width: 36px;
         height: 36px;
@@ -1465,7 +1593,6 @@ onMounted(() => {
         
         .message-info {
           display: flex;
-          justify-content: space-between;
           align-items: center;
           margin-bottom: 4px;
           font-size: 0.7rem;
@@ -1478,89 +1605,56 @@ onMounted(() => {
             color: #606266;
             font-size: 0.75rem;
           }
-          
+
+          /* 隐藏自己发送消息的用户名，WeChat 风格 */
+          .message-sent & .message-sender { display: none; }
+
           .message-time {
             opacity: 0.7;
             color: #909399;
             font-size: 0.65rem;
           }
         }
+      }
+
+      .message-bubble {
+        padding: 8px 12px;
+        border-radius: 18px;
+        margin-bottom: 4px;
+        transition: all 0.2s ease;
         
-        .message-bubble {
-          padding: 8px 12px;
-          border-radius: 18px;
-          margin-bottom: 4px;
-          transition: all 0.2s ease;
-          
-          .message-text {
-            line-height: 1.4;
-            font-size: 15px;
-            word-break: break-word;
-          }
-          
-          .message-time {
-            font-size: 11px;
-            opacity: 0.6;
-            text-align: right;
-            margin-top: 2px;
-          }
+        .message-text {
+          line-height: 1.4;
+          font-size: 15px;
+          word-break: break-word;
         }
+      }
+
+      .message-attachments {
+        margin-top: 8px;
         
-        .message-attachments {
+        .attachment-item {
           display: flex;
-          flex-direction: column;
-          gap: 4px;
-          margin-top: 6px;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          margin-top: 4px;
           
-          .attachment-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 10px;
-            background: white;
-            border: 1px solid #e8ecf1;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            
-            &:hover {
-              border-color: #07C160;
-              box-shadow: 0 1px 4px rgba(7, 193, 96, 0.15);
-            }
-            
-            .el-icon {
-              margin-right: 6px;
-              font-size: 14px;
-              color: #07C160;
-            }
-            
-            span {
-              flex: 1;
-              margin-right: 0.5rem;
-              font-size: 13px;
-              color: #303133;
-            }
+          .el-icon {
+            color: #667eea;
+          }
+          
+          span {
+            flex: 1;
+            font-size: 13px;
+            color: #333;
+            word-break: break-all;
           }
         }
       }
     }
-    
-    .message-time-divider {
-      text-align: center;
-      margin: 12px 0;
-      font-size: 11px;
-      color: #909399;
-      background: rgba(0, 0, 0, 0.05);
-      padding: 2px 12px;
-      border-radius: 10px;
-      align-self: center;
-    }
-  }
-  
-  .no-session {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
   }
   
   .loading-mask {
@@ -1573,38 +1667,42 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    border-radius: 12px;
   }
 }
 
+.no-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
 .message-input {
-  border-top: 1px solid #e8ecf1;
-  padding-top: 0.5rem;
-  padding-bottom: 1rem;
-  background: white;
-  border-radius: 0 0 12px 12px;
+  margin-top: 1rem;
   
   .input-toolbar {
-    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
+    margin-bottom: 8px;
+    
+    .el-button {
+      font-size: 14px;
+    }
     
     .toolbar-tip {
-      font-size: 0.75rem;
+      font-size: 12px;
       color: #909399;
-      margin-left: 8px;
+      margin-left: auto;
     }
   }
   
   .emoji-picker {
-    background: white;
-    border: 1px solid #e8ecf1;
-    border-radius: 8px;
+    margin-bottom: 8px;
     padding: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #f8f9fa;
+    border-radius: 8px;
     
     .emoji-grid {
       display: grid;
@@ -1617,319 +1715,86 @@ onMounted(() => {
         text-align: center;
         padding: 4px;
         border-radius: 4px;
+        transition: all 0.2s ease;
         
         &:hover {
-          background: #f0f0f0;
+          background: #e8ecf1;
+          transform: scale(1.1);
         }
       }
     }
   }
   
-  :deep(.el-textarea__inner) {
+  :deep(.el-textarea__wrapper) {
     border-radius: 8px;
-    border: 1px solid #e4e7ed;
-    transition: all 0.3s ease;
-    font-size: 15px;
-    line-height: 1.4;
+    border: 1px solid #e8ecf1;
     
-    &:focus {
-      border-color: #07C160;
-      box-shadow: 0 0 0 2px rgba(7, 193, 96, 0.1);
+    &:hover {
+      border-color: #667eea;
+    }
+    
+    &:focus-within {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
   }
   
   .input-actions {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 0.75rem;
+    justify-content: space-between;
+    margin-top: 8px;
     
     .input-info {
       .attachment-count {
-        font-size: 0.875rem;
-        color: #606266;
+        font-size: 12px;
+        color: #667eea;
         display: flex;
         align-items: center;
         gap: 4px;
-        
-        .el-icon {
-          color: #07C160;
-        }
       }
     }
     
     .send-button {
-      background: #07C160;
-      border-color: #07C160;
+      border-radius: 8px;
+      background: #667eea;
+      border-color: #667eea;
       
       &:hover {
-        background: #06b355;
-        border-color: #06b355;
-      }
-      
-      &:disabled {
-        background: #f0f9eb;
-        border-color: #c2e7b0;
-        color: #a7d28b;
+        background: #5a67d8;
+        border-color: #5a67d8;
       }
     }
-  }
-}
-
-.file-name {
-  display: flex;
-  align-items: center;
-  
-  .el-icon {
-    margin-right: 0.5rem;
-    color: #07C160;
   }
 }
 
 .files-card {
-  .card-header {
-    .card-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .el-input {
+      flex-shrink: 0;
     }
   }
   
   .no-files {
-    padding: 2rem 0;
     text-align: center;
+    padding: 2rem 0;
   }
   
   .files-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
-    margin-top: 1rem;
-  }
-  
-  .file-card {
-    background: white;
-    border: 1px solid #f0f0f0;
-    border-radius: 12px;
-    padding: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-color: #07C160;
-    }
-    
-    .file-icon {
-      text-align: center;
-      margin-bottom: 12px;
-      
-      .el-icon {
-        color: #07C160;
-      }
-    }
-    
-    .file-info {
-      margin-bottom: 12px;
-      
-      .file-name {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 8px;
-        font-size: 14px;
-        line-height: 1.4;
-      }
-      
-      .file-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        font-size: 12px;
-        color: #909399;
-        
-        .file-size,
-        .file-uploader,
-        .file-time {
-          padding: 2px 6px;
-          background: #f8f9fa;
-          border-radius: 4px;
-        }
-      }
-    }
-    
-    .file-actions {
+    .file-card {
       display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-  }
-}
-
-// 响应式设计
-@media (max-width: 768px) {
-  .interaction-content {
-    .el-col {
-      margin-bottom: 1rem;
-    }
-  }
-  
-  .chat-actions {
-    display: none;
-  }
-  
-  .message-content {
-    max-width: 85% !important;
-  }
-  
-  .chat-container {
-    height: 400px;
-    padding: 1rem;
-  }
-  
-  .advisor-detail {
-    padding: 1rem;
-    
-    .advisor-header {
       flex-direction: column;
-      text-align: center;
-      
-      .advisor-avatar {
-        margin-right: 0;
-        margin-bottom: 1rem;
-      }
-    }
-    
-    .advisor-actions {
-      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
     }
   }
-  
-  .message-input {
-    padding: 0.5rem;
-    
-    .input-toolbar {
-      flex-wrap: wrap;
-      
-      .el-button {
-        font-size: 12px;
-      }
-    }
-    
-    :deep(.el-textarea__inner) {
-      font-size: 14px;
-    }
-  }
-  
-  .sessions-list {
-    .session-item {
-      padding: 10px 12px;
-      
-      .session-avatar {
-        margin-right: 8px;
-        
-        .el-avatar {
-          width: 36px;
-          height: 36px;
-        }
-      }
-      
-      .session-content {
-        .session-header {
-          .session-name {
-            font-size: 13px;
-          }
-          
-          .session-time {
-            font-size: 10px;
-          }
-        }
-        
-        .session-preview {
-          font-size: 12px;
-        }
-      }
-    }
-  }
-  
-  .files-card {
-    :deep(.el-table) {
-      font-size: 12px;
-      
-      :deep(.el-table__cell) {
-        padding: 8px;
-      }
-    }
-  }
-}
-
-// 小屏幕设备
-@media (max-width: 480px) {
-  .chat-container {
-    height: 350px;
-  }
-  
-  .page-header {
-    padding: 16px;
-    
-    .page-title {
-      font-size: 1.5rem;
-    }
-  }
-  
-  .message-input {
-    .input-actions {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 8px;
-      
-      .input-info {
-        text-align: center;
-      }
-    }
-  }
-}
-
-// 动画效果
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-// 滚动条美化
-.chat-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-// 消息动画
-@keyframes messageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.chat-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 3px;
-}
-
-.chat-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-}
-
-.chat-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 </style>

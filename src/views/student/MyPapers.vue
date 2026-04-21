@@ -311,98 +311,56 @@
         </div>
       </div>
       <div v-if="papers.length > 0" class="pagination-container">
-        <div class="pagination">
-          <span class="page-info">共 {{ total }} 条记录</span>
-          <div class="page-controls">
-            <button 
-              class="page-button" 
-              @click="pagination.current > 1 && (pagination.current--, fetchPapers())"
-              :disabled="pagination.current === 1"
-            >
-              上一页
-            </button>
-            <span class="page-number">{{ pagination.current }} / {{ Math.ceil(total / pagination.size) }}</span>
-            <button 
-              class="page-button" 
-              @click="pagination.current < Math.ceil(total / pagination.size) && (pagination.current++, fetchPapers())"
-              :disabled="pagination.current >= Math.ceil(total / pagination.size)"
-            >
-              下一页
-            </button>
-            <select 
-              v-model="pagination.size" 
-              class="page-size-select"
-              @change="fetchPapers"
-            >
-              <option value="5">5条/页</option>
-              <option value="10">10条/页</option>
-              <option value="20">20条/页</option>
-              <option value="50">50条/页</option>
-            </select>
-          </div>
-        </div>
+        <el-pagination
+          :current-page="pagination.current"
+          @update:current-page="pagination.current = $event"
+          :page-size="pagination.size"
+          @update:page-size="pagination.size = $event"
+          :page-sizes="[5, 10, 20, 50]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </div>
     </div>
 
     <!-- 论文详情对话框 -->
     <el-dialog v-model="detailDialogVisible" :title="paperTitle" width="800px">
       <div v-if="currentPaper" class="paper-detail">
-        <div class="detail-section">
-          <div class="detail-row">
-            <div class="detail-item">
-              <div class="detail-label">论文标题</div>
-              <div class="detail-value">{{ currentPaper.paperTitle }}</div>
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="论文标题">
+            {{ currentPaper.paperTitle }}
+          </el-descriptions-item>
+          <el-descriptions-item label="提交时间">
+            {{ formatDateTime(currentPaper.submitTime) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="指导老师">
+            {{ currentPaper.advisorName || "待分配" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="当前状态">
+            <el-tag :type="getStatusType(currentPaper.paperStatus)">
+              {{ getStatusText(currentPaper.paperStatus) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="论文摘要" :span="2">
+            {{ currentPaper.paperAbstract || "暂无摘要" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="论文类型">
+            {{ getPaperTypeText(currentPaper.paperType) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="相似度">
+            {{ currentPaper.similarityRate }}%
+          </el-descriptions-item>
+          <el-descriptions-item label="查重结果">
+            {{ currentPaper.checkResult || "暂无结果" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="审核意见" :span="2">
+            <div class="feedback-content">
+              {{ currentPaper.feedback || "暂无审核意见" }}
             </div>
-            <div class="detail-item">
-              <div class="detail-label">提交时间</div>
-              <div class="detail-value">{{ formatDateTime(currentPaper.submitTime) }}</div>
-            </div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-item">
-              <div class="detail-label">指导老师</div>
-              <div class="detail-value">{{ currentPaper.advisorName || "待分配" }}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">当前状态</div>
-              <div class="detail-value">
-                <span class="status-badge" :class="getStatusType(currentPaper.paperStatus)">
-                  {{ getStatusText(currentPaper.paperStatus) }}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="detail-row full-width">
-            <div class="detail-item full-width">
-              <div class="detail-label">论文摘要</div>
-              <div class="detail-value">{{ currentPaper.paperAbstract || "暂无摘要" }}</div>
-            </div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-item">
-              <div class="detail-label">论文类型</div>
-              <div class="detail-value">{{ getPaperTypeText(currentPaper.paperType) }}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">相似度</div>
-              <div class="detail-value">{{ currentPaper.similarityRate }}%</div>
-            </div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-item">
-              <div class="detail-label">查重结果</div>
-              <div class="detail-value">{{ currentPaper.checkResult || "暂无结果" }}</div>
-            </div>
-          </div>
-          <div class="detail-row full-width">
-            <div class="detail-item full-width">
-              <div class="detail-label">审核意见</div>
-              <div class="detail-value feedback-content">
-                {{ currentPaper.feedback || "暂无审核意见" }}
-              </div>
-            </div>
-          </div>
-        </div>
+          </el-descriptions-item>
+        </el-descriptions>
 
         <div class="file-attachments">
           <h4>附件列表</h4>
@@ -537,9 +495,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from "vue";
+import { ref, reactive, onMounted, watch, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, ElSelect, ElOption, ElInput } from "element-plus";
 import { getDictDataByType } from "@/api/user.js";
 import { 
   getStudentPaperPage, 
@@ -555,7 +513,8 @@ import {
   downloadVersion as downloadVersionApi,
   downloadAttachment as downloadAttachmentApi,
   getSimpleCheckReport,
-  createBatchCheckTasks
+  createBatchCheckTasks,
+  getCheckTaskDetail
 } from "@/api/student.js";
 import { useUserStore } from "@/stores/user";
 
@@ -817,7 +776,7 @@ const withdrawPaper = async (paper) => {
   try {
     // 在同一个 prompt 里同时确认操作并收集理由
     const { value: reason } = await ElMessageBox.prompt(
-      `确定要撤回论文《${paper.paperTitle}》吗？\n请简要说明撤回理由：`,
+      `确定要撤回论文《${paper.paperTitle}》吗？\\n请简要说明撤回理由：`,
       '撤回论文',
       {
         confirmButtonText: '提交',
@@ -833,62 +792,9 @@ const withdrawPaper = async (paper) => {
         }
       }
     );
-    // 再弹窗选择原因类型和详细描述
-    try {
-      await ElMessageBox({
-        title: '请选择撤回原因类型',
-        message: h('div', {}, [
-          h(ElSelect, {
-            modelValue: selectedReasonType.value,
-            placeholder: '请选择原因类型',
-            style: 'width: 100%; margin-bottom: 15px;',
-            onChange: (value) => {
-              selectedReasonType.value = value;
-            }
-          }, {
-            default: () => [
-              h(ElOption, { label: '个人原因', value: 'PERSONAL' }),
-              h(ElOption, { label: '格式问题', value: 'FORMAT' }),
-              h(ElOption, { label: '内容问题', value: 'CONTENT' }),
-              h(ElOption, { label: '其他', value: 'OTHER' })
-            ]
-          }),
-          h(ElInput, {
-            modelValue: reasonDetail.value,
-            placeholder: '详细原因描述（可选）',
-            type: 'textarea',
-            rows: 3,
-            maxlength: 500,
-            showWordLimit: true,
-            style: 'margin-top: 10px;',
-            'onUpdate:modelValue': (value) => {
-              reasonDetail.value = value;
-            }
-          })
-        ]),
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-        customClass: 'reason-type-dialog',
-        distinguishCancelAndClose: true // 区分取消按钮和关闭动作
-      });
-    } catch (action) {
-      // 如果用户点击了取消或关闭对话框
-      if (action === 'cancel') {
-        console.log('用户取消了撤回操作');
-        return; // 直接返回，不执行后续逻辑
-      }
-      throw action; // 其他错误继续抛出
-    }
 
-    // 验证是否选择了原因类型
-    if (!selectedReasonType.value) {
-      ElMessage.warning('请选择撤回原因类型');
-      return;
-    }
-
-    // 调用撤回接口
-    const res = await withdrawPaperApi(paper.id, selectedReasonType.value, reasonDetail.value);
+    // 调用撤回接口，后端接口已扩展接受原因参数
+    const res = await withdrawPaperApi(paper.id, 'OTHER', reason);
 
     if (res.code === 200) {
       ElMessage.success('论文已撤回，您可以修改后重新提交');

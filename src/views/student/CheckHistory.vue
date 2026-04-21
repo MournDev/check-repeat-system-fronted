@@ -121,27 +121,44 @@
               <div class="history-record" :class="{ 'current-version': record.isCurrent }">
                 <div class="record-header">
                   <div class="version-info">
-                    <span class="version-tag" :class="{ 'current': record.isCurrent }">
+                    <el-tag 
+                      :type="record.isCurrent ? 'primary' : 'info'" 
+                      size="large"
+                      effect="dark"
+                    >
                       V{{ record.version }}
-                    </span>
+                    </el-tag>
                     <span class="similarity-badge" :class="getSimilarityClass(record.similarity)">
                       {{ record.similarity }}%
                     </span>
-                    <span class="rating-tag" :class="getRatingType(record.rating)">
+                    <el-tag :type="getRatingType(record.rating)" size="small">
                       {{ getRatingText(record.rating) }}
-                    </span>
+                    </el-tag>
                   </div>
                   <div class="record-actions" v-if="!compactView">
-                    <button class="action-button" @click="viewReport(record.reportId)">
+                    <el-button 
+                      text 
+                      size="small" 
+                      @click="viewReport(record.reportId)"
+                    >
                       查看报告
-                    </button>
-                    <button 
-                      class="action-button" 
+                    </el-button>
+                    <el-button 
+                      text 
+                      size="small" 
+                      @click="downloadPdfReport(record.reportId)"
+                    >
+                      <el-icon><Download /></el-icon>
+                      下载PDF
+                    </el-button>
+                    <el-button 
+                      text 
+                      size="small" 
                       @click="compareWithCurrent(record.version)"
                       v-if="!record.isCurrent"
                     >
                       对比当前
-                    </button>
+                    </el-button>
                   </div>
                 </div>
                 
@@ -152,9 +169,9 @@
                   </div>
                   
                   <div class="improvement-info" v-if="record.improvementFromPrevious !== undefined">
-                    <span class="improvement-badge" :class="getImprovementClass(record.improvementFromPrevious)">
+                    <div class="improvement-badge" :class="getImprovementClass(record.improvementFromPrevious)">
                       {{ record.improvementFromPrevious > 0 ? '+' : '' }}{{ record.improvementFromPrevious.toFixed(1) }}%
-                    </span>
+                    </div>
                     <span>相比上一版本</span>
                   </div>
                   
@@ -282,7 +299,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Refresh, DataLine, Timer, EditPen, TrendCharts, 
-  DataAnalysis, Lightning, ArrowRight, ArrowLeft
+  DataAnalysis, Lightning, ArrowRight, ArrowLeft, Download
 } from '@element-plus/icons-vue'
 // ECharts 通过 CDN 引入，全局 window.echarts 可用
 
@@ -511,6 +528,28 @@ const toggleCompactView = () => {
 
 const viewReport = (reportId) => {
   router.push(`/student/plagiarism-report/${reportId}`)
+}
+
+const downloadPdfReport = (reportId) => {
+  try {
+    // 构建PDF下载URL
+    const downloadUrl = `/api/detection/report/pdf/${reportId}`
+    
+    // 创建下载链接
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `plagiarism_report_${reportId}_${Date.now()}.pdf`
+    
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    ElMessage.success('PDF报告下载已开始')
+  } catch (error) {
+    console.error('下载PDF报告失败:', error)
+    ElMessage.error('下载PDF报告失败: ' + (error.message || '网络错误'))
+  }
 }
 
 const compareWithCurrent = async (version) => {
