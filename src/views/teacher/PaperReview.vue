@@ -39,13 +39,13 @@ const handleTabChange = (tab) => {
 
 :deep(.el-tabs) {
   margin-bottom: 24px;
-  
+
   .el-tabs__header {
     margin-bottom: 24px;
-    
+
     .el-tabs__nav {
       border-bottom: 1px solid #e2e8f0;
-      
+
       .el-tabs__item {
         font-size: 0.875rem;
         font-weight: 500;
@@ -53,15 +53,15 @@ const handleTabChange = (tab) => {
         padding: 12px 16px;
         margin-right: 24px;
         transition: all 0.2s ease;
-        
+
         &:hover {
           color: #0f172a;
         }
-        
+
         &.is-active {
           color: #1e40af;
           font-weight: 600;
-          
+
           &::after {
             background-color: #1e40af;
             height: 2px;
@@ -70,7 +70,5 @@ const handleTabChange = (tab) => {
       }
     }
   }
-  
-
 }
 </style>
