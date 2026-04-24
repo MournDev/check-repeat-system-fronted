@@ -92,7 +92,7 @@ export const getDictDataByType = (dictType) => {
   });
 };
 
-export const getSubjectFieldTree = () => {
+export const getSubjectFieldTree = (subjectField) => {
   return request({
     url: `/api/dict/subject/tree`,
     method: 'get'

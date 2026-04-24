@@ -1,100 +1,153 @@
 <template>
-  <div class="reset-container">
-    <!-- 背景遮罩层 -->
-    <div class="background-overlay"></div>
-    
-    <div class="reset-content">
-      <el-card class="reset-card">
-        <div class="card-header">
-          <h2 class="reset-title">找回密码</h2>
-          <p class="reset-subtitle">通过邮箱或手机号重置账户密码</p>
-        </div>
+  <AuthLayout
+    page-type="reset"
+    title="找回密码"
+    subtitle="通过邮箱重置账户密码"
+    :is-typing="isTyping"
+    :show-password="showPassword"
+    :password-length="passwordLength"
+    :is-error="!!error"
+  >
+    <el-form
+      :model="resetForm"
+      :rules="resetRules"
+      ref="resetFormRef"
+      size="large"
+      class="auth-form"
+    >
+      <div class="field-label">用户名</div>
+      <el-form-item prop="username">
+        <el-input
+          v-model="resetForm.username"
+          placeholder="请输入用户名"
+          @focus="isTyping = true; error = ''"
+          @blur="isTyping = false"
+        >
+          <template #prefix>
+            <el-icon><User /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
 
-        <el-form :model="resetForm" :rules="resetRules" ref="resetFormRef" label-width="0">
-          <el-form-item prop="username">
-            <el-input 
-              v-model="resetForm.username" 
-              placeholder="请输入用户名" 
-              size="large"
-              :prefix-icon="User"
-              clearable 
-            />
-          </el-form-item>
+      <div class="field-label">邮箱</div>
+      <el-form-item prop="email">
+        <el-input
+          v-model="resetForm.email"
+          placeholder="请输入邮箱（用于身份验证）"
+          @focus="isTyping = true; error = ''"
+          @blur="isTyping = false"
+        >
+          <template #prefix>
+            <el-icon><Message /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
 
-          <el-form-item prop="email">
-            <el-input 
-              v-model="resetForm.email" 
-              placeholder="请输入邮箱（用于身份验证）" 
-              size="large"
-              :prefix-icon="Message"
-              clearable 
-            />
-          </el-form-item>
+      <div class="field-label">新密码</div>
+      <el-form-item prop="newPassword">
+        <el-input
+          v-model="resetForm.newPassword"
+          :type="showPassword ? 'text' : 'password'"
+          placeholder="请输入新密码"
+          @focus="isTyping = true; error = ''"
+          @blur="isTyping = false"
+        >
+          <template #prefix>
+            <el-icon><Lock /></el-icon>
+          </template>
+          <template #suffix>
+            <span class="eye-toggle" @click="showPassword = !showPassword">
+              <el-icon v-if="showPassword"><View /></el-icon>
+              <el-icon v-else><Hide /></el-icon>
+            </span>
+          </template>
+        </el-input>
+      </el-form-item>
 
-          <el-form-item prop="newPassword">
-            <el-input 
-              v-model="resetForm.newPassword" 
-              type="password" 
-              placeholder="请输入新密码" 
-              size="large"
-              :prefix-icon="Lock"
-              show-password 
-              clearable
-            />
-          </el-form-item>
+      <div class="field-label">确认新密码</div>
+      <el-form-item prop="confirmPassword">
+        <el-input
+          v-model="resetForm.confirmPassword"
+          :type="showPassword ? 'text' : 'password'"
+          placeholder="请确认新密码"
+          @focus="isTyping = true; error = ''"
+          @blur="isTyping = false"
+        >
+          <template #prefix>
+            <el-icon><Lock /></el-icon>
+          </template>
+          <template #suffix>
+            <span class="eye-toggle" @click="showPassword = !showPassword">
+              <el-icon v-if="showPassword"><View /></el-icon>
+              <el-icon v-else><Hide /></el-icon>
+            </span>
+          </template>
+        </el-input>
+      </el-form-item>
 
-          <el-form-item prop="confirmPassword">
-            <el-input 
-              v-model="resetForm.confirmPassword" 
-              type="password" 
-              placeholder="请确认新密码" 
-              size="large"
-              :prefix-icon="Lock"
-              show-password 
-              clearable
-            />
-          </el-form-item>
+      <el-alert
+        v-if="error"
+        :title="error"
+        type="error"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 16px;"
+      />
 
-          <el-form-item>
-            <el-button 
-              :loading="loading" 
-              type="primary" 
-              class="reset-btn" 
-              @click="handleReset"
-              size="large"
-            >
-              {{ loading ? '重置中...' : '重置密码' }}
-            </el-button>
-          </el-form-item>
-        </el-form>
+      <el-form-item :style="{ marginBottom: 0 }">
+        <el-button
+          type="primary"
+          native-type="submit"
+          @click="handleReset"
+          :loading="loading"
+          class="submit-btn"
+        >
+          {{ loading ? '重置中...' : '重置密码' }}
+        </el-button>
+      </el-form-item>
+    </el-form>
 
-        <div class="reset-footer">
-          <span class="footer-text">已有账号？</span>
-          <el-button type="text" @click="goLogin" class="login-link">
-            返回登录
-          </el-button>
-        </div>
-      </el-card>
+    <div class="divider">
+      <span>或</span>
     </div>
-  </div>
+
+    <div class="signup-row">
+      已有账号？
+      <el-button type="text" @click="goLogin" class="signup-link">
+        返回登录
+      </el-button>
+    </div>
+  </AuthLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ElCard, ElForm, ElFormItem, ElInput, ElButton, ElDivider } from 'element-plus'
-import { User, Lock, Message } from '@element-plus/icons-vue'
+import { User, Lock, Message, View, Hide } from '@element-plus/icons-vue'
 import { forgetPassword } from '@/api/login'
+import AuthLayout from '@/components/layout/AuthLayout.vue'
 const router = useRouter()
 const resetFormRef = ref(null)
 const loading = ref(false)
+
+// 新增响应式变量
+const isTyping = ref(false)
+const showPassword = ref(false)
+const error = ref('')
 
 const resetForm = ref({
   username: '',
   email: '',
   newPassword: '',
   confirmPassword: ''
+})
+
+// 监听密码长度变化
+const passwordLength = ref(0)
+
+watch(() => resetForm.value.newPassword, (newVal) => {
+  passwordLength.value = newVal ? newVal.length : 0
 })
 
 const resetRules = {
@@ -130,6 +183,7 @@ const handleReset = async () => {
     console.log('开始重置密码验证...')
     await resetFormRef.value.validate()
     loading.value = true
+    error.value = ''
 
     console.log('表单验证通过，准备调用接口...')
     
@@ -158,11 +212,11 @@ const handleReset = async () => {
     
     // 更精确的错误处理
     if (err?.response?.status === 404) {
-      ElMessage.error('用户不存在或邮箱不匹配')
+      error.value = '用户不存在或邮箱不匹配'
     } else if (err?.response?.status === 400) {
-      ElMessage.error('请求参数错误，请检查输入')
+      error.value = '请求参数错误，请检查输入'
     } else if (err?.message && !err.message.includes('validation')) {
-      ElMessage.error(err.message || '重置失败，请重试')
+      error.value = err.message || '重置失败，请重试'
     }
     // 表单验证错误不显示额外提示
   } finally {
@@ -176,139 +230,123 @@ const goLogin = () => {
 </script>
 
 <style lang="scss" scoped>
-.reset-container {
-  position: relative;
+.auth-form {
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
+  }
+
+  :deep(.el-input__wrapper) {
+    height: 48px !important;
+    background: #fafafa !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+  }
+
+  :deep(.el-input__wrapper:hover) {
+    border-color: #3b82f6 !important;
+  }
+
+  :deep(.el-input__wrapper.is-focus),
+  :deep(.el-input__wrapper:focus) {
+    border-color: #1e40af !important;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.08) !important;
+    background: #ffffff !important;
+  }
+
+  :deep(.el-input__inner) {
+    background: transparent !important;
+    font-size: 14px !important;
+    color: #111827 !important;
+  }
+
+  :deep(.el-input__inner::placeholder) {
+    color: #c0c4cc !important;
+  }
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.eye-toggle {
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 16px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
-  // 使用本地图片作为背景
-  background-image: url('@/assets/images/login.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  transition: color 0.2s;
 }
 
-// 背景遮罩层
-.background-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
+.eye-toggle:hover {
+  color: #374151;
+}
+
+.submit-btn {
   width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1;
+  height: 48px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: #1e40af !important;
+  border-color: #1e40af !important;
+  letter-spacing: 1px;
+  transition: background 0.2s, opacity 0.2s !important;
+  cursor: pointer;
 }
 
-.reset-content {
-  width: 100%;
-  max-width: 420px;
-  padding: 20px;
-  position: relative;
-  z-index: 2;
+.submit-btn:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  opacity: 1 !important;
 }
 
-.reset-card {
-  width: 100%;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  background: rgba(255, 255, 255, 0.98);
-  
-  :deep(.el-card__body) {
-    padding: 0;
-  }
+.submit-btn:active {
+  opacity: 0.85 !important;
 }
 
-.card-header {
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 0;
+  color: #d1d5db;
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.divider span {
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.signup-row {
   text-align: center;
-  margin-bottom: 2rem;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 28px;
 }
 
-.reset-title {
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-.reset-subtitle {
-  margin: 0;
-  color: #718096;
-  font-size: 0.9rem;
-}
-
-:deep(.el-form-item) {
-  margin-bottom: 1.25rem;
-}
-
-:deep(.el-input__wrapper) {
-  border-radius: 8px;
-  transition: all 0.2s;
-  
-  &:hover {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  }
-}
-
-.reset-btn {
-  width: 100%;
-  height: 44px;
-  border-radius: 8px;
-  font-size: 1rem;
+.signup-link {
+  color: #1e40af !important;
   font-weight: 500;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  transition: all 0.2s;
-  margin-top: 0.5rem;
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.reset-footer {
-  text-align: center;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #eaeaea;
-}
-
-.footer-text {
-  color: #a0aec0;
-  font-size: 0.9rem;
-  margin-right: 8px;
-}
-
-.login-link {
-  color: #667eea;
-  font-weight: 500;
-  font-size: 0.95rem;
-  
-  &:hover {
-    color: #764ba2;
-  }
-}
-
-// 响应式设计
-@media (max-width: 480px) {
-  .reset-content {
-    max-width: 360px;
-    padding: 15px;
-  }
-  
-  .reset-card {
-    padding: 2rem 1.5rem;
-  }
-  
-  .reset-title {
-    font-size: 1.6rem;
-  }
+.signup-link:hover {
+  text-decoration: underline;
+  color: #1d4ed8 !important;
 }
 </style>

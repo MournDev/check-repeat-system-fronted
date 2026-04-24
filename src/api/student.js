@@ -282,7 +282,7 @@ export const onlinePreview = (fileId, fileType) => {
  */
 export const getPaperReport = (reportId) => {
   return request({
-    url: '/api/student/reports/preview',
+    url: '/api/student/reports/data',
     method: "get",
     params: { reportId }
   });
@@ -660,7 +660,15 @@ export const getMessageSessions = () => {
  * @param pageNum 页码
  * @param pageSize 每页数量
  */
-export const getMessages = (sessionId, pageNum = 1, pageSize = 20) => {
+export const getMessages = (params) => {
+  let sessionId, pageNum = 1, pageSize = 20;
+  if (typeof params === 'object' && params !== null) {
+    sessionId = params.sessionId;
+    pageNum = params.pageNum || 1;
+    pageSize = params.pageSize || 20;
+  } else {
+    sessionId = params;
+  }
   return request({
     url: '/api/student/messages/list',
     method: 'get',
@@ -743,7 +751,8 @@ export const getSharedFiles = (sessionId) => {
   return request({
     url: '/api/student/messages/shared-files',
     method: 'get',
-    params: { sessionId }
+    params: { sessionId },
+    _skipLoginRedirect: true // 跳过重定向，避免401时清除token和跳转
   });
 };
 
@@ -763,7 +772,13 @@ export const downloadSharedFile = (fileId) => {
  * 标记消息已读
  * @param sessionId 会话ID
  */
-export const markMessagesAsRead = (sessionId) => {
+export const markMessagesAsRead = (params) => {
+  let sessionId;
+  if (typeof params === 'object' && params !== null) {
+    sessionId = params.sessionId;
+  } else {
+    sessionId = params;
+  }
   return request({
     url: `/api/student/messages/session/${sessionId}/read`,
     method: 'put'

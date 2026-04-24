@@ -1,150 +1,147 @@
 <template>
   <div class="admin-dashboard">
     <!-- 页面标题和快速操作 -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">系统概览</h1>
-        <p class="page-desc">欢迎回来，{{ userStore.userInfo?.realName || '管理员' }}！这里是系统管理中心</p>
-      </div>
-      <div class="quick-actions">
-        <el-button type="primary" :icon="UserFilled" @click="goToUserManagement">
-          用户管理
-        </el-button>
-        <el-button :icon="DataAnalysis" @click="goToSchoolOverview">
-          全校概览
-        </el-button>
-        <el-button :icon="Refresh" @click="refreshData">
-          刷新数据
-        </el-button>
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <div class="welcome-left">
+          <h1 class="welcome-title">系统概览</h1>
+          <p class="welcome-subtitle">欢迎回来，{{ userStore.userInfo?.realName || '管理员' }}！这里是系统管理中心</p>
+        </div>
+        <div class="welcome-actions">
+          <button class="primary-button" @click="goToUserManagement">
+            <el-icon><UserFilled /></el-icon>
+            用户管理
+          </button>
+          <button class="secondary-button" @click="goToSchoolOverview">
+            <el-icon><DataAnalysis /></el-icon>
+            全校概览
+          </button>
+          <button class="secondary-button" @click="refreshData">
+            <el-icon><Refresh /></el-icon>
+            刷新数据
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- 系统统计卡片 -->
-    <el-row :gutter="16" class="stats-cards">
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-              <el-icon><User /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.totalUsers || 0 }}</div>
-              <div class="stat-label">总用户数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
-              <el-icon><Document /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.totalPapers || 0 }}</div>
-              <div class="stat-label">总论文数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
-              <el-icon><Connection /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.unassignedCount || 0 }}</div>
-              <div class="stat-label">待分配</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
-              <el-icon><TrendCharts /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stats.systemHealth || 0 }}%</div>
-              <div class="stat-label">系统健康度</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon user-icon">
+          <el-icon><User /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.totalUsers || 0 }}</div>
+          <div class="stat-label">总用户数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon paper-icon">
+          <el-icon><Document /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.totalPapers || 0 }}</div>
+          <div class="stat-label">总论文数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon unassigned-icon">
+          <el-icon><Connection /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.unassignedCount || 0 }}</div>
+          <div class="stat-label">待分配</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon health-icon">
+          <el-icon><TrendCharts /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.systemHealth || 0 }}%</div>
+          <div class="stat-label">系统健康度</div>
+        </div>
+      </div>
+    </div>
 
-    <el-row :gutter="16" class="dashboard-content">
+    <div class="main-content">
       <!-- 左侧：系统监控 -->
-      <el-col :xs="24" :lg="16">
+      <div class="main-left">
         <!-- 系统监控 -->
-        <el-card class="monitor-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><Monitor /></el-icon>
-                系统监控
-              </span>
-              <div class="monitor-status">
-                <el-tag type="success" effect="light">
-                  <el-icon><SuccessFilled /></el-icon>
-                  运行正常
-                </el-tag>
-              </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><Monitor /></el-icon>
+              系统监控
             </div>
-          </template>
+            <div class="monitor-status">
+              <span class="status-badge success">
+                <el-icon><SuccessFilled /></el-icon>
+                运行正常
+              </span>
+            </div>
+          </div>
           
           <div class="monitor-content">
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <div class="metric-item">
-                  <div class="metric-value">{{ systemMonitorData.cpuUsage }}%</div>
-                  <div class="metric-label">CPU使用率</div>
-                  <el-progress :percentage="systemMonitorData.cpuUsage" :show-text="false" />
+            <div class="metrics-grid">
+              <div class="metric-item">
+                <div class="metric-value">{{ systemMonitorData.cpuUsage }}%</div>
+                <div class="metric-label">CPU使用率</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: systemMonitorData.cpuUsage + '%' }"></div>
                 </div>
-              </el-col>
-              <el-col :span="8">
-                <div class="metric-item">
-                  <div class="metric-value">{{ formatMemory(systemMonitorData.memoryUsage) }}</div>
-                  <div class="metric-label">内存使用</div>
-                  <el-progress :percentage="systemMonitorData.memoryUsage" :show-text="false" />
+              </div>
+              <div class="metric-item">
+                <div class="metric-value">{{ formatMemory(systemMonitorData.memoryUsage) }}</div>
+                <div class="metric-label">内存使用</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: systemMonitorData.memoryUsage + '%' }"></div>
                 </div>
-              </el-col>
-              <el-col :span="8">
-                <div class="metric-item">
-                  <div class="metric-value">{{ systemMonitorData.todayVisits }}</div>
-                  <div class="metric-label">今日访问</div>
-                  <el-progress :percentage="Math.min(100, systemMonitorData.todayVisits / 2)" :show-text="false" />
+              </div>
+              <div class="metric-item">
+                <div class="metric-value">{{ systemMonitorData.todayVisits }}</div>
+                <div class="metric-label">今日访问</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: Math.min(100, systemMonitorData.todayVisits / 2) + '%' }"></div>
                 </div>
-              </el-col>
-            </el-row>
+              </div>
+            </div>
             
             <div class="server-info">
               <h4>服务器信息</h4>
-              <el-descriptions :column="2" border size="small">
-                <el-descriptions-item label="系统版本">{{ systemMonitorData.systemVersion }}</el-descriptions-item>
-                <el-descriptions-item label="运行时间">{{ systemMonitorData.uptime }}</el-descriptions-item>
-                <el-descriptions-item label="数据库">{{ systemMonitorData.database }}</el-descriptions-item>
-                <el-descriptions-item label="最后备份">{{ systemMonitorData.lastBackup }}</el-descriptions-item>
-              </el-descriptions>
+              <div class="server-details">
+                <div class="server-detail-item">
+                  <span class="detail-label">系统版本</span>
+                  <span class="detail-value">{{ systemMonitorData.systemVersion }}</span>
+                </div>
+                <div class="server-detail-item">
+                  <span class="detail-label">运行时间</span>
+                  <span class="detail-value">{{ systemMonitorData.uptime }}</span>
+                </div>
+                <div class="server-detail-item">
+                  <span class="detail-label">数据库</span>
+                  <span class="detail-value">{{ systemMonitorData.database }}</span>
+                </div>
+                <div class="server-detail-item">
+                  <span class="detail-label">最后备份</span>
+                  <span class="detail-value">{{ systemMonitorData.lastBackup }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </el-card>
-      </el-col>
+        </div>
+      </div>
 
       <!-- 右侧：数据统计和快速操作 -->
-      <el-col :xs="24" :lg="8">
+      <div class="main-right">
         <!-- 用户分布 -->
-        <el-card class="users-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><PieChart /></el-icon>
-                用户分布
-              </span>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><PieChart /></el-icon>
+              用户分布
             </div>
-          </template>
+          </div>
           
           <div class="users-distribution">
             <div class="distribution-item">
@@ -152,85 +149,73 @@
                 <div class="dist-value">{{ userDistribution.students }}</div>
                 <div class="dist-label">学生</div>
               </div>
-              <el-progress 
-                :percentage="safePercent(userDistribution.students, userDistribution.total)" 
-                :stroke-width="12"
-                text-inside
-                :color="['#667eea', '#764ba2']"
-              />
+              <div class="progress-bar">
+                <div class="progress-fill student" :style="{ width: safePercent(userDistribution.students, userDistribution.total) + '%' }"></div>
+              </div>
             </div>
             <div class="distribution-item">
               <div class="dist-info">
                 <div class="dist-value">{{ userDistribution.teachers }}</div>
                 <div class="dist-label">教师</div>
               </div>
-              <el-progress 
-                :percentage="safePercent(userDistribution.teachers, userDistribution.total)" 
-                :stroke-width="12"
-                text-inside
-                :color="['#f093fb', '#f5576c']"
-              />
+              <div class="progress-bar">
+                <div class="progress-fill teacher" :style="{ width: safePercent(userDistribution.teachers, userDistribution.total) + '%' }"></div>
+              </div>
             </div>
             <div class="distribution-item">
               <div class="dist-info">
                 <div class="dist-value">{{ userDistribution.admins }}</div>
                 <div class="dist-label">管理员</div>
               </div>
-              <el-progress 
-                :percentage="safePercent(userDistribution.admins, userDistribution.total)" 
-                :stroke-width="12"
-                text-inside
-                :color="['#43e97b', '#38f9d7']"
-              />
+              <div class="progress-bar">
+                <div class="progress-fill admin" :style="{ width: safePercent(userDistribution.admins, userDistribution.total) + '%' }"></div>
+              </div>
             </div>
           </div>
-        </el-card>
+        </div>
 
         <!-- 快速操作 -->
-        <el-card class="quick-actions-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><Operation /></el-icon>
-                快速操作
-              </span>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <el-icon><Operation /></el-icon>
+              快速操作
             </div>
-          </template>
+          </div>
           
           <div class="action-buttons">
-            <el-button 
-              type="primary" 
-              :icon="UserFilled" 
-              class="action-button"
+            <button 
+              class="action-button primary"
               @click="goToUserManagement"
             >
+              <el-icon><UserFilled /></el-icon>
               用户管理
-            </el-button>
-            <el-button 
-              :icon="Connection" 
+            </button>
+            <button 
               class="action-button"
               @click="goToAdvisorAssign"
             >
+              <el-icon><Connection /></el-icon>
               导师分配
-            </el-button>
-            <el-button 
-              :icon="Setting" 
+            </button>
+            <button 
               class="action-button"
               @click="goToSystemConfig"
             >
+              <el-icon><Setting /></el-icon>
               系统配置
-            </el-button>
-            <el-button 
-              :icon="Document" 
+            </button>
+            <button 
               class="action-button"
               @click="goToLogCenter"
             >
+              <el-icon><Document /></el-icon>
               日志中心
-            </el-button>
+            </button>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -306,7 +291,8 @@ const loadDashboardData = async () => {
     // 处理统计数据
     stats.value = {
       totalUsers: statsResponse.data.totalUsers ?? 0,
-      totalPapers: statsResponse.data.totalPapers ?? 0,
+      totalPapers: statsResponse.data.validPapers ?? 0,
+      validPapers: statsResponse.data.validPapers ?? 0,
       unassignedCount: statsResponse.data.pendingPapers ?? 0,
       systemHealth: statsResponse.data.systemMonitor?.healthScore ?? 95
     }
@@ -422,255 +408,470 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+// 全局样式
 .admin-dashboard {
-  padding: 0;
+  padding: 24px;
+  min-height: 100vh;
+  background: #f8fafc; // Slate-50
+  color: #0f172a; // Slate-900
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
+// 欢迎区域
+.welcome-section {
+  margin-bottom: 32px;
   
-  .header-content {
-    .page-title {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    
-    .page-desc {
-      margin: 0;
-      color: #7f8c8d;
-      font-size: 0.95rem;
-    }
-  }
-  
-  .quick-actions {
+  .welcome-content {
     display: flex;
-    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    
+    .welcome-left {
+      
+      .welcome-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+        line-height: 1.2;
+      }
+      
+      .welcome-subtitle {
+        font-size: 1rem;
+        color: #64748b;
+        margin: 0;
+      }
+    }
+    
+    .welcome-actions {
+      display: flex;
+      gap: 12px;
+    }
   }
 }
 
-.stats-cards {
-  margin-bottom: 1.5rem;
+// 统计卡片
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
   
-  .stat-card {
-    border: none;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
     
-    .stat-content {
+    &.user-icon {
+      background: #f0f9ff;
+      color: #0ea5e9;
+    }
+    
+    &.paper-icon {
+      background: #fef3c7;
+      color: #f59e0b;
+    }
+    
+    &.unassigned-icon {
+      background: #d1fae5;
+      color: #10b981;
+    }
+    
+    &.health-icon {
+      background: #ede9fe;
+      color: #8b5cf6;
+    }
+  }
+  
+  .stat-content {
+    flex: 1;
+    
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+  }
+}
+
+// 主要内容区域
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 通用卡片样式
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    .card-title {
       display: flex;
       align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
       
-      .stat-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        margin-right: 1rem;
-        
-        .el-icon {
-          color: white;
-          font-size: 1.5rem;
-        }
-      }
-      
-      .stat-info {
-        .stat-value {
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #2c3e50;
-          line-height: 1;
-        }
-        
-        .stat-label {
-          font-size: 0.875rem;
-          color: #7f8c8d;
-          margin-top: 0.25rem;
-        }
+      .el-icon {
+        color: #64748b;
       }
     }
   }
 }
 
-.dashboard-content {
-  .el-card {
-    border-radius: 12px;
-    border: 1px solid #f1f2f6;
-    margin-bottom: 1rem;
-    
-    :deep(.el-card__header) {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid #f1f2f6;
-      
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .card-title {
-          display: flex;
-          align-items: center;
-          font-weight: 600;
-          color: #2c3e50;
-          
-          .el-icon {
-            margin-right: 0.5rem;
-            color: #667eea;
-          }
-        }
-      }
-    }
-  }
-}
-
-/* 待办相关样式已移除 */
-
+// 系统监控
 .monitor-content {
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
   .metric-item {
-    text-align: center;
-    padding: 1rem;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
     
     .metric-value {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 0.5rem;
+      color: #0f172a;
+      margin-bottom: 8px;
     }
     
     .metric-label {
-      color: #7f8c8d;
+      color: #64748b;
       font-size: 0.875rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 12px;
     }
   }
   
   .server-info {
-    margin-top: 1.5rem;
+    margin-top: 24px;
     
     h4 {
-      margin: 0 0 1rem 0;
-      color: #2c3e50;
+      margin: 0 0 16px 0;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    
+    .server-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    
+    .server-detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      
+      .detail-label {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+      
+      .detail-value {
+        color: #0f172a;
+        font-weight: 500;
+      }
     }
   }
 }
 
+// 用户分布
 .users-distribution {
   .distribution-item {
-    margin-bottom: 1.5rem;
-    min-height: 56px;
+    margin-bottom: 16px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
     
     .dist-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 8px;
       
       .dist-value {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #0f172a;
       }
       
       .dist-label {
-        color: #7f8c8d;
+        color: #64748b;
         font-size: 0.875rem;
       }
     }
-    :deep(.el-progress) {
-      display: block;
-      width: 100% !important;
-      margin-top: 8px;
-    }
-    :deep(.el-progress__text) {
-      color: #fff;
-      font-weight: 600;
-      font-size: 12px;
-    }
   }
 }
 
+// 快速操作
 .action-buttons {
   display: grid;
-  gap: 0.75rem;
+  gap: 12px;
   
   .action-button {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
     border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
     
     &:hover {
-      background-color: #f8f9fa;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.1);
+    }
+    
+    &.primary {
+      background: #1e40af;
+      color: white;
+      
+      &:hover {
+        background: #1e3a8a;
+      }
+    }
+    
+    &:not(.primary) {
+      background: #f8fafc;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      
+      &:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+      }
+    }
+    
+    .el-icon {
+      font-size: 16px;
     }
   }
 }
 
-.logs-list {
-  .log-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f8f9fa;
+// 进度条
+.progress-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
     
-    &:last-child {
-      border-bottom: none;
+    &:not(.student):not(.teacher):not(.admin) {
+      background: #0ea5e9;
     }
     
-    .log-content {
-      flex: 1;
-      
-      .log-action {
-        font-weight: 500;
-        color: #2c3e50;
-        margin-bottom: 0.25rem;
-      }
-      
-      .log-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.75rem;
-        color: #7f8c8d;
-      }
+    &.student {
+      background: #667eea;
     }
+    
+    &.teacher {
+      background: #f5576c;
+    }
+    
+    &.admin {
+      background: #10b981;
+    }
+  }
+}
+
+// 状态标签
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  
+  &.success {
+    background: #d1fae5;
+    color: #10b981;
+  }
+  
+  .el-icon {
+    font-size: 14px;
+  }
+}
+
+// 按钮样式
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #1e40af;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #1e3a8a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  .el-icon {
+    font-size: 16px;
   }
 }
 
 // 响应式设计
 @media (max-width: 768px) {
-  .page-header {
+  .admin-dashboard {
+    padding: 16px;
+  }
+  
+  .welcome-content {
     flex-direction: column;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .welcome-actions {
+    width: 100%;
     
-    .quick-actions {
-      width: 100%;
-      
-      .el-button {
-        flex: 1;
-      }
+    .primary-button,
+    .secondary-button {
+      flex: 1;
+      justify-content: center;
     }
   }
   
-  .todo-item {
-    flex-direction: column;
-    align-items: flex-start !important;
-    
-    .todo-actions {
-      width: 100%;
-      justify-content: flex-end;
-      margin-top: 1rem;
-    }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .monitor-content {
-    .el-col {
-      margin-bottom: 1rem;
-    }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .server-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem !important;
+  }
+  
+  .card {
+    padding: 20px;
   }
 }
 </style>

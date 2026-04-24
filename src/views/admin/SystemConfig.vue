@@ -739,39 +739,73 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .system-config {
-  padding: 0;
+  min-height: 100vh;
+  background: #f8fafc; // Slate-50
+  color: #0f172a; // Slate-900
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
   
   .header-content {
     .page-title {
-      margin: 0 0 0.5rem 0;
+      margin: 0 0 8px 0;
       font-size: 1.75rem;
-      font-weight: 600;
-      color: #2c3e50;
+      font-weight: 700;
+      color: #0f172a; // Slate-900
     }
     
     .page-desc {
       margin: 0;
-      color: #7f8c8d;
+      color: #64748b; // Slate-500
       font-size: 0.95rem;
     }
   }
   
   .header-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 12px;
+    
+    .el-button {
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      border: 1px solid #e2e8f0;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+        border-color: #cbd5e1;
+      }
+    }
   }
 }
 
 .nav-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
   
   :deep(.el-card__body) {
     padding: 0;
@@ -783,7 +817,7 @@ onMounted(() => {
       
       &:hover {
         .el-step__title {
-          color: #667eea;
+          color: #3b82f6; // Blue-500
         }
       }
     }
@@ -791,41 +825,89 @@ onMounted(() => {
 }
 
 .config-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
   
   :deep(.el-card__body) {
-    padding: 1.5rem;
+    padding: 24px;
   }
   
   .config-tab {
     .tab-title {
-      margin: 0 0 1.5rem 0;
+      margin: 0 0 24px 0;
       font-size: 1.25rem;
-      color: #2c3e50;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid #f1f2f6;
+      color: #0f172a; // Slate-900
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
     }
     
     .config-form {
       :deep(.el-form-item) {
-        margin-bottom: 1.5rem;
+        margin-bottom: 24px;
         
         .el-form-item__label {
           font-weight: 500;
-          color: #5a6c7d;
+          color: #64748b; // Slate-500
+        }
+        
+        .el-input,
+        .el-select,
+        .el-date-picker {
+          width: 100%;
+          
+          :deep(.el-input__wrapper) {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              border-color: #cbd5e1;
+              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            }
+          }
+          
+          :deep(.el-select__wrapper) {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              border-color: #cbd5e1;
+              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            }
+          }
+        }
+        
+        .el-button {
+          border-radius: 8px;
+          transition: all 0.2s ease;
+          border: 1px solid #e2e8f0;
+          
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+            border-color: #cbd5e1;
+          }
         }
       }
       
       .form-tip {
         font-size: 0.875rem;
-        color: #7f8c8d;
-        margin-top: 0.25rem;
+        color: #94a3b8; // Slate-400
+        margin-top: 4px;
         line-height: 1.4;
       }
       
       .unit {
-        margin-left: 0.5rem;
-        color: #7f8c8d;
+        margin-left: 8px;
+        color: #94a3b8; // Slate-400
         font-size: 0.875rem;
       }
     }
@@ -834,11 +916,20 @@ onMounted(() => {
 
 .help-card,
 .backup-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
   
   :deep(.el-card__header) {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #f1f2f6;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
     
     .card-header {
       display: flex;
@@ -848,36 +939,40 @@ onMounted(() => {
         display: flex;
         align-items: center;
         font-weight: 600;
-        color: #2c3e50;
+        color: #0f172a; // Slate-900
         
         .el-icon {
-          margin-right: 0.5rem;
-          color: #667eea;
+          margin-right: 8px;
+          color: #475569; // Slate-600
         }
       }
     }
+  }
+  
+  :deep(.el-card__body) {
+    padding: 20px;
   }
 }
 
 .config-help {
   .help-content {
     h4 {
-      margin: 0 0 0.75rem 0;
-      color: #2c3e50;
+      margin: 0 0 12px 0;
+      color: #0f172a; // Slate-900
       font-size: 1rem;
     }
     
     ul {
-      padding-left: 1.25rem;
+      padding-left: 20px;
       margin: 0;
       
       li {
-        margin-bottom: 0.5rem;
+        margin-bottom: 8px;
         line-height: 1.5;
-        color: #5a6c7d;
+        color: #64748b; // Slate-500
         
         strong {
-          color: #2c3e50;
+          color: #0f172a; // Slate-900
         }
       }
     }
@@ -887,26 +982,43 @@ onMounted(() => {
 .backup-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 12px;
+  margin-bottom: 16px;
   
   .el-button {
     width: 100%;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      border-color: #cbd5e1;
+    }
   }
 }
 
 .backup-info {
   p {
-    margin: 0.25rem 0;
+    margin: 4px 0;
     font-size: 0.875rem;
-    color: #7f8c8d;
+    color: #94a3b8; // Slate-400
   }
 }
 
+.config-tab-container {
+  margin-top: 24px;
+}
+
 @media (max-width: 768px) {
+  .system-config {
+    padding: 16px;
+  }
+  
   .page-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 16px;
     
     .header-actions {
       width: 100%;
@@ -922,36 +1034,20 @@ onMounted(() => {
     
     .el-col {
       width: 100% !important;
-      margin-bottom: 1rem;
+      margin-bottom: 16px;
     }
   }
   
   .config-card {
     :deep(.el-card__body) {
-      padding: 1rem;
+      padding: 16px;
     }
   }
   
   .backup-actions {
     .el-button {
-      margin-bottom: 0.5rem;
+      margin-bottom: 8px;
     }
-  }
-}
-</style>
-
-<style lang="scss" scoped>
-.system-config {
-  padding: 0;
-}
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-  .header-content {
-    .page-title { margin: 0 0 0.5rem 0; font-size: 1.75rem; font-weight: 600; color: #2c3e50; }
-    .page-desc { margin: 0; color: #7f8c8d; font-size: 0.95rem; }
   }
 }
 </style>

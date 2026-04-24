@@ -25,7 +25,7 @@
               <el-icon><Document /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ libraryStats.totalPapers }}</div>
+              <div class="stat-value">{{ libraryStats.totalPapers || 0 }}</div>
               <div class="stat-label">论文总数</div>
             </div>
           </div>
@@ -38,7 +38,7 @@
               <el-icon><Check /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ libraryStats.checkedPapers }}</div>
+              <div class="stat-value">{{ libraryStats.checkedPapers || 0 }}</div>
               <div class="stat-label">已查重</div>
             </div>
           </div>
@@ -51,7 +51,7 @@
               <el-icon><Warning /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ libraryStats.highSimilarity }}</div>
+              <div class="stat-value">{{ libraryStats.highSimilarity || 0 }}</div>
               <div class="stat-label">高重复率</div>
             </div>
           </div>
@@ -64,7 +64,7 @@
               <el-icon><TrendCharts /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ libraryStats.avgSimilarity }}%</div>
+              <div class="stat-value">{{ libraryStats.avgSimilarity || 0 }}%</div>
               <div class="stat-label">平均相似度</div>
             </div>
           </div>
@@ -76,34 +76,34 @@
     <el-card class="filter-card" shadow="never">
       <el-form :model="filterForm" label-width="80px" inline>
         <el-form-item label="学院">
-          <el-select 
-            v-model="filterForm.collegeId" 
-            placeholder="请选择学院" 
-            clearable 
+          <el-select
+            v-model="filterForm.collegeId"
+            placeholder="请选择学院"
+            clearable
             style="width: 180px"
             @change="handleCollegeChange"
           >
-            <el-option 
-              v-for="college in collegeList" 
-              :key="college.value" 
-              :label="college.label" 
+            <el-option
+              v-for="college in collegeList"
+              :key="college.value"
+              :label="college.label"
               :value="college.value"
             >
             </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="专业">
-          <el-select 
-            v-model="filterForm.majorId" 
-            placeholder="请选择专业" 
-            clearable 
+          <el-select
+            v-model="filterForm.majorId"
+            placeholder="请选择专业"
+            clearable
             style="width: 180px"
             :disabled="!filterForm.collegeId"
           >
-            <el-option 
-              v-for="major in filteredMajorList" 
-              :key="major.value" 
-              :label="major.label" 
+            <el-option
+              v-for="major in filteredMajorList"
+              :key="major.value"
+              :label="major.label"
               :value="major.value"
             >
             </el-option>
@@ -160,24 +160,24 @@
             论文列表
           </span>
           <div class="table-actions">
-            <el-button 
-              type="success" 
-              :icon="Check" 
+            <el-button
+              type="success"
+              :icon="Check"
               :disabled="selectedPapers.length === 0"
               @click="performBatchInternalCheck"
             >
               批量校内查重
             </el-button>
-            <el-button 
-              type="warning" 
-              :icon="MagicStick" 
+            <el-button
+              type="warning"
+              :icon="MagicStick"
               :disabled="selectedPapers.length === 0"
               @click="performBatchThirdPartyCheck"
             >
               批量第三方查重
             </el-button>
-            <el-button 
-              :icon="Download" 
+            <el-button
+              :icon="Download"
               @click="exportLibrary"
             >
               导出数据
@@ -425,12 +425,12 @@
           <el-descriptions-item label="提交时间">{{ formatDate(currentPaper.submitTime) }}</el-descriptions-item>
           <el-descriptions-item label="字数">{{ currentPaper.wordCount }}字</el-descriptions-item>
         </el-descriptions>
-        
+
         <div class="section" v-if="currentPaper.paperAbstract">
           <h3>摘要</h3>
           <p class="summary">{{ currentPaper.paperAbstract }}</p>
         </div>
-        
+
         <div class="section" v-if="currentPaper.checkCompleted === 1 && currentPaper.checkSource === 'local'">
           <h3>校内查重结果</h3>
           <el-tag :type="getSimilarityTagType(currentPaper.similarityRate)">
@@ -441,7 +441,7 @@
             <p>查重引擎: {{ getCheckEngineText(currentPaper.checkEngineType) }}</p>
           </div>
         </div>
-        
+
         <div class="section" v-if="currentPaper.checkCompleted === 1 && currentPaper.checkSource === 'third_party'">
           <h3>第三方查重结果</h3>
           <el-tag :type="getSimilarityTagType(currentPaper.similarityRate)">
@@ -452,7 +452,7 @@
             <p>查重引擎: {{ getCheckEngineText(currentPaper.checkEngineType) }}</p>
           </div>
         </div>
-        
+
         <div class="section" v-if="currentPaper.internalCheck">
           <h3>校内查重结果</h3>
           <el-tag :type="getSimilarityTagType(currentPaper.internalCheck.score)">
@@ -470,7 +470,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="section" v-if="currentPaper.thirdPartyCheck">
           <h3>第三方查重结果</h3>
           <el-tag :type="getSimilarityTagType(currentPaper.thirdPartyCheck.score)">
@@ -492,10 +492,10 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 导入管理员API
-import { 
-  getPaperList, 
-  getPaperStats, 
-  deletePaper as deleteApiPaper, 
+import {
+  getPaperList,
+  getPaperStats,
+  deletePaper as deleteApiPaper,
   batchDeletePapers,
   internalCheck,
   thirdPartyCheck,
@@ -527,10 +527,10 @@ const currentPaper = ref(null)
 
 // 统计数据
 const libraryStats = ref({
-  totalPapers: 1247,
-  checkedPapers: 986,
-  highSimilarity: 47,
-  avgSimilarity: 23.5
+  totalPapers: 0,
+  checkedPapers: 0,
+  highSimilarity: 0,
+  avgSimilarity: 0
 })
 
 // 学院和专业数据
@@ -539,7 +539,7 @@ const majorList = ref([])
 const filteredMajorList = computed(() => {
   // 根据选中的学院ID过滤专业
   if (!filterForm.collegeId) return []
-  
+
   // 专业数据中包含 collegeId 字段
   return majorList.value.filter(major => major.collegeId === filterForm.collegeId)
 })
@@ -639,23 +639,19 @@ const handleCurrentChange = (val) => {
 const loadLibraryStats = async () => {
   try {
     const response = await getPaperStats()
+    console.log('论文库统计数据:', response)
+    // 正确获取 checked 字段并转换为数字
+    const checkedValue = response?.data?.checked
     libraryStats.value = {
-      totalPapers: response.data.totalPapers || 0,
-      checkedPapers: response.data.checkedPapers || 0,
-      highSimilarity: response.data.highSimilarity || 0,
-      avgSimilarity: response.data.avgSimilarity || 0
+      totalPapers: Number(response?.data?.totalPapers) || 0,
+      checkedPapers: checkedValue !== undefined && checkedValue !== null ? Number(checkedValue) : 0,
+      highSimilarity: Number(response?.data?.highSimilarity) || 0,
+      avgSimilarity: Number(response?.data?.avgSimilarity) || 0
     }
+    console.log('处理后的统计数据:', libraryStats.value)
   } catch (error) {
     console.error('加载论文库统计失败:', error)
     ElMessage.error('加载统计数据失败')
-    
-    // 降级到模拟数据
-    libraryStats.value = {
-      totalPapers: 1247,
-      checkedPapers: 986,
-      highSimilarity: 47,
-      avgSimilarity: 23.5
-    }
   }
 }
 
@@ -671,7 +667,7 @@ const loadPaperList = async () => {
       checkStatus: filterForm.checkStatus,
       keyword: filterForm.keyword
     }
-    
+
     // 添加相似度范围筛选
     if (filterForm.similarityRange) {
       switch (filterForm.similarityRange) {
@@ -689,7 +685,7 @@ const loadPaperList = async () => {
           break
       }
     }
-    
+
     const response = await getPaperList(params)
     console.debug('loadPaperList response:', response)
     // 兼容多层嵌套与多种格式：
@@ -714,9 +710,9 @@ const loadPaperList = async () => {
     if (!candidate) candidate = unwrap(response) || unwrap(response?.data)
     if (!candidate && Array.isArray(response)) candidate = { list: response, total: response.length }
     if (candidate) {
-      list = candidate.list || []
-      total = candidate.total || 0
-    }
+        list = candidate.list || []
+        total = Number(candidate.total) || 0
+      }
     // 规范化每项，解析 keyword 字符串为数组
     const normalized = (list || []).map(normalizePaper)
     paperList.value = normalized
@@ -726,7 +722,7 @@ const loadPaperList = async () => {
     console.error('加载论文列表失败:', error)
     ElMessage.error('加载论文列表失败')
     loading.value = false
-    
+
     // 降级到模拟数据
     paperList.value = [
       {
@@ -859,7 +855,7 @@ const handleFileChange = (file) => {
 
 const submitUpload = async () => {
   if (!uploadFormRef.value) return
-  
+
   try {
     await uploadFormRef.value.validate()
     uploading.value = true
@@ -1041,7 +1037,7 @@ const handleDownloadPaper = async (paper) => {
     const disposition = res.headers && res.headers['content-disposition']
     let filename = `paper_${paper.id}.pdf`
     if (disposition) {
-      const match = disposition.match(/filename\*=UTF-8''(.+)|filename="?([^";]+)"?/) 
+      const match = disposition.match(/filename\*=UTF-8''(.+)|filename="?([^";]+)"?/)
       if (match) filename = decodeURIComponent(match[1] || match[2])
     }
     a.download = filename
@@ -1140,7 +1136,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1.5rem;
-  
+
   .header-content {
     .page-title {
       margin: 0 0 0.5rem 0;
@@ -1148,14 +1144,14 @@ onMounted(async () => {
       font-weight: 600;
       color: #2c3e50;
     }
-    
+
     .page-desc {
       margin: 0;
       color: #7f8c8d;
       font-size: 0.95rem;
     }
   }
-  
+
   .header-actions {
     display: flex;
     gap: 0.75rem;
@@ -1164,15 +1160,15 @@ onMounted(async () => {
 
 .stats-cards {
   margin-bottom: 1.5rem;
-  
+
   .stat-card {
     border: none;
     border-radius: 12px;
-    
+
     .stat-content {
       display: flex;
       align-items: center;
-      
+
       .stat-icon {
         display: flex;
         align-items: center;
@@ -1181,29 +1177,29 @@ onMounted(async () => {
         height: 48px;
         border-radius: 12px;
         margin-right: 1rem;
-        
+
         &.bg-primary {
           background: linear-gradient(135deg, #667eea, #764ba2);
         }
-        
+
         &.bg-success {
           background: linear-gradient(135deg, #4facfe, #00f2fe);
         }
-        
+
         &.bg-warning {
           background: linear-gradient(135deg, #f093fb, #f5576c);
         }
-        
+
         &.bg-info {
           background: linear-gradient(135deg, #43e97b, #38f9d7);
         }
-        
+
         .el-icon {
           color: white;
           font-size: 1.5rem;
         }
       }
-      
+
       .stat-info {
         .stat-value {
           font-size: 1.75rem;
@@ -1211,7 +1207,7 @@ onMounted(async () => {
           color: #2c3e50;
           line-height: 1;
         }
-        
+
         .stat-label {
           font-size: 0.875rem;
           color: #7f8c8d;
@@ -1225,7 +1221,7 @@ onMounted(async () => {
 .filter-card {
   margin-bottom: 1.5rem;
   border-radius: 12px;
-  
+
   :deep(.el-card__body) {
     padding: 1.25rem;
   }
@@ -1233,35 +1229,35 @@ onMounted(async () => {
 
 .table-card {
   border-radius: 12px;
-  
+
   :deep(.el-card__header) {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #f1f2f6;
-    
+
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .card-title {
         display: flex;
         align-items: center;
         font-weight: 600;
         color: #2c3e50;
-        
+
         .el-icon {
           margin-right: 0.5rem;
           color: #667eea;
         }
       }
-      
+
       .table-actions {
         display: flex;
         gap: 0.75rem;
       }
     }
   }
-  
+
   :deep(.el-card__body) {
     padding: 0;
   }
@@ -1325,33 +1321,33 @@ onMounted(async () => {
 .paper-detail {
   .section {
     margin: 1.5rem 0;
-    
+
     h3 {
       margin: 0 0 1rem 0;
       color: #2c3e50;
       font-size: 1.1rem;
     }
-    
+
     .paper-keyword {
       .el-tag {
         margin-right: 0.5rem;
         margin-bottom: 0.5rem;
       }
     }
-    
+
     .summary {
       line-height: 1.6;
       color: #5a6c7d;
       text-align: justify;
     }
-    
+
     .check-details {
       margin-top: 1rem;
-      
+
       ul {
         margin: 0.5rem 0;
         padding-left: 1.5rem;
-        
+
         li {
           margin-bottom: 0.25rem;
           color: #5a6c7d;
@@ -1365,28 +1361,28 @@ onMounted(async () => {
   .page-header {
     flex-direction: column;
     gap: 1rem;
-    
+
     .header-actions {
       width: 100%;
-      
+
       .el-button {
         flex: 1;
       }
     }
   }
-  
+
   .stats-cards {
     .el-col {
       margin-bottom: 0.75rem;
     }
   }
-  
+
   .filter-card {
     :deep(.el-form) {
       .el-form-item {
         margin-bottom: 1rem;
         width: 100%;
-        
+
         .el-input,
         .el-select {
           width: 100% !important;
@@ -1394,7 +1390,7 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .table-card {
     :deep(.el-table) {
       .el-table__cell {
@@ -1402,10 +1398,10 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .pagination-container {
     justify-content: center;
-    
+
     :deep(.el-pagination) {
       .el-pagination__sizes,
       .el-pagination__jump {

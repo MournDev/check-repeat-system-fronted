@@ -72,7 +72,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="所属学院" prop="collegeId">
+                    <el-form-item label="所属学院" prop="collegeName">
                       <el-select v-model="formData.collegeId" placeholder="请选择学院" @change="handleCollegeChange"
                         :loading="collegeLoading">
                         <el-option v-for="college in collegeList" :key="college.value" :label="college.label"
@@ -336,8 +336,8 @@ const saveSettings = async () => {
   }
   const submitData = {
     ...formData,
-    avatar: formData.avatar || userInfo.value.avatar || userStore.userInfo.avatar || "",
-    userId: userStore.userInfo.userId||userInfo.value.userId,
+    avatar: formData.avatar || userStore.userInfo.avatar || "",
+    userId: userStore.userInfo.userId,
     // 其他需要后端的字段可在此补充
   };
   try {
@@ -347,7 +347,6 @@ const saveSettings = async () => {
       const updatedUserInfo = { ...userStore.userInfo, ...submitData };
       userStore.userInfo = updatedUserInfo;
       localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
-      userInfo.value = { ...updatedUserInfo };
       ElMessage.success("个人设置保存成功");
     } else {
       ElMessage.error(res.message || "保存失败");
@@ -486,7 +485,6 @@ const getAllInfo = async () => {
       Object.assign(formData, merged);
       userStore.userInfo = merged;
       localStorage.setItem("userInfo", JSON.stringify(merged));
-      userInfo.value = { ...merged };
     } else {
       ElMessage.error('获取个人信息失败：' + res.message)
     }

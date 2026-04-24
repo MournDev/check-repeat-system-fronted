@@ -68,6 +68,12 @@
             </el-icon>
             <span>查重管理</span>
           </template>
+          <el-menu-item index="/student/student-check-with-websocket">
+            <el-icon>
+              <Check />
+            </el-icon>
+            <span>查重任务</span>
+          </el-menu-item>
           <el-menu-item index="/student/check-history">
             <el-icon>
               <Histogram />
@@ -148,6 +154,36 @@
           </el-icon>
           <span>我的设置</span>
         </el-menu-item>
+        <el-menu-item index="/teacher/review-templates">
+          <el-icon>
+            <Document />
+          </el-icon>
+          <span>审核意见模板</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/student-groups">
+          <el-icon>
+            <UserFilled />
+          </el-icon>
+          <span>学生分组管理</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/chat-center">
+          <el-icon>
+            <ChatDotRound />
+          </el-icon>
+          <span>在线聊天</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/similarity-thresholds">
+          <el-icon>
+            <TrendCharts />
+          </el-icon>
+          <span>相似度阈值设置</span>
+        </el-menu-item>
+        <el-menu-item index="/teacher/review-workflow">
+          <el-icon>
+            <Connection />
+          </el-icon>
+          <span>审核工作流配置</span>
+        </el-menu-item>
       </el-menu>
 
       <!-- 管理员端菜单 -->
@@ -217,6 +253,18 @@
             <Document />
           </el-icon>
           <span>日志中心</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/report-management">
+          <el-icon>
+            <Histogram />
+          </el-icon>
+          <span>报告管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/settings">
+          <el-icon>
+            <Setting />
+          </el-icon>
+          <span>个人中心</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -361,6 +409,13 @@
           </router-view>
         </div>
       </el-main>
+
+      <!-- 页脚 -->
+      <el-footer class="footer-container">
+        <div class="footer-content">
+          © 2026 论文管理系统 版权所有
+        </div>
+      </el-footer>
     </el-container>
   </el-container>
 </template>
@@ -454,42 +509,51 @@ const breadcrumbItems = computed(() => {
 
 // 获取面包屑标题
 const getBreadcrumbTitle = (path, index) => {
-  const titleMap = {
-    'message-center': '通知中心',
-    'student': '学生',
-    'teacher': '教师',
-    'admin': '管理员',
-    'dashboard': '工作台',
-    'paper-submit': '论文提交',
-    'my-papers': '我的论文',
-    'advisor-interaction': '导师互动',
-    'student-list': '学生管理',
-    'data-statistics': '数据统计',
-    'audit-records': '审核记录',
-    'paper-review': '论文审核',
-    'profile': '个人设置',
-    'paper-details': '论文详情',
-    'pending': '待审核',
-    'history': '历史记录',
-    'user-management': '人员管理',
-    'permissions': '权限设置',
-    'paper-assignment': '论文分配',
-    'manual': '手动分配',
-    'auto': '自动分配',
-    'system-config': '系统配置',
-    'log-center': '日志中心',
-    'settings': '个人设置',
-    'school-overview': '全校概览',
-    'paper-library': '论文库',
-    // 查重功能相关
-    'check': '查重管理',
-    'check-history': '查重历史',
-    'academic-integrity': '学术诚信',
-    'check-monitor': '查重监控',
-    'plagiarism-report': '查重报告'
+    const titleMap = {
+      'message-center': '通知中心',
+      'student': '学生',
+      'teacher': '教师',
+      'admin': '管理员',
+      'dashboard': '工作台',
+      'paper-submit': '论文提交',
+      'my-papers': '我的论文',
+      'advisor-interaction': '导师互动',
+      'student-list': '学生管理',
+      'data-statistics': '数据统计',
+      'audit-records': '审核记录',
+      'paper-review': '论文审核',
+      'profile': '个人设置',
+      'help-center': '帮助中心',
+      'paper-details': '论文详情',
+      'pending': '待审核',
+      'history': '历史记录',
+      'user-management': '人员管理',
+      'permissions': '权限设置',
+      'paper-assignment': '论文分配',
+      'manual': '手动分配',
+      'auto': '自动分配',
+      'system-config': '系统配置',
+      'log-center': '日志中心',
+      'settings': '个人中心',
+      'school-overview': '全校概览',
+      'paper-library': '论文库',
+      'report-management': '报告管理',
+      // 查重功能相关
+      'check': '查重管理',
+      'check-history': '查重历史',
+      'academic-integrity': '学术诚信',
+      'check-monitor': '查重监控',
+      'plagiarism-report': '查重报告',
+      'student-check-with-websocket': '查重任务',
+      // 教师功能相关
+      'review-templates': '审核意见模板',
+      'student-groups': '学生分组管理',
+      'chat-center': '在线聊天',
+      'similarity-thresholds': '相似度阈值设置',
+      'review-workflow': '审核工作流配置'
+    }
+    return titleMap[path] || path
   }
-  return titleMap[path] || path
-}
 
 // 关闭通知下拉菜单的方法
 const closeNotificationDropdown = () => {
@@ -780,6 +844,15 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+// 限制SVG图标的尺寸，防止撑大页面
+:deep(.el-icon) {
+  svg {
+    width: 24px !important;
+    height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+  }
+}
 .main-container {
   height: 100vh;
   background: #f5f7fa;
@@ -899,14 +972,16 @@ onUnmounted(() => {
       margin: 2px 0;
       border-radius: 8px;
       transition: all 0.3s ease;
+      position: relative;
 
       &.is-active {
-        background: linear-gradient(135deg, #667eea, #764ba2) !important;
-        color: white !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        background: #ffffff !important;
+        color: #333333 !important;
+        border-left: 3px solid #1890FF;
+        padding-left: 13px;
 
         .el-icon {
-          color: white !important;
+          color: #1890FF !important;
         }
       }
 
@@ -916,8 +991,8 @@ onUnmounted(() => {
       }
 
       .el-icon {
-        color: #bdc3c7;
-        font-size: 1.2rem;
+        color: #555555;
+        font-size: 16px;
         margin-right: 8px;
       }
     }
@@ -928,20 +1003,33 @@ onUnmounted(() => {
         line-height: 48px;
         margin: 2px 0;
         border-radius: 8px;
+        position: relative;
 
         &:hover {
           background-color: #34495e;
         }
 
         .el-icon {
-          color: #bdc3c7;
-          font-size: 1.2rem;
+          color: #555555;
+          font-size: 16px;
           margin-right: 8px;
         }
       }
 
       .el-menu-item {
         padding-left: 56px !important;
+        position: relative;
+
+        &.is-active {
+          background: #ffffff !important;
+          color: #333333 !important;
+          border-left: 3px solid #1890FF;
+          padding-left: 53px;
+
+          .el-icon {
+            color: #1890FF !important;
+          }
+        }
       }
     }
   }
@@ -963,7 +1051,18 @@ onUnmounted(() => {
       margin-bottom: 4px;
 
       :deep(.el-breadcrumb) {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
+        color: #999999;
+      }
+      
+      :deep(.el-breadcrumb__item) {
+        .el-breadcrumb__inner {
+          color: #999999 !important;
+        }
+        
+        .el-breadcrumb__separator {
+          color: #999999 !important;
+        }
       }
     }
 
@@ -1044,16 +1143,28 @@ onUnmounted(() => {
 .main-content {
   padding: 0;
   background: #f5f7fa;
-  overflow: hidden;
+  overflow: auto;
 
   .content-wrapper {
-    height: 100%;
-    padding: 1.5rem;
+    padding: 1rem;
     overflow: auto;
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    margin: 0 1.5rem 1.5rem 1.5rem;
+    margin: 1rem;
+    min-height: 70vh;
+  }
+}
+
+.footer-container {
+  padding: 1rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+
+  .footer-content {
+    color: #999999;
+    font-size: 0.875rem;
   }
 }
 
@@ -1108,8 +1219,16 @@ onUnmounted(() => {
   }
 
   .main-content .content-wrapper {
-    padding: 1rem;
-    margin: 0 1rem 1rem 1rem;
+    padding: 0.75rem;
+    margin: 0.75rem;
+  }
+  
+  .footer-container {
+    padding: 0.75rem;
+  }
+  
+  .footer-content {
+    font-size: 0.75rem;
   }
 }
 </style>

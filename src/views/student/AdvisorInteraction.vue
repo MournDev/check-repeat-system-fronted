@@ -21,38 +21,61 @@
           </template>
 
           <div v-if="advisorInfo" class="advisor-detail">
-            <div class="advisor-avatar">
-              <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" :alt="advisorInfo.name">
-                {{ advisorInfo.name?.charAt(0) }}
-              </el-avatar>
+            <div class="advisor-header">
+              <div class="advisor-avatar">
+                <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" :alt="advisorInfo.name">
+                  {{ advisorInfo.name?.charAt(0) }}
+                </el-avatar>
+              </div>
+              <div class="advisor-basic-info">
+                <h3>{{ advisorInfo.name }}</h3>
+                <p class="advisor-title">{{ advisorInfo.title }}</p>
+                <p class="advisor-field">
+                  <el-icon><School /></el-icon>
+                  {{ advisorInfo.researchField }}
+                </p>
+              </div>
             </div>
-            <div class="advisor-info">
-              <h3>{{ advisorInfo.name }}</h3>
-              <p class="advisor-title">{{ advisorInfo.title }}</p>
-              <p class="advisor-field">
-                <el-icon><School /></el-icon>
-                {{ advisorInfo.researchField }}
-              </p>
-              <p class="advisor-contact">
-                <el-icon><Message /></el-icon>
-                {{ advisorInfo.email }}
-              </p>
-              <p class="advisor-contact">
-                <el-icon><Phone /></el-icon>
-                {{ advisorInfo.phone }}
-              </p>
-              <p class="advisor-office">
-                <el-icon><OfficeBuilding /></el-icon>
-                {{ advisorInfo.office }}
-              </p>
-              <p class="advisor-office-hours">
-                <el-icon><Clock /></el-icon>
-                {{ advisorInfo.officeHours }}
-              </p>
+            <div class="advisor-details-grid">
+              <div class="detail-item">
+                <el-icon class="detail-icon"><Message /></el-icon>
+                <div class="detail-content">
+                  <span class="detail-label">邮箱</span>
+                  <span class="detail-value">{{ advisorInfo.email }}</span>
+                </div>
+              </div>
+              <div class="detail-item">
+                <el-icon class="detail-icon"><Phone /></el-icon>
+                <div class="detail-content">
+                  <span class="detail-label">电话</span>
+                  <span class="detail-value">{{ advisorInfo.phone }}</span>
+                </div>
+              </div>
+              <div class="detail-item">
+                <el-icon class="detail-icon"><OfficeBuilding /></el-icon>
+                <div class="detail-content">
+                  <span class="detail-label">办公室</span>
+                  <span class="detail-value">{{ advisorInfo.office }}</span>
+                </div>
+              </div>
+              <div class="detail-item">
+                <el-icon class="detail-icon"><Clock /></el-icon>
+                <div class="detail-content">
+                  <span class="detail-label">办公时间</span>
+                  <span class="detail-value">{{ advisorInfo.officeHours }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="advisorInfo.bio" class="advisor-bio">
+              <h4>导师简介</h4>
+              <p>{{ advisorInfo.bio }}</p>
             </div>
             <div class="advisor-actions">
-              <el-button type="primary" :icon="ChatDotRound" @click="startNewMessage">
+              <el-button type="primary" :icon="ChatDotRound" @click="startNewMessage" class="primary-button">
                 发送消息
+              </el-button>
+              <el-button text :icon="User" @click="viewAdvisorProfile" class="secondary-button">
+                查看详情
               </el-button>
             </div>
           </div>
@@ -83,7 +106,7 @@
               @click="switchSession(session.id)"
             >
               <div class="session-avatar">
-                <el-avatar :size="40" :src="getAvatarUrl(session.avatar)">
+                <el-avatar :size="40" :src="getSessionAvatar(session)">
                   {{ session.name?.charAt(0) }}
                 </el-avatar>
               </div>
@@ -144,8 +167,13 @@
           </template>
 
           <!-- 消息区域 -->
-          <div class="chat-container">
+          <div class="chat-container" ref="chatContainerRef" @scroll="handleMessagesScroll">
             <div v-if="activeSessionId" class="messages-area">
+              <!-- 加载提示 -->
+              <div v-if="loadingMessages && currentPage > 1" class="loading-more">
+                <span>加载中...</span>
+              </div>
+              
               <!-- 快捷回复按钮 -->
               <div class="quick-replies">
                 <el-tag
@@ -176,18 +204,19 @@
                   <div class="message-avatar">
                     <el-avatar
                       :size="36"
-                      :src="getAvatarUrl(userMap[message.senderId]?.avatar || message.avatar)"
+                      :src="getAvatarUrl(userMap[message.senderId]?.avatar || message.avatar || message.senderAvatar)"
                       :alt="userMap[message.senderId]?.realName || message.senderName"
                     >
                       {{ (userMap[message.senderId]?.realName || message.senderName)?.charAt(0) }}
                     </el-avatar>
                   </div>
-                <div class="message-content">
-                  <div class="message-info">
-                    <span v-if="message.senderId !== userStore.userInfo?.userId" class="message-sender">
-                      {{ userMap[message.senderId]?.realName || message.senderName || '未知用户' }}
-                    </span>
-                    <span class="message-time">{{ formatMessageTime(message.time) }}</span>
+                  <div class="message-content">
+                    <div class="message-info">
+                      <span v-if="message.senderId !== userStore.userInfo?.userId" class="message-sender">
+                        {{ userMap[message.senderId]?.realName || message.senderName || '未知用户' }}
+                      </span>
+                      <span class="message-time">{{ formatMessageTime(message.time || message.sendTime) }}</span>
+                    </div>
                   </div>
                   <div class="message-bubble">
                     <div class="message-text">{{ message.content }}</div>
@@ -206,7 +235,6 @@
                     </div>
                   </div>
                 </div>
-                </div>
               </div>
               
               <!-- 加载状态 -->
@@ -222,15 +250,28 @@
           <!-- 消息输入区域 -->
           <div v-if="activeSessionId" class="message-input">
             <div class="input-toolbar">
+              <el-button text @click="showEmojiPicker = !showEmojiPicker">
+                😊
+              </el-button>
               <el-button text :icon="Paperclip" @click="attachFile">
-                添加附件
+                附件
               </el-button>
               <el-button text :icon="Picture" @click="attachImage">
-                添加图片
+                图片
               </el-button>
               <el-divider direction="vertical" />
-              <span class="toolbar-tip">支持 Word、PDF、图片等格式</span>
+              <span class="toolbar-tip">支持表情、附件、图片</span>
             </div>
+            
+            <!-- 表情选择器 -->
+            <div v-if="showEmojiPicker" class="emoji-picker">
+              <div class="emoji-grid">
+                <span v-for="emoji in emojiList" :key="emoji" class="emoji-item" @click="insertEmoji(emoji)">
+                  {{ emoji }}
+                </span>
+              </div>
+            </div>
+            
             <el-input
               v-model="newMessage"
               type="textarea"
@@ -251,6 +292,7 @@
                 :icon="Promotion" 
                 :disabled="!newMessage.trim() && attachments.length === 0"
                 @click="sendMessage"
+                class="send-button"
               >
                 发送
               </el-button>
@@ -266,39 +308,49 @@
                 <el-icon><Folder /></el-icon>
                 共享文件
               </span>
+              <div class="card-actions">
+                <el-input
+                  v-model="fileSearch"
+                  placeholder="搜索文件"
+                  size="small"
+                  prefix-icon="Search"
+                  style="width: 200px"
+                />
+                <el-button type="primary" text size="small" @click="uploadFile">
+                  上传文件
+                </el-button>
+              </div>
             </div>
           </template>
 
-          <el-table :data="sharedFiles" stripe style="width: 100%">
-            <el-table-column prop="name" label="文件名" min-width="200">
-              <template #default="{ row }">
-                <div class="file-name">
-                  <el-icon>
-                    <component :is="getFileIcon(row.type)" />
-                  </el-icon>
-                  <span>{{ row.name }}</span>
+          <div v-if="sharedFiles.length === 0" class="no-files">
+            <el-empty description="暂无共享文件" :image-size="80" />
+          </div>
+          <div v-else class="files-grid">
+            <div v-for="file in filteredFiles" :key="file.id" class="file-card">
+              <div class="file-icon">
+                <el-icon :size="48">
+                  <component :is="getFileIcon(file.type)" />
+                </el-icon>
+              </div>
+              <div class="file-info">
+                <div class="file-name">{{ file.name }}</div>
+                <div class="file-meta">
+                  <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                  <span class="file-uploader">{{ file.uploader }}</span>
+                  <span class="file-time">{{ formatDate(file.uploadTime) }}</span>
                 </div>
-              </template>
-            </el-table-column>
-            <el-table-column prop="size" label="大小" width="100">
-              <template #default="{ row }">
-                {{ formatFileSize(row.size) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="uploader" label="上传者" width="100" />
-            <el-table-column prop="uploadTime" label="上传时间" width="140">
-              <template #default="{ row }">
-                {{ formatDate(row.uploadTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="120">
-              <template #default="{ row }">
-                <el-button type="primary" text :icon="Download" size="small">
+              </div>
+              <div class="file-actions">
+                <el-button type="primary" text size="small" @click="previewFile(file)">
+                  预览
+                </el-button>
+                <el-button type="success" text size="small" @click="downloadSharedFileById(file.id)">
                   下载
                 </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+              </div>
+            </div>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -349,6 +401,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import Cookies from 'js-cookie'
 import { useUserStore } from '@/stores/user'
 
 // API 导入
@@ -374,6 +427,7 @@ import {
   Folder, Download, Document, Refresh, MoreFilled, Delete, User
 } from '@element-plus/icons-vue'
 import { getAvatarUrl } from '@/utils/avatar'
+import { useMessageWebSocket } from '@/composables/useMessageWebSocket'
 
 // 响应式数据
 const userStore = useUserStore()
@@ -386,9 +440,28 @@ const attachments = ref([])
 const messageDialogVisible = ref(false)
 const sharedFiles = ref([])
 const loadingMessages = ref(false)
+const showEmojiPicker = ref(false)
+const fileSearch = ref('')
+const chatContainerRef = ref(null)
+const chatContainer = ref(null)
+const currentPage = ref(1)
+const totalMessages = ref(0)
+const hasMoreMessages = ref(true)
+
 // 用户信息Map（userId→用户信息）
 const userMap = ref({})
-const chatContainer = ref(null)
+
+// 表情列表
+const emojiList = [
+  '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+  '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+  '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+  '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+  '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬',
+  '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗',
+  '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯',
+  '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐'
+]
 
 // 快捷回复选项
 const quickReplyOptions = ref([
@@ -409,6 +482,16 @@ const currentSession = computed(() => {
   return messageSessions.value.find(session => session.id === activeSessionId.value)
 })
 
+// 过滤文件列表
+const filteredFiles = computed(() => {
+  if (!fileSearch.value) {
+    return sharedFiles.value
+  }
+  return sharedFiles.value.filter(file => 
+    file.name.toLowerCase().includes(fileSearch.value.toLowerCase())
+  )
+})
+
 // 方法：从会话成员中提取对方（非当前用户）的头像
 const getSessionAvatar = (session) => {
   if (!session || !session.members) return undefined
@@ -422,7 +505,8 @@ const getSessionAvatar = (session) => {
   // 如果 avatar 为空、null 或undefined，返回undefined（让 el-avatar 显示插槽内容)
   if (!avatar || avatar === 'null' || avatar === 'undefined') return undefined
   
-  return avatar
+  // 使用导入的 getAvatarUrl 函数处理头像 URL
+  return getAvatarUrl(avatar)
 }
 
 // 方法
@@ -430,7 +514,6 @@ const loadAdvisorData = async () => {
   try {
     // 获取导师信息
     const advisorRes = await getAdvisorInteractionInfo();
-    console.log('导师信息响应:', advisorRes);
     if (advisorRes.code === 200 && advisorRes.data) {
       advisorInfo.value = advisorRes.data;
       // 收集导师信息到userMap
@@ -486,11 +569,16 @@ const loadAdvisorData = async () => {
       messageSessions.value = [];
     }
     
-    // 获取共享文件
+    // 获取共享文件（单独处理错误，不影响整体页面）
     if (activeSessionId.value) {
-      const filesRes = await getSharedFiles(activeSessionId.value);
-      if (filesRes.code === 200) {
-        sharedFiles.value = filesRes.data;
+      try {
+        const filesRes = await getSharedFiles(activeSessionId.value);
+        if (filesRes.code === 200) {
+          sharedFiles.value = filesRes.data;
+        }
+      } catch (error) {
+        console.warn('获取共享文件失败:', error);
+        // 共享文件获取失败不影响页面整体功能
       }
     }
   } catch (error) {
@@ -499,12 +587,32 @@ const loadAdvisorData = async () => {
   }
 };
 
-const loadMessages = async (sessionId) => {
+const loadMessages = async (sessionId, isPrepend = false) => {
   loadingMessages.value = true;
+  
+  let scrollHeightBefore = 0;
+  if (isPrepend && chatContainerRef.value) {
+    scrollHeightBefore = chatContainerRef.value.scrollHeight;
+  }
+  
   try {
-    const res = await getMessages(sessionId, 1, 20);
+    const res = await getMessages({
+      sessionId,
+      pageNum: isPrepend ? currentPage.value + 1 : 1,
+      pageSize: 20
+    });
     if (res.code === 200) {
-      currentMessages.value = res.data.records || [];
+      const newMessages = res.data.records || [];
+      totalMessages.value = res.data.total || 0;
+      
+      if (isPrepend) {
+        currentMessages.value = [...currentMessages.value, ...newMessages];
+        currentPage.value++;
+      } else {
+        currentMessages.value = newMessages;
+        currentPage.value = 1;
+      }
+      
       // 收集消息发送者到 userMap，并补全消息的 senderName/avatar
       currentMessages.value.forEach(msg => {
         const sid = msg.senderId;
@@ -530,18 +638,40 @@ const loadMessages = async (sessionId) => {
           }
         }
       });
-      // 标记消息为已读 - 这会自动更新 unreadCount
-      await markMessagesAsRead(sessionId);
-      // 更新该会话的最后时间和预览信息，使用最新一条消息的时间和内容
-      const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
-      if (sessionIndex !== -1) {
-        const latestMsg = currentMessages.value.length ? currentMessages.value[currentMessages.value.length - 1] : null;
-        messageSessions.value[sessionIndex].lastTime = latestMsg?.time || messageSessions.value[sessionIndex].lastTime;
-        messageSessions.value[sessionIndex].lastMessage = latestMsg?.content || messageSessions.value[sessionIndex].lastMessage;
-      }
-      // 手动更新当前会话的未读数
-      if (sessionIndex !== -1) {
-        messageSessions.value[sessionIndex].unreadCount = 0;
+      
+      hasMoreMessages.value = currentMessages.value.length < totalMessages.value;
+      
+      if (!isPrepend) {
+        // 标记消息为已读 - 这会自动更新 unreadCount
+        try {
+          const readRes = await markMessagesAsRead({
+            sessionId
+          });
+          if (readRes.code === 200) {
+            // 手动更新当前会话的未读数
+            const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
+            if (sessionIndex !== -1) {
+              messageSessions.value[sessionIndex].unreadCount = 0;
+              // 更新该会话的最后时间和预览信息，使用最新一条消息的时间和内容
+              const latestMsg = currentMessages.value.length ? currentMessages.value[currentMessages.value.length - 1] : null;
+              messageSessions.value[sessionIndex].lastTime = latestMsg?.time || messageSessions.value[sessionIndex].lastTime;
+              messageSessions.value[sessionIndex].lastMessage = latestMsg?.content || messageSessions.value[sessionIndex].lastMessage;
+            }
+          }
+        } catch (error) {
+          console.warn('标记消息已读失败:', error);
+        }
+        // 滚动到底部
+        nextTick(() => {
+          scrollToBottom();
+        });
+      } else {
+        // 加载更多时保持滚动位置
+        nextTick(() => {
+          if (chatContainerRef.value) {
+            chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight - scrollHeightBefore;
+          }
+        });
       }
     }
   } catch (error) {
@@ -555,11 +685,19 @@ const loadMessages = async (sessionId) => {
 };
 
 const scrollToBottom = () => {
-  try {
-    if (!chatContainer.value) return
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-  } catch (e) {
-    // ignore
+  if (chatContainerRef.value) {
+    chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight
+  }
+}
+
+const handleMessagesScroll = async (e) => {
+  const target = e.target;
+  if (!target) return;
+  
+  const isNearTop = target.scrollTop < 50;
+  
+  if (isNearTop && hasMoreMessages.value && !loadingMessages.value) {
+    await loadMessages(activeSessionId.value, true);
   }
 }
 
@@ -575,6 +713,8 @@ const getMessageSenderName = (message) => {
 
 const switchSession = (sessionId) => {
   activeSessionId.value = sessionId;
+  currentPage.value = 1;
+  hasMoreMessages.value = true;
   loadMessages(sessionId);
   // 切换会话时，同时更新该会话的未读数
   const sessionIndex = messageSessions.value.findIndex(s => s.id === sessionId);
@@ -602,6 +742,15 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() && attachments.length === 0) return;
 
   try {
+    // 从会话成员中找到非当前用户的成员（即导师）
+    const otherMember = currentSession.value?.members?.find(member => member.userId !== userStore.userInfo?.userId);
+    const receiverId = otherMember?.userId;
+    
+    if (!receiverId) {
+      ElMessage.error('无法获取接收者信息');
+      return;
+    }
+    
     // 确保当前用户信息存在于 userMap，便于立即渲染自己的头像和姓名
     if (userStore.userInfo?.userId && !userMap.value[userStore.userInfo.userId]) {
       userMap.value[userStore.userInfo.userId] = {
@@ -610,9 +759,10 @@ const sendMessage = async () => {
         avatar: userStore.userInfo.avatar
       }
     }
+    
     const messageData = {
       sessionId: activeSessionId.value,
-      receiverId: currentSession.value?.id,
+      receiverId: receiverId,
       senderId: userStore.userInfo?.userId,
       content: newMessage.value,
       attachmentIds: attachments.value.map(att => att.id),
@@ -666,6 +816,12 @@ const insertQuickReply = (text) => {
   }
 }
 
+// 插入表情
+const insertEmoji = (emoji) => {
+  newMessage.value += emoji
+  showEmojiPicker.value = false
+}
+
 // 刷新消息
 const refreshMessages = async () => {
   if (!activeSessionId.value) return
@@ -681,8 +837,6 @@ const refreshMessages = async () => {
     loadingMessages.value = false
   }
 }
-
-
 
 // 查看导师主页
 const viewAdvisorProfile = () => {
@@ -733,7 +887,7 @@ const downloadAttachment = async (file) => {
 
 const attachFile = async () => {
   try {
-    // 创建文件选择�?
+    // 创建文件选择器
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
@@ -767,7 +921,7 @@ const attachFile = async () => {
 
 const attachImage = async () => {
   try {
-    // 创建图片选择�?
+    // 创建图片选择器
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -811,7 +965,7 @@ const getFileIcon = (fileType) => {
   return iconMap[fileType] || 'Document'
 }
 
-// 格式化消息时�?- 更详细的时间显示
+// 格式化消息时间- 更详细的时间显示
 const formatMessageTime = (date) => {
   if (!date) return ''
   const now = new Date()
@@ -821,21 +975,21 @@ const formatMessageTime = (date) => {
   
   // 今天
   if (now.toDateString() === target.toDateString()) {
-    return target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
   // 昨天
   else if (diff < oneDay * 2 && diff >= oneDay) {
-    return `昨天 ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+    return '昨天 ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
-  // 本周�?
+  // 本周内
   else if (diff < oneDay * 7) {
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    return `${weekdays[target.getDay()]} ${target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+    return weekdays[target.getDay()] + ' ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
   // 更早
   else {
     return target.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }) + 
-           ' ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+           ' ' + target.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
 }
 
@@ -869,8 +1023,100 @@ const shouldShowTimeSeparator = (index, message) => {
   }
 }
 
+// 上传文件
+const uploadFile = async () => {
+  try {
+    // 创建文件选择器
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.accept = '.doc,.docx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png'
+    
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files)
+      for (let file of files) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('sessionId', activeSessionId.value)
+        
+        try {
+          const res = await uploadMessageFile(formData)
+          if (res.code === 200) {
+            // 刷新共享文件列表
+            if (activeSessionId.value) {
+              const filesRes = await getSharedFiles(activeSessionId.value)
+              if (filesRes.code === 200) {
+                sharedFiles.value = filesRes.data
+              }
+            }
+            ElMessage.success(`${file.name} 上传成功`)
+          }
+        } catch (error) {
+          console.error('文件上传失败:', error)
+          ElMessage.error(`${file.name} 上传失败`)
+        }
+      }
+    }
+    
+    input.click()
+  } catch (error) {
+    console.error('附件上传失败:', error)
+    ElMessage.error('附件上传失败')
+  }
+}
+
+// 预览文件
+const previewFile = (file) => {
+  // 这里可以添加文件预览逻辑
+  ElMessage.info(`预览文件: ${file.name}`)
+  // 实际项目中可以根据文件类型打开不同的预览方式
+}
+
+// 下载共享文件
+const downloadSharedFileById = async (fileId) => {
+  try {
+    const res = await downloadSharedFile(fileId)
+    // 创建下载链接
+    const blob = new Blob([res.data])
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `file_${fileId}`
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('文件下载成功')
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('下载失败')
+  }
+}
+
 onMounted(() => {
   loadAdvisorData();
+  // 连接WebSocket，监听实时消息
+  setTimeout(() => {
+    if (userStore.userInfo?.userId) {
+      try {
+        // WebSocket 连接逻辑
+        const { connect: connectWebSocket, isConnected: wsConnected } = useMessageWebSocket()
+        const handleNewMessage = (message) => {
+          console.log('处理新消息:', message)
+          // 如果是当前会话的消息，直接添加到消息列表
+          if (message.sessionId === activeSessionId.value) {
+            currentMessages.value.push(message)
+          }
+          // 刷新会话列表，更新未读消息数
+          loadAdvisorData()
+        }
+        
+        connectWebSocket(userStore.userInfo.userId, handleNewMessage);
+      } catch (error) {
+        console.error('WebSocket 连接失败:', error);
+        // 不影响页面主功能，仅提示
+        ElMessage.warning('实时消息连接失败，不影响其他功能');
+      }
+    }
+  }, 1000); // 延迟 1 秒连接
 });
 </script>
 
@@ -881,17 +1127,21 @@ onMounted(() => {
 
 .page-header {
   margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   
   .page-title {
     margin: 0 0 0.5rem 0;
     font-size: 1.75rem;
-    font-weight: 600;
-    color: #2c3e50;
+    font-weight: 700;
+    color: white;
   }
   
   .page-desc {
     margin: 0;
-    color: #7f8c8d;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.95rem;
   }
 }
@@ -928,44 +1178,141 @@ onMounted(() => {
 }
 
 .advisor-detail {
-  text-align: center;
+  padding: 1.5rem 1rem;
   
-  .advisor-avatar {
-    margin-bottom: 1rem;
-  }
-  
-  .advisor-info {
-    h3 {
-      margin: 0 0 0.5rem 0;
-      color: #2c3e50;
-    }
+  .advisor-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
     
-    .advisor-title {
-      color: #667eea;
-      font-weight: 500;
-      margin-bottom: 1rem;
-    }
-    
-    .advisor-field,
-    .advisor-contact,
-    .advisor-office,
-    .advisor-office-hours {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0.5rem 0;
-      color: #5a6c7d;
-      font-size: 0.875rem;
+    .advisor-avatar {
+      margin-right: 1rem;
       
-      .el-icon {
-        margin-right: 0.5rem;
-        color: #667eea;
+      .el-avatar {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 2px solid white;
+      }
+    }
+    
+    .advisor-basic-info {
+      flex: 1;
+      
+      h3 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+      
+      .advisor-title {
+        margin: 0 0 0.5rem 0;
+        color: #07C160;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      
+      .advisor-field {
+        margin: 0;
+        color: #606266;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        
+        .el-icon {
+          color: #07C160;
+          font-size: 14px;
+        }
       }
     }
   }
   
+  .advisor-details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    
+    .detail-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      
+      .detail-icon {
+        color: #07C160;
+        font-size: 16px;
+        margin-top: 2px;
+      }
+      
+      .detail-content {
+        flex: 1;
+        
+        .detail-label {
+          display: block;
+          font-size: 0.75rem;
+          color: #909399;
+          margin-bottom: 2px;
+        }
+        
+        .detail-value {
+          display: block;
+          font-size: 0.85rem;
+          color: #303133;
+          word-break: break-all;
+        }
+      }
+    }
+  }
+  
+  .advisor-bio {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    
+    h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    p {
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: #606266;
+    }
+  }
+  
   .advisor-actions {
-    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    
+    .primary-button {
+      flex: 1;
+      background: #07C160;
+      border-color: #07C160;
+      
+      &:hover {
+        background: #06b355;
+        border-color: #06b355;
+      }
+    }
+    
+    .secondary-button {
+      flex: 1;
+      color: #07C160;
+      
+      &:hover {
+        color: #06b355;
+      }
+    }
   }
 }
 
@@ -983,68 +1330,95 @@ onMounted(() => {
 .sessions-list {
   .session-item {
     display: flex;
-    padding: 1rem;
-    border-radius: 12px;
+    padding: 12px 16px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid transparent;
-    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+    
+    &:last-child {
+      border-bottom: none;
+    }
     
     &:hover {
       background-color: #f8f9fa;
-      transform: translateX(4px);
     }
     
     &.session-active {
-      background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
-      border-color: #667eea;
-      box-shadow: 0 2px 12px rgba(102, 126, 234, 0.15);
+      background-color: #f0f9eb;
     }
     
     .session-avatar {
-      margin-right: 0.75rem;
+      margin-right: 12px;
       flex-shrink: 0;
+      position: relative;
+      
+      .el-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+      }
+      
+      .session-status {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        background: #07C160;
+        border: 2px solid white;
+        border-radius: 50%;
+      }
     }
     
     .session-content {
       flex: 1;
       min-width: 0;
-      position: relative;
       
       .session-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.375rem;
-        gap: 8px;
+        margin-bottom: 4px;
         
         .session-name {
           font-weight: 600;
           color: #2c3e50;
-          font-size: 0.95rem;
+          font-size: 14px;
         }
         
         .session-time {
-          font-size: 0.75rem;
+          font-size: 11px;
           color: #909399;
           flex-shrink: 0;
+          margin-left: 8px;
         }
       }
       
       .session-preview {
-        font-size: 0.875rem;
-        color: #7f8c8d;
+        font-size: 13px;
+        color: #909399;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-bottom: 0.375rem;
-        line-height: 1.4;
+        line-height: 1.3;
       }
       
       .session-meta {
         position: absolute;
-        right: 0;
-        bottom: 0;
+        top: 12px;
+        right: 16px;
+        
+        .el-tag {
+          font-size: 10px;
+          height: 16px;
+          line-height: 16px;
+          padding: 0 6px;
+          border-radius: 10px;
+          background: #ff4d4f;
+          color: white;
+          font-weight: 500;
+        }
       }
     }
   }
@@ -1059,6 +1433,13 @@ onMounted(() => {
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: #c3cfe2 #f5f7fa;
+  
+  .loading-more {
+    text-align: center;
+    padding: 12px;
+    color: #909399;
+    font-size: 13px;
+  }
   
   .quick-replies {
     display: flex;
@@ -1097,22 +1478,22 @@ onMounted(() => {
         box-shadow: 0 1px 2px rgba(0,0,0,0.02);
       }
     .message-item {
-    display: flex;
-    margin-bottom: 12px;
-    animation: messageSlideIn 0.18s ease-out;
-    align-items: flex-end;
-    gap: 8px;
+        display: flex;
+        margin-bottom: 1rem;
+        animation: messageSlideIn 0.18s ease-out;
+        align-items: flex-end;
+        gap: 8px;
       
-      @keyframes messageSlideIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
+        @keyframes messageSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
       
       &.message-sent {
         flex-direction: row-reverse;
@@ -1127,27 +1508,32 @@ onMounted(() => {
         }
 
         .message-bubble {
-          background: #dcf8c6; /* WeChat-like light green */
-          color: #111;
-          box-shadow: none;
+          background: #07C160;
+          color: white;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           border: none;
           position: relative;
+          max-width: 80%;
           border-radius: 14px 14px 4px 14px;
           padding: 10px 14px;
-
+          
           &::after {
             content: '';
             position: absolute;
-            right: -6px;
-            bottom: 6px;
-            width: 10px;
-            height: 10px;
-            background: #dcf8c6;
-            transform: rotate(45deg);
-            box-shadow: -1px 1px 0 rgba(0,0,0,0.02);
+            bottom: 8px;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #07C160;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
           }
-
-          .message-text { font-size: 14px; color: #111; }
+          
+          .message-time {
+            color: rgba(255, 255, 255, 0.7);
+          }
+          
+          .message-text { font-size: 14px; color: white; }
         }
       }
 
@@ -1156,6 +1542,7 @@ onMounted(() => {
 
         .message-avatar {
           margin-right: 8px;
+          margin-left: 0;
         }
 
         .message-content {
@@ -1163,22 +1550,25 @@ onMounted(() => {
         }
 
         .message-bubble {
-          background: #fff;
+          background: #ffffff;
+          color: #333;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           border: 1px solid #e6e6e6;
-          box-shadow: none;
           position: relative;
+          max-width: 80%;
           border-radius: 14px 14px 14px 4px;
           padding: 10px 14px;
 
           &::after {
             content: '';
             position: absolute;
-            left: -6px;
-            bottom: 6px;
-            width: 10px;
-            height: 10px;
-            background: #fff;
-            transform: rotate(45deg);
+            left: -8px;
+            bottom: 8px;
+            width: 0;
+            height: 0;
+            border-right: 8px solid #ffffff;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
             border-left: 1px solid #e6e6e6;
             box-shadow: 1px 1px 0 rgba(0,0,0,0.02);
           }
@@ -1186,129 +1576,85 @@ onMounted(() => {
           .message-text { font-size: 14px; color: #222; }
         }
       }
-      
+
       .message-avatar {
-        margin: 0 8px;
-        flex-shrink: 0;
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        overflow: hidden;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        border: 1px solid rgba(0,0,0,0.04);
+        margin: 0 0.5rem;
+        flex-shrink: 0;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e8ecf1;
       }
       
-        .message-content {
-          display: flex;
-          flex-direction: column;
-          max-width: 72%;
+      .message-content {
+        display: flex;
+        flex-direction: column;
         
-          .message-info {
+        .message-info {
           display: flex;
           align-items: center;
-          margin-bottom: 6px;
-          font-size: 12px;
+          margin-bottom: 4px;
+          font-size: 0.7rem;
           color: #909399;
+          padding: 0 4px;
           gap: 8px;
-
+          
           .message-sender {
-            font-weight: 600;
+            font-weight: 500;
             color: #606266;
-            font-size: 13px;
+            font-size: 0.75rem;
           }
 
           /* 隐藏自己发送消息的用户名，WeChat 风格 */
           .message-sent & .message-sender { display: none; }
 
           .message-time {
-            opacity: 0.65;
-            color: #909399;
-            font-size: 11px;
-          }
-        }
-        
-        .message-bubble {
-          padding: 10px 14px;
-          border-radius: 14px;
-          margin-bottom: 0.5rem;
-          word-wrap: break-word;
-          word-break: break-word;
-          transition: all 0.18s ease;
-          
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-          }
-          
-          .message-text {
-            margin-bottom: 0.25rem;
-            line-height: 1.6;
-            font-size: 0.95rem;
-          }
-          
-          .message-time {
-            font-size: 0.72rem;
             opacity: 0.7;
-            margin-top: 6px;
-            word-wrap: break-word;
+            color: #909399;
+            font-size: 0.65rem;
+          }
+        }
+      }
+
+      .message-bubble {
+        padding: 8px 12px;
+        border-radius: 18px;
+        margin-bottom: 4px;
+        transition: all 0.2s ease;
+        
+        .message-text {
+          line-height: 1.4;
+          font-size: 15px;
+          word-break: break-word;
+        }
+      }
+
+      .message-attachments {
+        margin-top: 8px;
+        
+        .attachment-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          margin-top: 4px;
+          
+          .el-icon {
+            color: #667eea;
           }
           
-          .message-time { text-align: right; }
-        }
-        
-        .message-attachments {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          margin-top: 8px;
-          
-          .attachment-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 12px;
-            background: linear-gradient(to right, #f8f9fa, #ffffff);
-            border: 1px solid #e4e7ed;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            
-            &:hover {
-              background: linear-gradient(to right, #e8f4ff, #ffffff);
-              border-color: #667eea;
-              transform: translateX(4px);
-              box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-            }
-            
-            .el-icon {
-              margin-right: 8px;
-              font-size: 1.2rem;
-              color: #667eea;
-              font-size: 16px;
-            }
-            
-            span {
-              flex: 1;
-              margin-right: 8px;
-              font-size: 0.85rem;
-              color: #606266;
-              margin-right: 0.5rem;
-              font-size: 0.875rem;
-              color: #303133;
-            }
+          span {
+            flex: 1;
+            font-size: 13px;
+            color: #333;
+            word-break: break-all;
           }
         }
       }
     }
-  }
-  
-  .no-session {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
   }
   
   .loading-mask {
@@ -1321,117 +1667,134 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    border-radius: 12px;
   }
 }
 
+.no-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
 .message-input {
-  border-top: 1px solid #e8ecf1;
-  padding-top: 1rem;
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 0 0 12px 12px;
+  margin-top: 1rem;
   
   .input-toolbar {
-    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
+    margin-bottom: 8px;
+    
+    .el-button {
+      font-size: 14px;
+    }
     
     .toolbar-tip {
-      font-size: 0.75rem;
+      font-size: 12px;
       color: #909399;
-      margin-left: 8px;
-      font-style: italic;
+      margin-left: auto;
     }
   }
   
-  :deep(.el-textarea__inner) {
+  .emoji-picker {
+    margin-bottom: 8px;
+    padding: 12px;
+    background: #f8f9fa;
     border-radius: 8px;
-    border: 1px solid #e4e7ed;
-    transition: all 0.3s ease;
     
-    &:focus {
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+      
+      .emoji-item {
+        font-size: 20px;
+        cursor: pointer;
+        text-align: center;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #e8ecf1;
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+  
+  :deep(.el-textarea__wrapper) {
+    border-radius: 8px;
+    border: 1px solid #e8ecf1;
+    
+    &:hover {
       border-color: #667eea;
-      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+    
+    &:focus-within {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
   }
   
   .input-actions {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 0.75rem;
+    justify-content: space-between;
+    margin-top: 8px;
     
-    .attachment-count {
-      font-size: 0.875rem;
-      color: #606266;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      
-      .el-icon {
+    .input-info {
+      .attachment-count {
+        font-size: 12px;
         color: #667eea;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+    
+    .send-button {
+      border-radius: 8px;
+      background: #667eea;
+      border-color: #667eea;
+      
+      &:hover {
+        background: #5a67d8;
+        border-color: #5a67d8;
       }
     }
   }
 }
 
-.file-name {
-  display: flex;
-  align-items: center;
-  
-  .el-icon {
-    margin-right: 0.5rem;
-    color: #667eea;
-  }
-}
-
-// 响应式设�?
-@media (max-width: 768px) {
-  .interaction-content {
-    .el-col {
-      margin-bottom: 1rem;
+.files-card {
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .el-input {
+      flex-shrink: 0;
     }
   }
   
-  .chat-actions {
-    display: none;
+  .no-files {
+    text-align: center;
+    padding: 2rem 0;
   }
   
-  .message-content {
-    max-width: 85% !important;
+  .files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    
+    .file-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+    }
   }
-}
-
-// 动画效果
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-// 滚动条美�?
-.chat-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 3px;
-}
-
-.chat-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-}
-
-.chat-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 </style>

@@ -98,10 +98,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 // 导入管理员API
 import {
   getAssignmentStats, 
-  getPendingStudents, 
-  getAvailableAdvisors,
-  autoAssign,
-  manualAssign
+  getUnassignedStudents, 
+  getAvailableTeachers,
+  assignSingleStudent,
+  assignBatchStudents
 } from '@/api/admin/assignment'
 
 // 导入其他必要API
@@ -155,11 +155,11 @@ const loadPendingStudents = async () => {
   loading.value = true
   try {
     const params = {
-      page: pagination.currentPage,
-      size: pagination.pageSize
+      pageNum: pagination.currentPage,
+      pageSize: pagination.pageSize
     }
-    const response = await getPendingStudents(params)
-    pendingStudents.value = response.data.list || []
+    const response = await getUnassignedStudents(params)
+    pendingStudents.value = response.data.records || []
     pagination.total = response.data.total || 0
     loading.value = false
   } catch (error) {
@@ -174,7 +174,7 @@ const loadPendingStudents = async () => {
 
 const loadAvailableAdvisors = async () => {
   try {
-    const response = await getAvailableAdvisors()
+    const response = await getAvailableTeachers()
     availableAdvisors.value = response.data || []
   } catch (error) {
     console.error('加载可用导师失败:', error)
@@ -194,7 +194,7 @@ const handleAutoAssign = async () => {
       }
     )
     
-    const response = await autoAssign({ algorithm: 'balanced' })
+    const response = await assignBatchStudents({ algorithm: 'balanced' })
     ElMessage.success(`自动分配完成，共分配 ${response.data.assignedCount} 名学生`)
     refreshData()
   } catch (error) {

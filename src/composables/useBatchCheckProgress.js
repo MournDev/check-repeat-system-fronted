@@ -123,17 +123,16 @@ export function useBatchCheckProgress() {
     successList.forEach(item => {
       const { connect } = useCheckProgress();
       
-      // 连接到 WebSocket
-      connect(item.taskId);
-      
-      // 监听进度变化（这里简化处理，实际需要更复杂的逻辑）
-      setTimeout(() => {
+      // 连接到 WebSocket 并监听进度
+      connect(item.taskId, (data) => {
+        // 更新任务进度
         updateTaskProgress(item.taskId, {
-          stage: 'COMPLETED',
-          percent: 100,
-          message: '查重完成'
+          stage: data.type === 'complete' ? 'COMPLETED' : 
+                 data.type === 'error' ? 'FAILED' : 'PROCESSING',
+          percent: data.progress || 0,
+          message: data.message || ''
         });
-      }, item.estimatedTime * 1000);
+      });
     });
   };
 
