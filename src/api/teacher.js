@@ -198,6 +198,60 @@ export const getMajors = (collegeId) => {
   })
 }
 
+// 删除学生
+export const deleteStudent = (studentId) => {
+  return request({
+    url: `/api/teacher/students/${studentId}`,
+    method: 'delete'
+  })
+}
+
+// 分配导师
+export const assignAdvisor = (studentId, data) => {
+  return request({
+    url: `/api/teacher/students/${studentId}/advisor`,
+    method: 'put',
+    data
+  })
+}
+
+// 批量分配导师
+export const batchAssignAdvisor = (data) => {
+  return request({
+    url: '/api/teacher/students/batch-assign-advisor',
+    method: 'post',
+    data
+  })
+}
+
+// 批量发送消息
+export const batchSendMessage = (data) => {
+  return request({
+    url: '/api/teacher/students/batch-send-message',
+    method: 'post',
+    data
+  })
+}
+
+// 批量删除学生
+export const batchDeleteStudents = (studentIds) => {
+  return request({
+    url: '/api/teacher/students/batch',
+    method: 'delete',
+    data: studentIds
+  })
+}
+
+// 导出学生数据
+export const exportStudentData = (params) => {
+  return request({
+    url: '/api/teacher/students/export',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  })
+}
+
 // 获取学生论文信息
 export const getStudentPaper = (studentId) => {
   return request({
