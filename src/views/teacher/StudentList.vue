@@ -136,15 +136,15 @@
 
       <el-table :data="filteredStudents" v-loading="loading" stripe class="student-table"
         @sort-change="handleSortChange">
-        <el-table-column type="index" label="序号" width="60" align="center" />
+        <el-table-column type="index" label="序号" width="55" align="center" />
 
-        <el-table-column prop="username" label="学号" width="120" sortable>
+        <el-table-column prop="username" label="学号" width="130" sortable>
           <template #default="{ row }">
             <span class="student-id">{{ row.username }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="studentName" label="姓名" width="100" sortable>
+        <el-table-column prop="studentName" label="姓名" min-width="90" sortable show-overflow-tooltip>
           <template #default="{ row }">
             <div class="student-info">
               <div class="student-name">
@@ -154,25 +154,25 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="collegeName" label="学院" width="120" sortable>
+        <el-table-column prop="collegeName" label="学院" min-width="120" sortable show-overflow-tooltip>
           <template #default="{ row }">
             <el-tag type="info" size="small">{{ row.collegeName }}</el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column prop="major" label="专业" width="140" sortable>
+        <el-table-column prop="major" label="专业" min-width="140" sortable show-overflow-tooltip>
           <template #default="{ row }">
             <span class="major">{{ row.major }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="grade" label="年级" width="80" sortable>
+        <el-table-column prop="grade" label="年级" width="80" sortable show-overflow-tooltip>
           <template #default="{ row }">
             <span class="grade">{{ row.grade }}级</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="paperStatus" label="论文状态" width="100" sortable>
+        <el-table-column prop="paperStatus" label="论文状态" min-width="110" sortable>
           <template #default="{ row }">
             <template v-if="row.paperCount && row.paperCount > 1">
               <el-tag type="info" effect="light" size="small" @click="viewAllPapers(row)" style="cursor: pointer;">
@@ -187,7 +187,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="advisorName" label="指导老师" width="120">
+        <el-table-column prop="advisorName" label="指导老师" min-width="100" show-overflow-tooltip>
           <template #default="{ row }">
             <div v-if="row.advisorName" class="advisor-info">
               <span class="advisor-name">{{ row.advisorName }}</span>
@@ -196,7 +196,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="submitTime" label="提交时间" width="140" sortable>
+        <el-table-column prop="submitTime" label="提交时间" width="155" sortable>
           <template #default="{ row }">
             <span v-if="row.submitTime" class="submit-time">
               {{ formatDate(row.submitTime) }}
@@ -205,7 +205,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="similarity" label="相似度" width="100" sortable>
+        <el-table-column prop="similarity" label="相似度" width="115" sortable>
           <template #default="{ row }">
             <div v-if="row.similarity !== null && row.similarity !== undefined">
               <el-progress :percentage="row.similarity" :stroke-width="6" :show-text="false"
@@ -216,7 +216,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons" style="display: flex; align-items: center; gap: 8px;">
               <!-- 主要操作显式展示 -->
@@ -695,7 +695,6 @@ const refreshList = async () => {
 }
 
 const handleSortChange = ({ prop, order }) => {
-  console.log('排序:', prop, order)
   // 实际应用中这里会重新请求排序后的数据
 }
 
@@ -975,7 +974,6 @@ const deleteStudent = async (student) => {
 // 论文预览相关函数
 const onPreviewLoad = () => {
   previewLoading.value = false
-  console.log('论文预览加载完成')
 }
 
 const onPreviewError = () => {
@@ -1329,8 +1327,8 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .student-management {
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
-  color: #0f172a; // Slate-900
+  background: #f5f5f7; // Slate-50
+  color: #1d1d1f; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 24px;
 }
@@ -1339,14 +1337,14 @@ onMounted(async () => {
 .page-header {
   margin-bottom: 32px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 24px;
   transition: all 0.2s ease;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */;
+    border-color: #d2d2d7;
   }
 
   .header-content {
@@ -1361,7 +1359,7 @@ onMounted(async () => {
         margin: 0 0 8px 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
       }
 
       .page-subtitle {
@@ -1376,14 +1374,13 @@ onMounted(async () => {
       gap: 12px;
       
       .el-button {
-        border-radius: 8px;
+        border-radius: 11px;
         transition: all 0.2s ease;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #d2d2d7;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-          border-color: #cbd5e1;
+          /* translateY + box-shadow removed for Apple HIG */
+          border-color: #d2d2d7;
         }
       }
     }
@@ -1399,15 +1396,15 @@ onMounted(async () => {
 
   .stat-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 18px;
     padding: 20px;
     transition: all 0.2s ease;
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-      border-color: #cbd5e1;
+      /* translateY removed for Apple HIG */;
+      /* box-shadow removed for Apple HIG */;
+      border-color: #d2d2d7;
     }
 
     .stat-content {
@@ -1420,7 +1417,7 @@ onMounted(async () => {
         justify-content: center;
         width: 56px;
         height: 56px;
-        border-radius: 10px;
+        border-radius: 11px;
         margin-right: 16px;
         background: #f1f5f9;
 
@@ -1434,7 +1431,7 @@ onMounted(async () => {
         .stat-number {
           font-size: 1.75rem;
           font-weight: 700;
-          color: #0f172a; // Slate-900
+          color: #1d1d1f; // Slate-900
           line-height: 1;
           margin-bottom: 4px;
         }
@@ -1453,14 +1450,14 @@ onMounted(async () => {
 .filter-card {
   margin-bottom: 24px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 20px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */;
+    border-color: #d2d2d7;
   }
 
   .filter-content {
@@ -1480,13 +1477,13 @@ onMounted(async () => {
         width: 300px;
         
         :deep(.el-input__wrapper) {
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
+          border-radius: 11px;
+          border: 1px solid #d2d2d7;
           transition: all 0.2s ease;
           
           &:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            border-color: #d2d2d7;
+            /* box-shadow removed for Apple HIG */
           }
         }
       }
@@ -1495,13 +1492,13 @@ onMounted(async () => {
         width: 150px;
         
         :deep(.el-select__wrapper) {
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
+          border-radius: 11px;
+          border: 1px solid #d2d2d7;
           transition: all 0.2s ease;
           
           &:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            border-color: #d2d2d7;
+            /* box-shadow removed for Apple HIG */
           }
         }
       }
@@ -1512,14 +1509,13 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 8px;
+        border-radius: 11px;
         transition: all 0.2s ease;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #d2d2d7;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-          border-color: #cbd5e1;
+          /* translateY + box-shadow removed for Apple HIG */
+          border-color: #d2d2d7;
         }
       }
     }
@@ -1529,14 +1525,14 @@ onMounted(async () => {
 // 列表卡片
 .list-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   margin-bottom: 24px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */;
+    border-color: #d2d2d7;
   }
 
   .list-header {
@@ -1544,8 +1540,8 @@ onMounted(async () => {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: #f5f5f7;
+    border-bottom: 1px solid #d2d2d7;
 
     .header-title {
       display: flex;
@@ -1553,7 +1549,7 @@ onMounted(async () => {
       gap: 8px;
       font-weight: 600;
       font-size: 1.125rem;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
 
       .el-icon {
         color: #475569; // Slate-600
@@ -1571,14 +1567,13 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 8px;
+        border-radius: 11px;
         transition: all 0.2s ease;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #d2d2d7;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-          border-color: #cbd5e1;
+          /* translateY + box-shadow removed for Apple HIG */
+          border-color: #d2d2d7;
         }
       }
     }
@@ -1588,18 +1583,18 @@ onMounted(async () => {
     width: 100%;
 
     :deep(.el-table__header-wrapper) {
-      background-color: #f8fafc;
+      background-color: #f5f5f7;
       
       th {
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
         font-weight: 600;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #d2d2d7;
         padding: 12px 16px;
       }
     }
     
     :deep(.el-table__row:hover) {
-      background-color: #f8fafc;
+      background-color: #f5f5f7;
       transition: background-color 0.2s ease;
     }
     
@@ -1614,7 +1609,7 @@ onMounted(async () => {
     
     :deep(.el-table__cell) {
       padding: 16px;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
     }
 
     .student-info {
@@ -1622,8 +1617,8 @@ onMounted(async () => {
       align-items: center;
       gap: 12px;
       padding: 8px;
-      background: #f8fafc;
-      border-radius: 8px;
+      background: #f5f5f7;
+      border-radius: 11px;
       transition: all 0.2s ease;
       
       &:hover {
@@ -1633,35 +1628,35 @@ onMounted(async () => {
       .student-name {
         .name {
           font-weight: 600;
-          color: #0f172a; // Slate-900
+          color: #1d1d1f; // Slate-900
         }
       }
     }
 
     .student-id {
       font-family: 'Monaco', 'Consolas', monospace;
-      color: #3b82f6; // Blue-500
+      color: #0066cc; // Blue-500
       font-weight: 600;
       padding: 4px 8px;
-      background: #eff6ff;
-      border-radius: 4px;
+      background: #f5f5f7;
+      border-radius: 8px;
     }
 
     .major,
     .grade {
       color: #64748b; // Slate-500
       padding: 4px 8px;
-      background: #f8fafc;
-      border-radius: 4px;
+      background: #f5f5f7;
+      border-radius: 8px;
     }
 
     .advisor-info {
       .advisor-name {
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
         font-weight: 600;
         padding: 4px 8px;
-        background: #eff6ff;
-        border-radius: 4px;
+        background: #f5f5f7;
+        border-radius: 8px;
       }
     }
 
@@ -1670,16 +1665,16 @@ onMounted(async () => {
       color: #94a3b8; // Slate-400
       font-style: italic;
       padding: 4px 8px;
-      background: #f8fafc;
-      border-radius: 4px;
+      background: #f5f5f7;
+      border-radius: 8px;
     }
 
     .submit-time {
       color: #64748b; // Slate-500
       font-size: 0.875rem;
       padding: 4px 8px;
-      background: #f8fafc;
-      border-radius: 4px;
+      background: #f5f5f7;
+      border-radius: 8px;
     }
 
     .similarity-progress {
@@ -1688,19 +1683,19 @@ onMounted(async () => {
       margin-right: 8px;
       
       :deep(.el-progress__bar) {
-        border-radius: 6px;
+        border-radius: 8px;
       }
       
       :deep(.el-progress__bar__outer) {
-        background: #e2e8f0;
-        border-radius: 6px;
+        background: #d2d2d7;
+        border-radius: 8px;
       }
     }
 
     .similarity-value {
       font-size: 0.875rem;
       color: #64748b; // Slate-500
-      font-weight: 500;
+      font-weight: 400;
     }
 
     .action-buttons {
@@ -1708,14 +1703,13 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 8px;
+        border-radius: 11px;
         transition: all 0.2s ease;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #d2d2d7;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-          border-color: #cbd5e1;
+          /* translateY + box-shadow removed for Apple HIG */
+          border-color: #d2d2d7;
         }
       }
     }
@@ -1729,17 +1723,17 @@ onMounted(async () => {
     
     :deep(.el-pagination) {
       .el-pagination__item {
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        border: 1px solid #d2d2d7;
         
         &:hover {
-          color: #3b82f6; // Blue-500
-          border-color: #93c5fd;
+          color: #0066cc; // Blue-500
+          border-color: #0066cc;
         }
         
         &.is-active {
-          background-color: #3b82f6;
-          border-color: #3b82f6;
+          background-color: #0066cc;
+          border-color: #0066cc;
         }
       }
     }
@@ -1755,14 +1749,14 @@ onMounted(async () => {
 
   .batch-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 18px;
     padding: 16px 24px;
     transition: all 0.2s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-      border-color: #cbd5e1;
+      /* box-shadow removed for Apple HIG */;
+      border-color: #d2d2d7;
     }
   }
 
@@ -1777,8 +1771,8 @@ onMounted(async () => {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-weight: 500;
-      color: #0f172a; // Slate-900
+      font-weight: 400;
+      color: #1d1d1f; // Slate-900
 
       .el-icon {
         color: #475569; // Slate-600
@@ -1791,14 +1785,13 @@ onMounted(async () => {
       flex-wrap: wrap;
       
       .el-button {
-        border-radius: 8px;
+        border-radius: 11px;
         transition: all 0.2s ease;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #d2d2d7;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-          border-color: #cbd5e1;
+          /* translateY + box-shadow removed for Apple HIG */
+          border-color: #d2d2d7;
         }
       }
     }
@@ -1818,19 +1811,19 @@ onMounted(async () => {
     flex-wrap: wrap;
     gap: 20px;
     padding: 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    background: #f5f5f7;
+    border: 1px solid #d2d2d7;
+    border-radius: 11px;
     margin-bottom: 16px;
     
     .info-item {
       .label {
-        font-weight: 500;
+        font-weight: 400;
         color: #64748b; // Slate-500
         margin-right: 4px;
       }
       .value {
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
       }
     }
   }
@@ -1842,8 +1835,8 @@ onMounted(async () => {
     .preview-iframe {
       width: 100%;
       height: 100%;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid #d2d2d7;
+      border-radius: 11px;
     }
     
     .preview-error {
@@ -1864,17 +1857,16 @@ onMounted(async () => {
     justify-content: flex-end;
     gap: 12px;
     padding-top: 16px;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #d2d2d7;
     
     .el-button {
-      border-radius: 8px;
+      border-radius: 11px;
       transition: all 0.2s ease;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #d2d2d7;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-        border-color: #cbd5e1;
+        /* translateY + box-shadow removed for Apple HIG */
+        border-color: #d2d2d7;
       }
     }
   }
@@ -1886,18 +1878,18 @@ onMounted(async () => {
     width: 100%;
 
     :deep(.el-table__header-wrapper) {
-      background-color: #f8fafc;
+      background-color: #f5f5f7;
       
       th {
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
         font-weight: 600;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #d2d2d7;
         padding: 12px 16px;
       }
     }
     
     :deep(.el-table__row:hover) {
-      background-color: #f8fafc;
+      background-color: #f5f5f7;
       transition: background-color 0.2s ease;
     }
     
@@ -1912,23 +1904,23 @@ onMounted(async () => {
     
     :deep(.el-table__cell) {
       padding: 12px;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
     }
 
     .paper-title {
-      color: #1a365d;
-      font-weight: 500;
+      color: #1d1d1f;
+      font-weight: 400;
       padding: 4px 8px;
-      background: #f8f9fa;
-      border-radius: 4px;
+      background: #f5f5f7;
+      border-radius: 8px;
     }
 
     .submit-time {
-      color: #5a6c7d;
+      color: #86868b;
       font-size: 0.875rem;
       padding: 4px 8px;
-      background: #f8f9fa;
-      border-radius: 4px;
+      background: #f5f5f7;
+      border-radius: 8px;
     }
 
     .similarity-progress {
@@ -1937,19 +1929,19 @@ onMounted(async () => {
       margin-right: 8px;
       
       :deep(.el-progress__bar) {
-        border-radius: 6px;
+        border-radius: 8px;
       }
       
       :deep(.el-progress__bar__outer) {
-        background: #e4e7ed;
-        border-radius: 6px;
+        background: #d2d2d7;
+        border-radius: 8px;
       }
     }
 
     .similarity-value {
       font-size: 0.875rem;
-      color: #5a6c7d;
-      font-weight: 500;
+      color: #86868b;
+      font-weight: 400;
     }
 
     .action-buttons {
@@ -1957,12 +1949,11 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 6px;
+        border-radius: 8px;
         transition: all 0.3s ease;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          /* translateY + box-shadow removed for Apple HIG */
         }
       }
     }

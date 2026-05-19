@@ -328,9 +328,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import PlagiarismReportViewer from './PlagiarismReportViewer.vue'
-import { doReview, sendMessage, getReviewTemplates, useReviewTemplate } from '@/api/teacher.js'
+import { doReview, sendMessage, getReviewTemplates, useReviewTemplate, getPaperContent } from '@/api/teacher.js'
 import { convertToBackendStatus } from '@/utils/reviewStatus.js'
 import { useRouter } from 'vue-router'
 
@@ -587,7 +587,7 @@ const submitReview = async () => {
         allValid = false
         break
       }
-      const paper = props.papers.find(p => p.paperId === paperId)
+      const paper = props.papers.find(p => String(p.paperId) === String(paperId))
       reviewData.push({
         paperId: paperId,
         studentId: paper?.studentId || paper?.studentNo || '',
@@ -740,9 +740,7 @@ const getTimelineType = (status) => {
 // 生命周期
 onMounted(async () => {
   if (props.paperId) {
-    // 加载论文内容
-    // 加载查重报告
-    // 加载审核历史
+    await loadPaperContent()
   }
   
   // 批量审核时初始化选中状态
@@ -750,6 +748,30 @@ onMounted(async () => {
     selectedPapersForReview.value = props.papers.map(paper => paper.paperId)
   }
 })
+
+// 加载论文内容
+const loadPaperContent = async () => {
+  const loading = ElLoading.service({
+    lock: true,
+    text: '正在加载论文内容...',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+  
+  try {
+    const response = await getPaperContent(props.paperId)
+    if (response.code === 200 && response.data) {
+      paperContent.value = response.data.content || response.data.abstract || '暂无论文内容'
+    } else {
+      paperContent.value = '暂无论文内容'
+    }
+  } catch (error) {
+    console.error('加载论文内容失败:', error)
+    paperContent.value = '加载论文内容失败'
+    ElMessage.error('加载论文内容失败')
+  } finally {
+    loading.close()
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -778,15 +800,15 @@ onMounted(async () => {
         
         .paper-item-card {
           margin-bottom: 12px;
-          border: 1px solid #e4e7ed;
-          border-radius: 8px;
+          border: 1px solid #d2d2d7;
+          border-radius: 11px;
           transition: all 0.3s ease;
           
           &:hover {
-            border-color: #409eff;
-            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+            border-color: #0066cc;
+            /* box-shadow removed for Apple HIG */
           }
-          
+
           .paper-item-header {
             display: flex;
             align-items: center;
@@ -798,7 +820,7 @@ onMounted(async () => {
             
             .paper-title {
               flex: 1;
-              font-weight: 500;
+              font-weight: 400;
               color: #303133;
               overflow: hidden;
               text-overflow: ellipsis;
@@ -813,7 +835,7 @@ onMounted(async () => {
           .paper-item-info {
             display: flex;
             justify-content: space-between;
-            font-size: 14px;
+            font-size: 17px;
             color: #606266;
             
             .student-name {
@@ -843,7 +865,7 @@ onMounted(async () => {
         margin-bottom: 12px;
         
         label {
-          font-weight: 500;
+          font-weight: 400;
           color: #606266;
           margin-right: 8px;
         }
@@ -865,7 +887,7 @@ onMounted(async () => {
         
         .content-area {
           border: 1px solid #dcdfe6;
-          border-radius: 4px;
+          border-radius: 8px;
           padding: 16px;
           min-height: 400px;
           max-height: 600px;
@@ -881,7 +903,7 @@ onMounted(async () => {
       .history-content {
         .history-item {
           .reviewer {
-            font-weight: 500;
+            font-weight: 400;
             margin-bottom: 4px;
           }
           
@@ -891,7 +913,7 @@ onMounted(async () => {
           
           .opinion {
             color: #606266;
-            font-size: 14px;
+            font-size: 17px;
             line-height: 1.5;
           }
         }
@@ -914,14 +936,14 @@ onMounted(async () => {
   
   .batch-opinion-card {
     margin-bottom: 16px;
-    border: 1px solid #e4e7ed;
-    border-radius: 8px;
+    border: 1px solid #d2d2d7;
+    border-radius: 11px;
     
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 500;
+      font-weight: 400;
       
       .paper-title {
         flex: 1;
@@ -933,7 +955,7 @@ onMounted(async () => {
       }
       
       .student-name {
-        font-size: 14px;
+        font-size: 17px;
         color: #606266;
       }
     }
@@ -954,10 +976,10 @@ onMounted(async () => {
     transition: all 0.3s ease;
     
     &:hover {
-      border-color: #409eff;
-      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+      border-color: #0066cc;
+      /* box-shadow removed for Apple HIG */
     }
-    
+
     .template-header {
       display: flex;
       justify-content: space-between;
@@ -980,7 +1002,7 @@ onMounted(async () => {
         .info-item {
           display: flex;
           align-items: center;
-          font-size: 14px;
+          font-size: 17px;
           color: #606266;
           
           .el-icon {
@@ -992,9 +1014,9 @@ onMounted(async () => {
       .template-preview {
         .preview-content {
           padding: 12px;
-          background-color: #f5f7fa;
-          border-radius: 4px;
-          font-size: 14px;
+          background-color: #f5f5f7;
+          border-radius: 8px;
+          font-size: 17px;
           line-height: 1.5;
           color: #606266;
           max-height: 120px;

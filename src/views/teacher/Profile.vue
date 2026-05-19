@@ -72,7 +72,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="所属学院" prop="collegeName">
+                    <el-form-item label="所属学院" prop="collegeId">
                       <el-select v-model="formData.collegeId" placeholder="请选择学院" @change="handleCollegeChange"
                         :loading="collegeLoading">
                         <el-option v-for="college in collegeList" :key="college.value" :label="college.label"
@@ -158,7 +158,7 @@
                   <div class="security-title">登录密码</div>
                   <div class="security-desc">定期更改密码以保证账户安全</div>
                 </div>
-                <el-button type="text" :icon="Edit" @click="changePasswordAPI">
+                <el-button link :icon="Edit" @click="changePasswordAPI">
                   修改密码
                 </el-button>
               </div>
@@ -168,7 +168,7 @@
                   <div class="security-title">登录设备</div>
                   <div class="security-desc">查看您账户的登录设备记录</div>
                 </div>
-                <el-button type="text" :icon="View" @click="viewDevices">
+                <el-button link :icon="View" @click="viewDevices">
                   查看设备
                 </el-button>
               </div>
@@ -307,7 +307,7 @@ const formRules = {
   title: [
     { required: true, message: '请选择职称', trigger: 'change' }
   ],
-  college: [
+  collegeId: [
     { required: true, message: '请选择学院', trigger: 'change' }
   ]
 }
@@ -386,7 +386,6 @@ const handleAvatarChange = async (event) => {
     // 根据后端返回结构调整取值
     const avatarUrl = res.data;
     if (avatarUrl) {
-      console.log("上传成功，头像 URL：", avatarUrl);
       // 使用 userStore 的 updateAvatar 方法
       userStore.updateAvatar(avatarUrl);
       await nextTick();
@@ -473,7 +472,6 @@ const getColleges = async () => {
 //获取当前用户信息
 const getAllInfo = async () => {
   try {
-    console.log("获取用户信息，用户ID：", userStore.userInfo?.userId);
     const res = await getInfo(userStore.userInfo.userId);
     if (res.code === 200) {
       // 合并时优先保留已有 userId
@@ -506,16 +504,16 @@ onMounted(() => {
 .teacher-settings {
   padding: 20px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea0d 0%, #764ba20d 100%);
+  background: #f5f5f7;
 }
 
 // 页面头部
 .page-header {
   margin-bottom: 24px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.1);
+  border: 1px solid #d2d2d7;
 
   .header-content {
     display: flex;
@@ -527,12 +525,12 @@ onMounted(() => {
         margin: 0 0 8px 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #1d1d1f;
       }
 
       .page-subtitle {
         margin: 0;
-        color: #7f8c8d;
+        color: #86868b;
         font-size: 0.875rem;
       }
     }
@@ -543,11 +541,11 @@ onMounted(() => {
 .main-content {
   .section-card {
     margin-bottom: 16px;
-    border-radius: 12px;
+    border-radius: 18px;
     border: none;
 
     &:hover {
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      border-color: #d2d2d7;
     }
 
     :deep(.el-card__header) {
@@ -565,10 +563,10 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #1d1d1f;
 
     .el-icon {
-      color: #667eea;
+      color: #0066cc;
     }
   }
 }
@@ -599,8 +597,8 @@ onMounted(() => {
 
   .settings-form {
     :deep(.el-form-item__label) {
-      font-weight: 500;
-      color: #5a6c7d;
+      font-weight: 400;
+      color: #86868b;
     }
   }
 }
@@ -620,14 +618,14 @@ onMounted(() => {
 
     .security-info {
       .security-title {
-        font-weight: 500;
-        color: #2c3e50;
+        font-weight: 400;
+        color: #1d1d1f;
         margin-bottom: 4px;
       }
 
       .security-desc {
         font-size: 0.875rem;
-        color: #7f8c8d;
+        color: #86868b;
       }
     }
 
@@ -652,14 +650,14 @@ onMounted(() => {
 
     .notification-info {
       .notification-title {
-        font-weight: 500;
-        color: #2c3e50;
+        font-weight: 400;
+        color: #1d1d1f;
         margin-bottom: 4px;
       }
 
       .notification-desc {
         font-size: 0.875rem;
-        color: #7f8c8d;
+        color: #86868b;
       }
     }
   }
@@ -676,8 +674,8 @@ onMounted(() => {
     }
 
     .preference-label {
-      font-weight: 500;
-      color: #2c3e50;
+      font-weight: 400;
+      color: #1d1d1f;
       margin-bottom: 12px;
     }
 

@@ -535,14 +535,14 @@ onMounted(async () => {
       
       .template-card {
         border: 1px solid #ebeef5;
-        border-radius: 8px;
+        border-radius: 11px;
         padding: 16px;
         cursor: pointer;
         transition: all 0.3s;
         
         &:hover {
-          border-color: #409eff;
-          box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.1);
+          border-color: #0066cc;
+          /* box-shadow removed for Apple HIG */
         }
         
         .template-header {
@@ -552,7 +552,7 @@ onMounted(async () => {
           margin-bottom: 12px;
           
           .template-title {
-            font-weight: 500;
+            font-weight: 400;
             font-size: 16px;
             color: #303133;
             flex: 1;
@@ -569,7 +569,7 @@ onMounted(async () => {
           color: #606266;
           line-height: 1.5;
           margin-bottom: 16px;
-          font-size: 14px;
+          font-size: 17px;
         }
         
         .template-footer {
@@ -606,7 +606,7 @@ onMounted(async () => {
   .template-preview {
     .preview-title {
       font-size: 18px;
-      font-weight: 500;
+      font-weight: 400;
       margin-bottom: 12px;
       color: #303133;
     }
@@ -629,7 +629,7 @@ onMounted(async () => {
     
     .section-title {
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 400;
       margin: 20px 0 12px 0;
       color: #303133;
       padding-bottom: 8px;
@@ -642,14 +642,14 @@ onMounted(async () => {
       align-items: center;
       padding: 12px;
       border: 1px solid #ebeef5;
-      border-radius: 4px;
+      border-radius: 8px;
       margin-bottom: 8px;
       cursor: pointer;
       transition: all 0.2s;
       
       &:hover {
-        border-color: #409eff;
-        background-color: #f5f7fa;
+        border-color: #0066cc;
+        background-color: #f5f5f7;
       }
       
       .template-info {
@@ -657,7 +657,7 @@ onMounted(async () => {
         margin-right: 12px;
         
         .template-name {
-          font-weight: 500;
+          font-weight: 400;
           margin-bottom: 4px;
           color: #303133;
         }

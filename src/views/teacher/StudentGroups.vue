@@ -463,7 +463,7 @@ onMounted(() => {
           .group-name {
             margin: 0 0 8px 0;
             font-size: 18px;
-            font-weight: 500;
+            font-weight: 400;
           }
           
           .group-meta {
@@ -527,18 +527,18 @@ onMounted(() => {
         margin-bottom: 12px;
         padding: 12px;
         border: 1px solid #ebeef5;
-        border-radius: 4px;
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s;
         
         &:hover {
-          border-color: #409eff;
-          background-color: #f5f7fa;
+          border-color: #0066cc;
+          background-color: #f5f5f7;
         }
         
         .student-info {
           .student-name {
-            font-weight: 500;
+            font-weight: 400;
             margin-bottom: 4px;
           }
           
@@ -551,7 +551,7 @@ onMounted(() => {
     }
     
     .selected-count {
-      font-size: 14px;
+      font-size: 17px;
       color: #606266;
       margin-bottom: 20px;
     }

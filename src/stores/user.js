@@ -18,6 +18,9 @@ export const useUserStore = defineStore("user", {
         username: username,
         password: password,
       });
+      if (res.code !== 200) {
+        throw new Error(res.message || '登录失败');
+      }
       this.token = res.data.token;
       this.role = res.data.roleCode;
       // 保存完整的用户信息到 userInfo

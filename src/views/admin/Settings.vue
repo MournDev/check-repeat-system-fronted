@@ -132,30 +132,11 @@
                   <div class="security-title">登录密码</div>
                   <div class="security-desc">定期更改密码以保证账户安全</div>
                 </div>
-                <el-button type="text" :icon="Edit" @click="changePasswordAPI">
+                <el-button link :icon="Edit" @click="changePasswordAPI">
                   修改密码
                 </el-button>
               </div>
 
-              <div class="security-item">
-                <div class="security-info">
-                  <div class="security-title">登录设备</div>
-                  <div class="security-desc">查看您账户的登录设备记录</div>
-                </div>
-                <el-button type="text" :icon="View" @click="viewDevices">
-                  查看设备
-                </el-button>
-              </div>
-
-              <div class="security-item">
-                <div class="security-info">
-                  <div class="security-title">权限管理</div>
-                  <div class="security-desc">查看和管理您的系统权限</div>
-                </div>
-                <el-button type="text" :icon="View" @click="viewPermissions">
-                  查看权限
-                </el-button>
-              </div>
             </div>
           </el-card>
 
@@ -279,7 +260,7 @@ const formData = reactive({
   notifySystemAnnouncement: true,
   notifyEmail: true,
   defaultPage: 'dashboard',
-  themeColor: '#667eea',
+  themeColor: '#0066cc',
   language: 'zh-CN',
   logRetentionDays: 90,
   backupFrequency: 'daily'
@@ -420,14 +401,6 @@ const changePasswordAPI = async() => {
   })
 }
 
-const viewPermissions = () => {
-  ElMessage.info('权限管理功能开发中')
-}
-
-const viewDevices = () => {
-  ElMessage.info('查看登录设备功能开发中')
-}
-
 const toggleTwoFactorAuth = (value) => {
   if (value) {
     ElMessageBox.confirm('确定要开启两步验证吗？', '开启两步验证', {
@@ -470,16 +443,16 @@ onMounted(() => {
 .admin-settings {
   padding: 20px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea0d 0%, #764ba20d 100%);
+  background: #f5f5f7;
 }
 
 // 页面头部
 .page-header {
   margin-bottom: 24px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-radius: 16px;
+  background: #f5f5f7;
+  border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.1);
+  border: 1px solid #d2d2d7;
 
   .header-content {
     display: flex;
@@ -491,12 +464,12 @@ onMounted(() => {
         margin: 0 0 8px 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #1d1d1f;
       }
 
       .page-subtitle {
         margin: 0;
-        color: #7f8c8d;
+        color: #86868b;
         font-size: 0.875rem;
       }
     }
@@ -514,16 +487,12 @@ onMounted(() => {
   margin: 0 auto;
   .section-card {
     margin-bottom: 16px;
-    border-radius: 12px;
-    border: none;
-
-    &:hover {
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    }
+    border-radius: 18px;
+    border: 1px solid #d2d2d7;
 
     :deep(.el-card__header) {
       padding: 16px 20px;
-      border-bottom: 1px solid #f1f2f6;
+      border-bottom: 1px solid #d2d2d7;
     }
 
     :deep(.el-card__body) {
@@ -536,10 +505,10 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #1d1d1f;
 
     .el-icon {
-      color: #667eea;
+      color: #0066cc;
     }
   }
 }
@@ -557,7 +526,7 @@ onMounted(() => {
 
       .admin-avatar {
         border: 4px solid #fff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #d2d2d7;
         margin-bottom: 12px;
       }
 
@@ -572,8 +541,8 @@ onMounted(() => {
   .settings-form {
     flex: 1;
     :deep(.el-form-item__label) {
-      font-weight: 500;
-      color: #5a6c7d;
+      font-weight: 400;
+      color: #86868b;
       min-width: 110px;
     }
   }
@@ -586,7 +555,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #f1f2f6;
+    border-bottom: 1px solid #d2d2d7;
 
     &:last-child {
       border-bottom: none;
@@ -594,14 +563,14 @@ onMounted(() => {
 
     .security-info {
       .security-title {
-        font-weight: 500;
-        color: #2c3e50;
+        font-weight: 400;
+        color: #1d1d1f;
         margin-bottom: 4px;
       }
 
       .security-desc {
         font-size: 0.875rem;
-        color: #7f8c8d;
+        color: #86868b;
       }
     }
 
@@ -618,7 +587,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #f1f2f6;
+    border-bottom: 1px solid #d2d2d7;
 
     &:last-child {
       border-bottom: none;
@@ -626,14 +595,14 @@ onMounted(() => {
 
     .notification-info {
       .notification-title {
-        font-weight: 500;
-        color: #2c3e50;
+        font-weight: 400;
+        color: #1d1d1f;
         margin-bottom: 4px;
       }
 
       .notification-desc {
         font-size: 0.875rem;
-        color: #7f8c8d;
+        color: #86868b;
       }
     }
   }
@@ -643,7 +612,7 @@ onMounted(() => {
 .preference-section {
   .preference-item {
     padding: 12px 0;
-    border-bottom: 1px solid #f1f2f6;
+    border-bottom: 1px solid #d2d2d7;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -653,8 +622,8 @@ onMounted(() => {
     }
 
     .preference-label {
-      font-weight: 500;
-      color: #2c3e50;
+      font-weight: 400;
+      color: #1d1d1f;
       margin: 0;
       flex: 1 1 55%;
     }

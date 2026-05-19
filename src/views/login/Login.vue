@@ -24,9 +24,6 @@
 
       <!-- 底部链接已移除 -->
 
-      <div class="decor-blur decor-blur-1"></div>
-      <div class="decor-blur decor-blur-2"></div>
-      <div class="decor-grid"></div>
     </div>
 
     <!-- 右侧：登录表单 -->
@@ -35,8 +32,8 @@
         <div class="mobile-logo">
           <div class="mobile-logo-icon">
             <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-              <path d="M7 14L12 9L17 14L12 19L7 14Z" fill="#1E40AF" fill-opacity="0.9" />
-              <path d="M13 14L18 9L21 12V16L18 19L13 14Z" fill="#3B82F6" fill-opacity="0.7" />
+              <path d="M7 14L12 9L17 14L12 19L7 14Z" fill="#0066cc" fill-opacity="0.9" />
+              <path d="M13 14L18 9L21 12V16L18 19L13 14Z" fill="#5ac8fa" fill-opacity="0.7" />
             </svg>
           </div>
           <span>论文查重管理系统</span>
@@ -126,7 +123,7 @@
         </el-form>
 
         <div class="password-forgot">
-          <el-button type="text" @click="handleForgotPassword" class="forgot-link">
+          <el-button link @click="handleForgotPassword" class="forgot-link">
             忘记密码？
           </el-button>
         </div>
@@ -137,7 +134,7 @@
 
         <div class="signup-row">
           暂无账号？
-          <el-button type="text" @click="handleRegister" class="signup-link">
+          <el-button link @click="handleRegister" class="signup-link">
             前往注册
           </el-button>
         </div>
@@ -185,15 +182,11 @@ const handleLogin = async () => {
 
   try {
     const res = await userStore.login(loginForm.value)
-    console.log('登录响应完整数据：', res)
-    console.log('res.success：', res.success)
 
-    if (res.success) {
+    if (res.code === 200) {
       ElMessage.success('登录成功')
 
-      const role = res.roleCode || userStore.role
-      console.log('用户角色：', role)
-      console.log('userStore.role：', userStore.role)
+      const role = res.data?.roleCode || userStore.role
 
       let targetRoute
       if (role === 'STUDENT') {
@@ -206,9 +199,7 @@ const handleLogin = async () => {
         targetRoute = { name: 'Dashboard' }
       }
       
-      console.log('准备跳转到：', targetRoute)
       const result = await router.push(targetRoute)
-      console.log('跳转结果：', result)
       if (result) {
         console.error('跳转失败：', result)
       }
@@ -216,7 +207,7 @@ const handleLogin = async () => {
       error.value = res.message || '登录失败，请检查账号密码'
     }
   } catch (err) {
-    error.value = '账号或密码有误，请重新输入'
+    error.value = err?.message || '账号或密码有误，请重新输入'
     console.error('登录失败：', err)
   } finally {
     loading.value = false
@@ -246,7 +237,7 @@ const handleForgotPassword = () => {
   flex-direction: column;
   justify-content: space-between;
   padding: 48px;
-  background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%);
+  background: #272729;
   overflow: hidden;
 }
 
@@ -311,42 +302,6 @@ const handleForgotPassword = () => {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.decor-blur {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.decor-blur-1 {
-  top: 15%;
-  right: 10%;
-  width: 300px;
-  height: 300px;
-  background: rgba(59, 130, 246, 0.25);
-  filter: blur(80px);
-}
-
-.decor-blur-2 {
-  bottom: 10%;
-  left: 5%;
-  width: 400px;
-  height: 400px;
-  background: rgba(30, 64, 175, 0.3);
-  filter: blur(100px);
-}
-
-.decor-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* 右侧面板 */
 .right-panel {
   display: flex;
@@ -398,7 +353,7 @@ const handleForgotPassword = () => {
 
 .form-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #86868b;
   margin: 0;
   line-height: 1.6;
 }
@@ -410,44 +365,45 @@ const handleForgotPassword = () => {
 
   :deep(.el-input__wrapper) {
     height: 48px !important;
-    background: #fafafa !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 10px !important;
+    background: #f5f5f7 !important;
+    border: 1px solid #d2d2d7 !important;
+    border-radius: 9999px !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
   }
 
   :deep(.el-input__wrapper:hover) {
-    border-color: #3b82f6 !important;
+    border-color: #0066cc !important;
   }
 
   :deep(.el-input__wrapper.is-focus),
   :deep(.el-input__wrapper:focus) {
-    border-color: #1e40af !important;
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.08) !important;
+    border-color: #0066cc !important;
+    outline: 2px solid #0066cc;
+    outline-offset: -2px;
     background: #ffffff !important;
   }
 
   :deep(.el-input__inner) {
     background: transparent !important;
     font-size: 14px !important;
-    color: #111827 !important;
+    color: #1d1d1f !important;
   }
 
   :deep(.el-input__inner::placeholder) {
-    color: #c0c4cc !important;
+    color: #86868b !important;
   }
 }
 
 .field-label {
   font-size: 13px;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 400;
+  color: #1d1d1f;
   margin-bottom: 6px;
   letter-spacing: 0.2px;
 }
 
 .eye-toggle {
-  color: #6b7280;
+  color: #86868b;
   cursor: pointer;
   font-size: 16px;
   display: flex;
@@ -456,7 +412,7 @@ const handleForgotPassword = () => {
 }
 
 .eye-toggle:hover {
-  color: #374151;
+  color: #1d1d1f;
 }
 
 .submit-btn {
@@ -464,17 +420,17 @@ const handleForgotPassword = () => {
   height: 48px !important;
   font-size: 15px !important;
   font-weight: 600 !important;
-  border-radius: 10px !important;
-  background: #1e40af !important;
-  border-color: #1e40af !important;
+  border-radius: 9999px !important;
+  background: #0066cc !important;
+  border-color: #0066cc !important;
   letter-spacing: 1px;
   transition: background 0.2s, opacity 0.2s !important;
   cursor: pointer;
 }
 
 .submit-btn:hover {
-  background: #1d4ed8 !important;
-  border-color: #1d4ed8 !important;
+  background: #0055aa !important;
+  border-color: #0055aa !important;
   opacity: 1 !important;
 }
 
@@ -487,7 +443,7 @@ const handleForgotPassword = () => {
   align-items: center;
   gap: 12px;
   margin: 20px 0 0;
-  color: #d1d5db;
+  color: #d2d2d7;
   font-size: 13px;
 }
 
@@ -496,31 +452,31 @@ const handleForgotPassword = () => {
   content: '';
   flex: 1;
   height: 1px;
-  background: #e5e7eb;
+  background: #d2d2d7;
 }
 
 .divider span {
-  color: #9ca3af;
+  color: #86868b;
   white-space: nowrap;
 }
 
 .signup-row {
   text-align: center;
   font-size: 13px;
-  color: #6b7280;
+  color: #86868b;
   margin-top: 28px;
 }
 
 .signup-link {
-  color: #1e40af !important;
-  font-weight: 500;
+  color: #0066cc !important;
+  font-weight: 400;
   text-decoration: none;
   cursor: pointer;
 }
 
 .signup-link:hover {
   text-decoration: underline;
-  color: #1d4ed8 !important;
+  color: #0055aa !important;
 }
 
 .password-forgot {
@@ -530,7 +486,7 @@ const handleForgotPassword = () => {
 }
 
 .forgot-link {
-  color: #6b7280 !important;
+  color: #86868b !important;
   font-size: 13px;
   font-weight: 400;
   text-decoration: none;
@@ -538,7 +494,7 @@ const handleForgotPassword = () => {
 }
 
 .forgot-link:hover {
-  color: #1e40af !important;
+  color: #0066cc !important;
   text-decoration: underline;
 }
 

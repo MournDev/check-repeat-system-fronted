@@ -136,16 +136,18 @@
                     </el-tag>
                   </div>
                   <div class="record-actions" v-if="!compactView">
-                    <el-button 
-                      text 
-                      size="small" 
+                    <el-button
+                      v-if="record.reportId"
+                      text
+                      size="small"
                       @click="viewReport(record.reportId)"
                     >
                       查看报告
                     </el-button>
-                    <el-button 
-                      text 
-                      size="small" 
+                    <el-button
+                      v-if="record.reportId"
+                      text
+                      size="small"
                       @click="downloadPdfReport(record.reportId)"
                     >
                       <el-icon><Download /></el-icon>
@@ -154,7 +156,7 @@
                     <el-button 
                       text 
                       size="small" 
-                      @click="compareWithCurrent(record.version)"
+                      @click="compareWithCurrent(record)"
                       v-if="!record.isCurrent"
                     >
                       对比当前
@@ -168,9 +170,9 @@
                     <span>{{ record.changes }}</span>
                   </div>
                   
-                  <div class="improvement-info" v-if="record.improvementFromPrevious !== undefined">
+                  <div class="improvement-info" v-if="record.improvementFromPrevious != null">
                     <div class="improvement-badge" :class="getImprovementClass(record.improvementFromPrevious)">
-                      {{ record.improvementFromPrevious > 0 ? '+' : '' }}{{ record.improvementFromPrevious.toFixed(1) }}%
+                      {{ record.improvementFromPrevious > 0 ? '+' : '' }}{{ (record.improvementFromPrevious || 0).toFixed(1) }}%
                     </div>
                     <span>相比上一版本</span>
                   </div>
@@ -179,7 +181,7 @@
                     <div class="section-change" v-for="(change, section) in record.sectionChanges" :key="section">
                       <span class="section-name">{{ getSectionName(section) }}:</span>
                       <span class="change-value" :class="getChangeClass(change.change)">
-                        {{ change.to }}% ({{ change.change > 0 ? '+' : '' }}{{ change.change.toFixed(1) }}%)
+                        {{ change.to || 0 }}% ({{ (change.change || 0) > 0 ? '+' : '' }}{{ (change.change || 0).toFixed(1) }}%)
                       </span>
                     </div>
                   </div>
@@ -206,7 +208,7 @@
             <span class="version-tag current">V{{ compareData.toVersion }}</span>
           </div>
           <div class="overall-change" :class="getImprovementClass(compareData.overallChange)">
-            总体变化: {{ compareData.overallChange > 0 ? '+' : '' }}{{ compareData.overallChange.toFixed(1) }}%
+            总体变化: {{ (compareData.overallChange || 0) > 0 ? '+' : '' }}{{ (compareData.overallChange || 0).toFixed(1) }}%
           </div>
         </div>
         
@@ -301,9 +303,9 @@ import {
   Refresh, DataLine, Timer, EditPen, TrendCharts, 
   DataAnalysis, Lightning, ArrowRight, ArrowLeft, Download
 } from '@element-plus/icons-vue'
-// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
 import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/student'
+import * as echarts from 'echarts'
 
 const route = useRoute()
 const router = useRouter()
@@ -325,10 +327,10 @@ const chartInstance = ref(null)
 const historyRecords = ref([])
 
 const trendAnalysis = ref({
-  direction: 'decreasing',
-  totalImprovement: -27.1,
-  averageImprovementPerVersion: -13.55,
-  bestVersion: 3
+  direction: 'stable',
+  totalImprovement: 0,
+  averageImprovementPerVersion: 0,
+  bestVersion: 0
 })
 
 const compareData = ref(null)
@@ -364,28 +366,51 @@ const refreshHistory = async () => {
     if (res.code === 200) {
       // 处理历史记录数据
       historyRecords.value = res.data.history || []
-      
-      // 处理趋势分析数据
-      trendAnalysis.value = res.data.trendAnalysis || {
-        direction: 'decreasing',
-        totalImprovement: 0,
-        averageImprovementPerVersion: 0,
-        bestVersion: 1
+
+      // 处理趋势分析数据 — 优先使用后端数据，否则从历史记录计算
+      if (res.data.trendAnalysis) {
+        trendAnalysis.value = res.data.trendAnalysis
+      } else {
+        computeTrendFromRecords(historyRecords.value)
       }
       
-      // 处理论文信息
-      paperInfo.value = {
-        title: res.data.paperInfo?.title || '',
-        currentSimilarity: res.data.paperInfo?.currentSimilarity || 0,
-        lowestSimilarity: res.data.paperInfo?.lowestSimilarity || 0,
-        versionCount: res.data.paperInfo?.versionCount || 0
+      // 处理论文信息 — 优先使用后端数据，否则从历史记录计算
+      const records = historyRecords.value
+      if (res.data.paperInfo) {
+        paperInfo.value = {
+          title: res.data.paperInfo.title || '',
+          currentSimilarity: res.data.paperInfo.currentSimilarity || 0,
+          lowestSimilarity: res.data.paperInfo.lowestSimilarity || 0,
+          versionCount: res.data.paperInfo.versionCount || 0
+        }
+      } else if (records.length > 0) {
+        const similarities = records.map(r => Number(r.similarity) || 0)
+        paperInfo.value = {
+          title: route.query.paperTitle || '',
+          currentSimilarity: similarities[0] || 0,
+          lowestSimilarity: Math.min(...similarities),
+          versionCount: records.length
+        }
       }
-      
-      // 处理统计数据
-      stats.value = {
-        improvementRate: res.data.statistics?.improvementRate || 0,
-        averageSimilarity: res.data.statistics?.averageSimilarity || 0,
-        improvementSpeed: res.data.statistics?.improvementSpeed || ''
+
+      // 处理统计数据 — 优先使用后端数据，否则从历史记录计算
+      if (res.data.statistics) {
+        stats.value = {
+          improvementRate: res.data.statistics.improvementRate || 0,
+          averageSimilarity: res.data.statistics.averageSimilarity || 0,
+          improvementSpeed: res.data.statistics.improvementSpeed || ''
+        }
+      } else if (records.length > 0) {
+        const similarities = records.map(r => Number(r.similarity) || 0)
+        const avgSim = similarities.reduce((a, b) => a + b, 0) / similarities.length
+        const firstSim = similarities[similarities.length - 1]
+        const lastSim = similarities[0]
+        const improvementRate = firstSim > 0 ? Math.round((firstSim - lastSim) / firstSim * 100) : 0
+        stats.value = {
+          improvementRate,
+          averageSimilarity: Math.round(avgSim * 10) / 10,
+          improvementSpeed: records.length > 1 ? `${(records.length - 1)}个版本` : '首个版本'
+        }
       }
       
       ElMessage.success('历史记录已刷新')
@@ -460,7 +485,7 @@ const renderTrendChart = (data) => {
           }
         },
         axisLabel: {
-          color: '#606266'
+          color: '#86868b'
         },
         splitLine: {
           show: false
@@ -474,7 +499,7 @@ const renderTrendChart = (data) => {
           show: false
         },
         axisLabel: {
-          color: '#606266',
+          color: '#86868b',
           formatter: '{value}%'
         },
         splitLine: {
@@ -492,10 +517,10 @@ const renderTrendChart = (data) => {
         symbolSize: 8,
         lineStyle: {
           width: 3,
-          color: '#409eff'
+          color: '#0066cc'
         },
         itemStyle: {
-          color: '#409eff',
+          color: '#0066cc',
           borderColor: '#fff',
           borderWidth: 2
         },
@@ -504,8 +529,8 @@ const renderTrendChart = (data) => {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-              { offset: 1, color: 'rgba(64, 158, 255, 0.05)' }
+              { offset: 0, color: 'rgba(0, 102, 204, 0.3)' },
+              { offset: 1, color: 'rgba(0, 102, 204, 0.05)' }
             ]
           }
         }
@@ -527,7 +552,7 @@ const toggleCompactView = () => {
 }
 
 const viewReport = (reportId) => {
-  router.push(`/student/plagiarism-report/${reportId}`)
+  router.push(`/student/plagiarism-report/${route.params.paperId}?reportId=${reportId}`)
 }
 
 const downloadPdfReport = (reportId) => {
@@ -552,22 +577,27 @@ const downloadPdfReport = (reportId) => {
   }
 }
 
-const compareWithCurrent = async (version) => {
+const compareWithCurrent = async (record) => {
   const paperId = route.params.paperId
-  
+
   // 参数验证
   if (!paperId || paperId === 'undefined') {
     ElMessage.error('缺少论文ID参数')
     return
   }
-  
+
+  // 获取当前版本的 submitVersion
+  const currentRecord = historyRecords.value.find(r => r.isCurrent)
+  const fromSubmitVersion = record.submitVersion ?? record.version
+  const toSubmitVersion = currentRecord?.submitVersion ?? paperInfo.value.versionCount
+
   try {
-    const res = await comparePaperVersions(paperId, [version, paperInfo.value.versionCount])
-    
+    const res = await comparePaperVersions(paperId, [fromSubmitVersion, toSubmitVersion])
+
     if (res.code === 200) {
       compareData.value = {
-        fromVersion: version,
-        toVersion: paperInfo.value.versionCount,
+        fromVersion: record.version,
+        toVersion: currentRecord?.version || paperInfo.value.versionCount,
         overallChange: res.data.overallChange || 0,
         sectionComparison: res.data.sectionComparison || []
       }
@@ -640,12 +670,14 @@ const getSimilarityClass = (similarity) => {
 }
 
 const getImprovementClass = (improvement) => {
+  if (improvement == null) return 'unchanged'
   if (improvement < 0) return 'improved'
   if (improvement > 0) return 'regressed'
   return 'unchanged'
 }
 
 const getChangeClass = (change) => {
+  if (change == null) return 'unchanged'
   if (change < 0) return 'decreased'
   if (change > 0) return 'increased'
   return 'unchanged'
@@ -683,6 +715,41 @@ const getSimilarityColor = (similarity) => {
   return '#f56c6c'
 }
 
+const computeTrendFromRecords = (records) => {
+  if (!records || records.length === 0) {
+    trendAnalysis.value = { direction: 'stable', totalImprovement: 0, averageImprovementPerVersion: 0, bestVersion: 0 }
+    return
+  }
+
+  const similarities = records.map(r => Number(r.similarity) || 0)
+  const firstSim = similarities[similarities.length - 1]
+  const lastSim = similarities[0]
+  const totalImprovement = firstSim - lastSim
+
+  let direction = 'stable'
+  if (totalImprovement > 3) direction = 'decreasing'
+  else if (totalImprovement < -3) direction = 'increasing'
+
+  const versionCount = similarities.length
+  const averageImprovementPerVersion = versionCount > 1 ? totalImprovement / (versionCount - 1) : 0
+
+  let bestVersion = 0
+  let bestSim = Infinity
+  similarities.forEach((sim, i) => {
+    if (sim < bestSim) {
+      bestSim = sim
+      bestVersion = versionCount - i
+    }
+  })
+
+  trendAnalysis.value = {
+    direction,
+    totalImprovement: Math.round(totalImprovement * 10) / 10,
+    averageImprovementPerVersion: Math.round(averageImprovementPerVersion * 100) / 100,
+    bestVersion
+  }
+}
+
 const formatDateTime = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleString('zh-CN', {
@@ -717,7 +784,7 @@ onUnmounted(() => {
 .check-history-page {
   padding: 24px;
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
+  background: #f5f5f7; // Slate-50
   color: #0f172a; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
@@ -741,24 +808,24 @@ onUnmounted(() => {
           gap: 6px;
           padding: 8px 16px;
           border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 11px;
           background: white;
           color: #475569;
           font-size: 0.875rem;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
           
           &:hover {
             border-color: #cbd5e1;
-            background: #f8fafc;
-            transform: translateY(-1px);
+            background: #f5f5f7;
+            /* translateY removed */
           }
         }
         
         .page-title {
           font-size: 1.5rem;
-          font-weight: 700;
+          font-weight: 600;
           color: #0f172a;
           margin: 0;
         }
@@ -771,18 +838,18 @@ onUnmounted(() => {
           gap: 6px;
           padding: 8px 16px;
           border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 11px;
           background: white;
           color: #475569;
           font-size: 0.875rem;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
           
           &:hover {
             border-color: #cbd5e1;
-            background: #f8fafc;
-            transform: translateY(-1px);
+            background: #f5f5f7;
+            /* translateY removed */
           }
         }
       }
@@ -793,13 +860,12 @@ onUnmounted(() => {
   .paper-info-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 24px;
     margin-bottom: 24px;
     transition: all 0.2s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
       border-color: #cbd5e1;
     }
     
@@ -822,14 +888,14 @@ onUnmounted(() => {
             font-size: 0.75rem;
             color: #64748b;
             margin-bottom: 6px;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
           
           .stat-value {
             font-size: 1.25rem;
-            font-weight: 700;
+            font-weight: 600;
             color: #0f172a;
             
             &.excellent { color: #10b981; }
@@ -846,13 +912,12 @@ onUnmounted(() => {
   .trend-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 24px;
     margin-bottom: 24px;
     transition: all 0.2s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
       border-color: #cbd5e1;
     }
     
@@ -879,16 +944,16 @@ onUnmounted(() => {
         .radio-group {
           display: flex;
           gap: 4px;
-          background: #f8fafc;
+          background: #f5f5f7;
           border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 11px;
           padding: 4px;
           
           .radio-button {
             padding: 6px 16px;
-            border-radius: 6px;
+            border-radius: 11px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             color: #64748b;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -896,7 +961,6 @@ onUnmounted(() => {
             &.active {
               background: white;
               color: #0f172a;
-              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
             }
             
             &:hover:not(.active) {
@@ -913,8 +977,8 @@ onUnmounted(() => {
       gap: 24px;
       
       .chart-wrapper {
-        background: #f8fafc;
-        border-radius: 8px;
+        background: #f5f5f7;
+        border-radius: 11px;
         padding: 20px;
         min-height: 400px;
         display: flex;
@@ -932,14 +996,14 @@ onUnmounted(() => {
             font-size: 0.75rem;
             color: #64748b;
             margin-bottom: 6px;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
           
           .summary-value {
             font-size: 1.25rem;
-            font-weight: 700;
+            font-weight: 600;
             
             &.decreasing { color: #10b981; }
             &.increasing { color: #ef4444; }
@@ -956,13 +1020,12 @@ onUnmounted(() => {
   .history-card {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 24px;
     margin-bottom: 24px;
     transition: all 0.2s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
       border-color: #cbd5e1;
     }
     
@@ -991,14 +1054,14 @@ onUnmounted(() => {
         border: none;
         color: #64748b;
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
         
         &:hover {
           color: #0f172a;
-          background: #f8fafc;
-          border-radius: 6px;
+          background: #f5f5f7;
+          border-radius: 11px;
         }
       }
     }
@@ -1035,8 +1098,7 @@ onUnmounted(() => {
             border-radius: 50%;
             background: #cbd5e1;
             border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
-            
+
             &.success {
               background: #10b981;
             }
@@ -1068,22 +1130,24 @@ onUnmounted(() => {
               font-size: 0.75rem;
               color: #94a3b8;
               margin-bottom: 8px;
-              font-weight: 500;
+              font-weight: 600;
             }
             
             .history-record {
               padding: 20px;
-              background: #f8fafc;
+              background: #f5f5f7;
               border: 1px solid #e2e8f0;
-              border-radius: 8px;
+              border-radius: 11px;
               transition: all 0.2s ease;
               
               &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
                 border-color: #cbd5e1;
               }
-              
+
+              &:active {
+                transform: scale(0.95);
+              }
+
               &.current-version {
                 border-color: #8b5cf6;
                 background: rgba(139, 92, 246, 0.05);
@@ -1129,9 +1193,9 @@ onUnmounted(() => {
                   
                   .rating-tag {
                     padding: 2px 8px;
-                    border-radius: 12px;
+                    border-radius: 18px;
                     font-size: 0.75rem;
-                    font-weight: 500;
+                    font-weight: 600;
                     
                     &.success { background: #d1fae5; color: #10b981; }
                     &.primary { background: #e0f2fe; color: #0ea5e9; }
@@ -1148,18 +1212,18 @@ onUnmounted(() => {
                   .action-button {
                     padding: 6px 12px;
                     border: 1px solid #e2e8f0;
-                    border-radius: 6px;
+                    border-radius: 11px;
                     background: white;
                     color: #64748b;
                     font-size: 0.75rem;
-                    font-weight: 500;
+                    font-weight: 600;
                     cursor: pointer;
                     transition: all 0.2s ease;
                     
                     &:hover {
                       border-color: #cbd5e1;
                       color: #0f172a;
-                      transform: translateY(-1px);
+                      /* translateY removed */
                     }
                   }
                 }
@@ -1216,7 +1280,7 @@ onUnmounted(() => {
                     }
                     
                     .change-value {
-                      font-weight: 500;
+                      font-weight: 600;
                       font-size: 0.875rem;
                       
                       &.decreased { color: #10b981; }
@@ -1272,7 +1336,7 @@ onUnmounted(() => {
       
       .overall-change {
         font-size: 1rem;
-        font-weight: 700;
+        font-weight: 600;
         
         &.improved { color: #10b981; }
         &.regressed { color: #ef4444; }
@@ -1284,16 +1348,15 @@ onUnmounted(() => {
       .section-compare-card {
         background: white;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 11px;
         padding: 20px;
         margin-bottom: 16px;
         transition: all 0.2s ease;
         
         &:hover {
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
           border-color: #cbd5e1;
         }
-        
+
         .section-header {
           display: flex;
           justify-content: space-between;
@@ -1308,9 +1371,9 @@ onUnmounted(() => {
           
           .change-tag {
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 18px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             
             &.success { background: #d1fae5; color: #10b981; }
             &.danger { background: #fee2e2; color: #ef4444; }
@@ -1329,19 +1392,19 @@ onUnmounted(() => {
               width: 60px;
               font-size: 0.75rem;
               color: #64748b;
-              font-weight: 500;
+              font-weight: 600;
             }
             
             .progress-container {
               flex: 1;
               height: 8px;
               background: #e2e8f0;
-              border-radius: 4px;
+              border-radius: 11px;
               overflow: hidden;
               
               .progress-bar {
                 height: 100%;
-                border-radius: 4px;
+                border-radius: 11px;
                 transition: width 0.3s ease;
                 
                 &.excellent { background: #10b981; }
@@ -1372,16 +1435,18 @@ onUnmounted(() => {
     .stat-card {
       background: white;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      border-radius: 18px;
       padding: 20px;
       transition: all 0.2s ease;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
         border-color: #cbd5e1;
       }
-      
+
+      &:active {
+        transform: scale(0.95);
+      }
+
       .stat-content {
         display: flex;
         align-items: center;
@@ -1390,7 +1455,7 @@ onUnmounted(() => {
         .stat-icon {
           width: 48px;
           height: 48px;
-          border-radius: 12px;
+          border-radius: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1414,7 +1479,7 @@ onUnmounted(() => {
         .stat-info {
           .stat-number {
             font-size: 1.75rem;
-            font-weight: 700;
+            font-weight: 600;
             color: #0f172a;
             line-height: 1.2;
             margin-bottom: 4px;
@@ -1423,7 +1488,7 @@ onUnmounted(() => {
           .stat-label {
             font-size: 0.875rem;
             color: #64748b;
-            font-weight: 500;
+            font-weight: 600;
           }
         }
       }

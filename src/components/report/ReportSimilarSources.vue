@@ -77,17 +77,15 @@ const viewComparison = (source) => {
 
 .source-item {
   background: #f8fafc;
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  transition: border-color 0.2s ease;
 }
 
 .source-item:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  transform: translateY(-4px);
-  border-color: #3b82f6;
+  border-color: #0066cc;
 }
 
 .source-header {
@@ -138,12 +136,12 @@ const viewComparison = (source) => {
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
-  border-left: 4px solid #3b82f6;
-  transition: all 0.3s ease;
+  border-left: 3px solid #0066cc;
+  transition: background-color 0.15s ease;
 }
 
 .paragraph-item:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background-color: #f5f5f7;
 }
 
 .source-text,

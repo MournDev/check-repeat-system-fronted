@@ -74,14 +74,14 @@ const getSimilarityRating = (similarity) => {
 .similarity-card {
   text-align: center;
   padding: 32px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
-  transition: all 0.3s ease;
+  background: #f5f5f7;
+  border-radius: 18px;
+  border: 1px solid #e0e0e0;
+  transition: border-color 0.2s ease;
 }
 
 .similarity-card:hover {
-  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.15);
+  border-color: #d0d0d0;
 }
 
 .similarity-value {
@@ -118,18 +118,18 @@ const getSimilarityRating = (similarity) => {
 
 .stat-item {
   text-align: center;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 17px;
+  background: #fafafc;
+  border-radius: 11px;
+  border: 1px solid #f0f0f0;
   flex: 1;
   margin: 0 8px;
 }
 
 .stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #3b82f6;
+  font-size: 28px;
+  font-weight: 600;
+  color: #0066cc;
   margin-bottom: 8px;
 }
 

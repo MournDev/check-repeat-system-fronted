@@ -91,7 +91,7 @@
         </el-table-column>
         <el-table-column label="相似度" width="150">
           <template #default="{ row }">
-            <span v-if="row.checkRate">
+            <span v-if="row.checkRate != null">
               {{ row.checkRate }}%
               <el-tag :type="getSimilarityColor(row.checkRate)" size="small" style="margin-left: 4px">
                 {{ getRiskLevel(row.checkRate) }}
@@ -113,13 +113,23 @@
         <el-table-column label="进度">
           <template #default="{ row }">
             <div v-if="row.checkStatus === 'checking'">
-              <el-progress 
-                :percentage="getProgress(row.taskId).percent" 
+              <el-progress
+                :percentage="getProgress(row.taskId).percent"
                 :status="getProgress(row.taskId).status"
               >
                 <template #default="{ percentage }">
                   {{ getProgress(row.taskId).message || `${percentage}%` }}
                 </template>
+              </el-progress>
+            </div>
+            <div v-else-if="row.checkStatus === 'completed'">
+              <el-progress :percentage="100" status="success">
+                <template #default>100%</template>
+              </el-progress>
+            </div>
+            <div v-else-if="row.checkStatus === 'failure'">
+              <el-progress :percentage="100" status="exception">
+                <template #default>失败</template>
               </el-progress>
             </div>
             <span v-else>-</span>
@@ -697,7 +707,7 @@ onUnmounted(() => {
 
   .page-title {
     margin-bottom: 24px;
-    color: #2c3e50;
+    color: #1d1d1f;
     font-size: 1.5rem;
     font-weight: 600;
   }
@@ -707,8 +717,8 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     padding: 16px;
-    background-color: #f5f7fa;
-    border-radius: 8px;
+    background-color: #f5f5f7;
+    border-radius: 11px;
   }
 
   .connection-status {
@@ -735,15 +745,15 @@ onUnmounted(() => {
   }
 
   .stat-label {
-    font-size: 14px;
-    color: #666;
+    font-size: 17px;
+    color: #86868b;
     margin-bottom: 8px;
   }
 
   .stat-value {
     font-size: 24px;
     font-weight: 600;
-    color: #1890ff;
+    color: #0066cc;
   }
 
   .table-card {
@@ -787,17 +797,17 @@ onUnmounted(() => {
 
     h3 {
       margin-bottom: 16px;
-      color: #1890ff;
+      color: #0066cc;
     }
 
     h4 {
       margin: 16px 0 8px 0;
-      color: #333;
+      color: #1d1d1f;
     }
 
     h5 {
       margin: 8px 0;
-      color: #666;
+      color: #86868b;
     }
 
     p {
@@ -808,14 +818,14 @@ onUnmounted(() => {
       margin: 16px 0;
       padding: 16px;
       background-color: #f5f5f5;
-      border-radius: 4px;
+      border-radius: 11px;
     }
 
     .report-recommendations {
       margin: 16px 0;
       padding: 16px;
-      background-color: #e6f7ff;
-      border-radius: 4px;
+      background-color: #f5f5f7;
+      border-radius: 11px;
     }
 
     .similarity-info {
@@ -833,7 +843,7 @@ onUnmounted(() => {
       margin-top: 8px;
       padding: 8px;
       background-color: #fff1f0;
-      border-radius: 4px;
+      border-radius: 11px;
     }
   }
 
@@ -845,7 +855,7 @@ onUnmounted(() => {
 
   .author-info {
     font-size: 12px;
-    color: #666;
+    color: #86868b;
   }
 
   .mb-4 {
@@ -855,15 +865,15 @@ onUnmounted(() => {
   .fragment-item {
     padding: 8px;
     background-color: #fff;
-    border-radius: 4px;
+    border-radius: 11px;
     margin-bottom: 8px;
     border-left: 3px solid #f56c6c;
   }
 
   .recommendation-item {
     padding: 8px;
-    background-color: #f0f9eb;
-    border-radius: 4px;
+    background-color: #f5f5f7;
+    border-radius: 11px;
     margin-bottom: 8px;
     border-left: 3px solid #67c23a;
   }
@@ -877,7 +887,7 @@ onUnmounted(() => {
 
   .loading-text {
     font-size: 16px;
-    color: #666;
+    color: #86868b;
   }
 }
 </style>

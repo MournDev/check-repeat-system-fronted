@@ -197,8 +197,8 @@
                 <div
                   class="message-item"
                   :class="{
-                    'message-sent': message.senderId === userStore.userInfo?.userId,
-                    'message-received': message.senderId !== userStore.userInfo?.userId
+                    'message-sent': String(message.senderId) === String(userStore.userInfo?.userId),
+                    'message-received': String(message.senderId) !== String(userStore.userInfo?.userId)
                   }"
                 >
                   <div class="message-avatar">
@@ -532,7 +532,6 @@ const loadAdvisorData = async () => {
           avatar: userStore.userInfo.avatar
         }
       }
-      console.log('设置 advisorInfo:', advisorInfo.value);
     } else {
       console.warn('获取导师信息失败或未分配导师:', advisorRes.message);
       advisorInfo.value = null;
@@ -840,8 +839,6 @@ const refreshMessages = async () => {
 
 // 查看导师主页
 const viewAdvisorProfile = () => {
-  console.log('查看导师主页被点击');
-  console.log('advisorInfo:', advisorInfo.value);
   
   if (advisorInfo.value) {
     ElMessageBox.alert(
@@ -862,7 +859,6 @@ const viewAdvisorProfile = () => {
     )
   } else {
     ElMessage.warning('暂无导师信息');
-    console.log('advisorInfo 为空');
   }
 }
 
@@ -1100,7 +1096,6 @@ onMounted(() => {
         // WebSocket 连接逻辑
         const { connect: connectWebSocket, isConnected: wsConnected } = useMessageWebSocket()
         const handleNewMessage = (message) => {
-          console.log('处理新消息:', message)
           // 如果是当前会话的消息，直接添加到消息列表
           if (message.sessionId === activeSessionId.value) {
             currentMessages.value.push(message)
@@ -1127,15 +1122,14 @@ onMounted(() => {
 
 .page-header {
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-  border-radius: 16px;
+  background: #0066cc;
+  border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   
   .page-title {
     margin: 0 0 0.5rem 0;
     font-size: 1.75rem;
-    font-weight: 700;
+    font-weight: 600;
     color: white;
   }
   
@@ -1148,7 +1142,7 @@ onMounted(() => {
 
 .interaction-content {
   .el-card {
-    border-radius: 12px;
+    border-radius: 18px;
     border: 1px solid #f1f2f6;
     margin-bottom: 1.5rem;
     
@@ -1165,11 +1159,11 @@ onMounted(() => {
           display: flex;
           align-items: center;
           font-weight: 600;
-          color: #2c3e50;
+          color: #1d1d1f;
           
           .el-icon {
             margin-right: 0.5rem;
-            color: #667eea;
+            color: #0066cc;
           }
         }
       }
@@ -1191,7 +1185,6 @@ onMounted(() => {
       margin-right: 1rem;
       
       .el-avatar {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         border: 2px solid white;
       }
     }
@@ -1203,27 +1196,27 @@ onMounted(() => {
         margin: 0 0 0.25rem 0;
         font-size: 1.25rem;
         font-weight: 600;
-        color: #2c3e50;
+        color: #1d1d1f;
       }
       
       .advisor-title {
         margin: 0 0 0.5rem 0;
-        color: #07C160;
-        font-weight: 500;
+        color: #0066cc;
+        font-weight: 600;
         font-size: 0.9rem;
       }
       
       .advisor-field {
         margin: 0;
-        color: #606266;
+        color: #86868b;
         font-size: 0.85rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
         
         .el-icon {
-          color: #07C160;
-          font-size: 14px;
+          color: #0066cc;
+          font-size: 17px;
         }
       }
     }
@@ -1240,11 +1233,11 @@ onMounted(() => {
       align-items: flex-start;
       gap: 0.75rem;
       padding: 0.75rem;
-      background: #f8f9fa;
-      border-radius: 8px;
+      background: #f5f5f7;
+      border-radius: 11px;
       
       .detail-icon {
-        color: #07C160;
+        color: #0066cc;
         font-size: 16px;
         margin-top: 2px;
       }
@@ -1255,14 +1248,14 @@ onMounted(() => {
         .detail-label {
           display: block;
           font-size: 0.75rem;
-          color: #909399;
+          color: #86868b;
           margin-bottom: 2px;
         }
         
         .detail-value {
           display: block;
           font-size: 0.85rem;
-          color: #303133;
+          color: #1d1d1f;
           word-break: break-all;
         }
       }
@@ -1272,21 +1265,21 @@ onMounted(() => {
   .advisor-bio {
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: #f5f5f7;
+    border-radius: 11px;
     
     h4 {
       margin: 0 0 0.5rem 0;
       font-size: 0.9rem;
       font-weight: 600;
-      color: #2c3e50;
+      color: #1d1d1f;
     }
     
     p {
       margin: 0;
       font-size: 0.85rem;
       line-height: 1.4;
-      color: #606266;
+      color: #86868b;
     }
   }
   
@@ -1296,21 +1289,21 @@ onMounted(() => {
     
     .primary-button {
       flex: 1;
-      background: #07C160;
-      border-color: #07C160;
+      background: #0066cc;
+      border-color: #0066cc;
       
       &:hover {
-        background: #06b355;
-        border-color: #06b355;
+        background: #0055aa;
+        border-color: #0055aa;
       }
     }
     
     .secondary-button {
       flex: 1;
-      color: #07C160;
+      color: #0066cc;
       
       &:hover {
-        color: #06b355;
+        color: #0055aa;
       }
     }
   }
@@ -1322,7 +1315,7 @@ onMounted(() => {
   
   .no-advisor-tip {
     margin-top: 0.5rem;
-    color: #7f8c8d;
+    color: #86868b;
     font-size: 0.875rem;
   }
 }
@@ -1341,7 +1334,7 @@ onMounted(() => {
     }
     
     &:hover {
-      background-color: #f8f9fa;
+      background-color: #f5f5f7;
     }
     
     &.session-active {
@@ -1356,7 +1349,7 @@ onMounted(() => {
       .el-avatar {
         width: 40px;
         height: 40px;
-        border-radius: 8px;
+        border-radius: 11px;
       }
       
       .session-status {
@@ -1365,7 +1358,7 @@ onMounted(() => {
         right: 0;
         width: 10px;
         height: 10px;
-        background: #07C160;
+        background: #0066cc;
         border: 2px solid white;
         border-radius: 50%;
       }
@@ -1383,13 +1376,13 @@ onMounted(() => {
         
         .session-name {
           font-weight: 600;
-          color: #2c3e50;
-          font-size: 14px;
+          color: #1d1d1f;
+          font-size: 17px;
         }
         
         .session-time {
           font-size: 11px;
-          color: #909399;
+          color: #86868b;
           flex-shrink: 0;
           margin-left: 8px;
         }
@@ -1397,7 +1390,7 @@ onMounted(() => {
       
       .session-preview {
         font-size: 13px;
-        color: #909399;
+        color: #86868b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1417,7 +1410,7 @@ onMounted(() => {
           border-radius: 10px;
           background: #ff4d4f;
           color: white;
-          font-weight: 500;
+          font-weight: 600;
         }
       }
     }
@@ -1428,16 +1421,16 @@ onMounted(() => {
   height: 500px;
   overflow-y: auto;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
+  background: #f5f5f7;
+  border-radius: 18px;
   position: relative;
   scrollbar-width: thin;
-  scrollbar-color: #c3cfe2 #f5f7fa;
+  scrollbar-color: #d2d2d7 #f5f5f7;
   
   .loading-more {
     text-align: center;
     padding: 12px;
-    color: #909399;
+    color: #86868b;
     font-size: 13px;
   }
   
@@ -1447,20 +1440,21 @@ onMounted(() => {
     gap: 8px;
     margin-bottom: 16px;
     padding: 12px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-    border-radius: 12px;
+    background: #f5f5f7;
+    border-radius: 18px;
     border: 1px solid #e8ecf1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    
+
     .el-tag {
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       border-width: 1.5px;
-      
+
       &:hover {
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-        border-color: #667eea;
+        border-color: #0066cc;
+      }
+
+      &:active {
+        transform: scale(0.95);
       }
     }
   }
@@ -1473,9 +1467,8 @@ onMounted(() => {
         background: #eef6ff;
         color: #6b7785;
         font-size: 12px;
-        border-radius: 12px;
+        border-radius: 18px;
         text-align: center;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
       }
     .message-item {
         display: flex;
@@ -1508,13 +1501,12 @@ onMounted(() => {
         }
 
         .message-bubble {
-          background: #07C160;
+          background: #0066cc;
           color: white;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           border: none;
           position: relative;
           max-width: 80%;
-          border-radius: 14px 14px 4px 14px;
+          border-radius: 14px 14px 8px 14px;
           padding: 10px 14px;
           
           &::after {
@@ -1524,7 +1516,7 @@ onMounted(() => {
             right: -8px;
             width: 0;
             height: 0;
-            border-left: 8px solid #07C160;
+            border-left: 8px solid #0066cc;
             border-top: 8px solid transparent;
             border-bottom: 8px solid transparent;
           }
@@ -1533,7 +1525,7 @@ onMounted(() => {
             color: rgba(255, 255, 255, 0.7);
           }
           
-          .message-text { font-size: 14px; color: white; }
+          .message-text { font-size: 17px; color: white; }
         }
       }
 
@@ -1551,12 +1543,11 @@ onMounted(() => {
 
         .message-bubble {
           background: #ffffff;
-          color: #333;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          color: #1d1d1f;
           border: 1px solid #e6e6e6;
           position: relative;
           max-width: 80%;
-          border-radius: 14px 14px 14px 4px;
+          border-radius: 14px 14px 14px 8px;
           padding: 10px 14px;
 
           &::after {
@@ -1570,10 +1561,9 @@ onMounted(() => {
             border-top: 8px solid transparent;
             border-bottom: 8px solid transparent;
             border-left: 1px solid #e6e6e6;
-            box-shadow: 1px 1px 0 rgba(0,0,0,0.02);
           }
 
-          .message-text { font-size: 14px; color: #222; }
+          .message-text { font-size: 17px; color: #1d1d1f; }
         }
       }
 
@@ -1583,7 +1573,6 @@ onMounted(() => {
         border-radius: 50%;
         margin: 0 0.5rem;
         flex-shrink: 0;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         border: 1px solid #e8ecf1;
       }
       
@@ -1596,13 +1585,13 @@ onMounted(() => {
           align-items: center;
           margin-bottom: 4px;
           font-size: 0.7rem;
-          color: #909399;
+          color: #86868b;
           padding: 0 4px;
           gap: 8px;
           
           .message-sender {
-            font-weight: 500;
-            color: #606266;
+            font-weight: 600;
+            color: #86868b;
             font-size: 0.75rem;
           }
 
@@ -1611,7 +1600,7 @@ onMounted(() => {
 
           .message-time {
             opacity: 0.7;
-            color: #909399;
+            color: #86868b;
             font-size: 0.65rem;
           }
         }
@@ -1638,18 +1627,18 @@ onMounted(() => {
           align-items: center;
           gap: 8px;
           padding: 8px;
-          background: #f8f9fa;
-          border-radius: 8px;
+          background: #f5f5f7;
+          border-radius: 11px;
           margin-top: 4px;
           
           .el-icon {
-            color: #667eea;
+            color: #0066cc;
           }
           
           span {
             flex: 1;
             font-size: 13px;
-            color: #333;
+            color: #1d1d1f;
             word-break: break-all;
           }
         }
@@ -1667,7 +1656,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 18px;
   }
 }
 
@@ -1688,12 +1677,12 @@ onMounted(() => {
     margin-bottom: 8px;
     
     .el-button {
-      font-size: 14px;
+      font-size: 17px;
     }
     
     .toolbar-tip {
       font-size: 12px;
-      color: #909399;
+      color: #86868b;
       margin-left: auto;
     }
   }
@@ -1701,8 +1690,8 @@ onMounted(() => {
   .emoji-picker {
     margin-bottom: 8px;
     padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: #f5f5f7;
+    border-radius: 11px;
     
     .emoji-grid {
       display: grid;
@@ -1714,7 +1703,7 @@ onMounted(() => {
         cursor: pointer;
         text-align: center;
         padding: 4px;
-        border-radius: 4px;
+        border-radius: 8px;
         transition: all 0.2s ease;
         
         &:hover {
@@ -1726,16 +1715,16 @@ onMounted(() => {
   }
   
   :deep(.el-textarea__wrapper) {
-    border-radius: 8px;
+    border-radius: 11px;
     border: 1px solid #e8ecf1;
     
     &:hover {
-      border-color: #667eea;
+      border-color: #0066cc;
     }
     
     &:focus-within {
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
     }
   }
   
@@ -1748,7 +1737,7 @@ onMounted(() => {
     .input-info {
       .attachment-count {
         font-size: 12px;
-        color: #667eea;
+        color: #0066cc;
         display: flex;
         align-items: center;
         gap: 4px;
@@ -1756,13 +1745,13 @@ onMounted(() => {
     }
     
     .send-button {
-      border-radius: 8px;
-      background: #667eea;
-      border-color: #667eea;
+      border-radius: 11px;
+      background: #0066cc;
+      border-color: #0066cc;
       
       &:hover {
-        background: #5a67d8;
-        border-color: #5a67d8;
+        background: #0066cc;
+        border-color: #0066cc;
       }
     }
   }

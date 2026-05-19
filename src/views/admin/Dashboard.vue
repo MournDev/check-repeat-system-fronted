@@ -8,18 +8,18 @@
           <p class="welcome-subtitle">欢迎回来，{{ userStore.userInfo?.realName || '管理员' }}！这里是系统管理中心</p>
         </div>
         <div class="welcome-actions">
-          <button class="primary-button" @click="goToUserManagement">
+          <el-button type="primary" @click="goToUserManagement">
             <el-icon><UserFilled /></el-icon>
             用户管理
-          </button>
-          <button class="secondary-button" @click="goToSchoolOverview">
+          </el-button>
+          <el-button @click="goToSchoolOverview">
             <el-icon><DataAnalysis /></el-icon>
             全校概览
-          </button>
-          <button class="secondary-button" @click="refreshData">
+          </el-button>
+          <el-button @click="refreshData">
             <el-icon><Refresh /></el-icon>
             刷新数据
-          </button>
+          </el-button>
         </div>
       </div>
     </div>
@@ -184,29 +184,26 @@
           </div>
           
           <div class="action-buttons">
-            <button 
-              class="action-button primary"
+            <el-button
+              type="primary"
               @click="goToUserManagement"
             >
               <el-icon><UserFilled /></el-icon>
               用户管理
-            </button>
-            <button 
-              class="action-button"
+            </el-button>
+            <el-button
               @click="goToAdvisorAssign"
             >
               <el-icon><Connection /></el-icon>
               导师分配
-            </button>
-            <button 
-              class="action-button"
+            </el-button>
+            <el-button
               @click="goToSystemConfig"
             >
               <el-icon><Setting /></el-icon>
               系统配置
-            </button>
-            <button 
-              class="action-button"
+            </el-button>
+            <el-button
               @click="goToLogCenter"
             >
               <el-icon><Document /></el-icon>
@@ -226,7 +223,7 @@ import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
 // 导入管理员API
-import { getDashboardStats, getRecentActivities } from '@/api/admin/dashboard'
+import { getDashboardStats } from '@/api/admin/dashboard'
 import { getUserList } from '@/api/admin/users'
 import { getPaperList } from '@/api/admin/papers'
 import { getAssignmentStats } from '@/api/admin/assignment'
@@ -307,53 +304,20 @@ const loadDashboardData = async () => {
       admins: Number(statsResponse.data.admins ?? allUsers.filter(user => user.roleCode === 'ADMIN').length) || 0
     }
 
-    // 调试：打印接口返回的原始数据
-    console.log('Dashboard Stats Response:', statsResponse)
-    console.log('System Monitor data:', statsResponse.data.systemMonitor)
-    
     // 从stats接口获取系统监控数据
     const monitorData = statsResponse.data.systemMonitor || {}
     systemMonitorData.value = {
       cpuUsage: monitorData.cpuUsage !== undefined ? Math.round(monitorData.cpuUsage * 100) : 0,
       memoryUsage: monitorData.memoryUsage !== undefined ? monitorData.memoryUsage : 0,
-      todayVisits: statsResponse.data.totalUsers || 0, // 使用总用户数作为访问参考
+      todayVisits: statsResponse.data.todayVisits || 0,
       systemVersion: 'v2.1.0',
       uptime: monitorData.uptime || '未知',
       database: 'MySQL 8.0',
       lastBackup: '2小时前'
     }
-    
-    // 调试：打印处理后的数据
-    console.log('Processed system monitor data:', systemMonitorData.value)
-
   } catch (error) {
-    console.error('加载仪表盘数据失败:', error)
+    console.error('加载统计数据失败:', error)
     ElMessage.error('加载数据失败，请稍后重试')
-    
-    // 使用模拟数据作为降级方案
-    stats.value = {
-      totalUsers: 156,
-      totalPapers: 89,
-      unassignedCount: 12,
-      systemHealth: 95
-    }
-    
-    userDistribution.value = {
-      total: 156,
-      students: 120,
-      teachers: 30,
-      admins: 6
-    }
-    
-    systemMonitorData.value = {
-      cpuUsage: 65,
-      memoryUsage: 45,
-      todayVisits: 156,
-      systemVersion: 'v2.1.0',
-      uptime: '15天',
-      database: 'MySQL 8.0',
-      lastBackup: '2小时前'
-    }
   }
 }
 
@@ -392,8 +356,6 @@ const formatTime = (date) => {
 }
 
 const formatMemory = (usage) => {
-  // 根据实际数据格式调整显示
-  console.log('Formatting memory usage:', usage)
   if (usage === 0 || usage === undefined) {
     return '0.0GB'
   } else {
@@ -412,8 +374,8 @@ onMounted(() => {
 .admin-dashboard {
   padding: 24px;
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
-  color: #0f172a; // Slate-900
+  background: #f5f5f7; // Slate-50
+  color: #1d1d1f; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -432,14 +394,14 @@ onMounted(() => {
       .welcome-title {
         font-size: 2rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #1d1d1f;
         margin: 0 0 8px 0;
         line-height: 1.2;
       }
       
       .welcome-subtitle {
         font-size: 1rem;
-        color: #64748b;
+        color: #86868b;
         margin: 0;
       }
     }
@@ -462,7 +424,7 @@ onMounted(() => {
 .stat-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -470,15 +432,18 @@ onMounted(() => {
   transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     border-color: #cbd5e1;
   }
-  
+
+  &:active {
+    transform: scale(0.95);
+    transition: transform 0.15s ease;
+  }
+
   .stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -512,14 +477,14 @@ onMounted(() => {
     .stat-value {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #1d1d1f;
       line-height: 1.2;
       margin-bottom: 4px;
     }
     
     .stat-label {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #86868b;
     }
   }
 }
@@ -539,16 +504,15 @@ onMounted(() => {
 .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     border-color: #cbd5e1;
   }
-  
+
   .card-header {
     display: flex;
     justify-content: space-between;
@@ -561,10 +525,10 @@ onMounted(() => {
       gap: 8px;
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       
       .el-icon {
-        color: #64748b;
+        color: #86868b;
       }
     }
   }
@@ -581,7 +545,7 @@ onMounted(() => {
   
   .metric-item {
     padding: 16px;
-    background: #f8fafc;
+    background: #f5f5f7;
     border-radius: 8px;
     transition: all 0.2s ease;
     
@@ -593,12 +557,12 @@ onMounted(() => {
     .metric-value {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #1d1d1f;
       margin-bottom: 8px;
     }
     
     .metric-label {
-      color: #64748b;
+      color: #86868b;
       font-size: 0.875rem;
       margin-bottom: 12px;
     }
@@ -609,7 +573,7 @@ onMounted(() => {
     
     h4 {
       margin: 0 0 16px 0;
-      color: #0f172a;
+      color: #1d1d1f;
       font-weight: 600;
     }
     
@@ -624,17 +588,17 @@ onMounted(() => {
       justify-content: space-between;
       align-items: center;
       padding: 12px;
-      background: #f8fafc;
+      background: #f5f5f7;
       border-radius: 8px;
       
       .detail-label {
-        color: #64748b;
+        color: #86868b;
         font-size: 0.875rem;
       }
       
       .detail-value {
-        color: #0f172a;
-        font-weight: 500;
+        color: #1d1d1f;
+        font-weight: 400;
       }
     }
   }
@@ -658,11 +622,11 @@ onMounted(() => {
       .dist-value {
         font-size: 1.125rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       .dist-label {
-        color: #64748b;
+        color: #86868b;
         font-size: 0.875rem;
       }
     }
@@ -681,18 +645,22 @@ onMounted(() => {
     padding: 12px 16px;
     border-radius: 8px;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
     transition: all 0.2s ease;
     border: none;
     cursor: pointer;
     
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.1);
+      filter: brightness(0.95);
     }
-    
+
+    &:active {
+      transform: scale(0.95);
+      transition: transform 0.15s ease;
+    }
+
     &.primary {
-      background: #1e40af;
+      background: #0066cc;
       color: white;
       
       &:hover {
@@ -701,8 +669,8 @@ onMounted(() => {
     }
     
     &:not(.primary) {
-      background: #f8fafc;
-      color: #0f172a;
+      background: #f5f5f7;
+      color: #1d1d1f;
       border: 1px solid #e2e8f0;
       
       &:hover {
@@ -734,7 +702,7 @@ onMounted(() => {
     }
     
     &.student {
-      background: #667eea;
+      background: #0066cc;
     }
     
     &.teacher {
@@ -755,7 +723,7 @@ onMounted(() => {
   padding: 4px 12px;
   border-radius: 16px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 400;
   
   &.success {
     background: #d1fae5;
@@ -774,22 +742,21 @@ onMounted(() => {
   gap: 8px;
   padding: 10px 16px;
   border-radius: 8px;
-  background: #1e40af;
+  background: #0066cc;
   color: white;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 400;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #1e3a8a;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+    background: #0055aa;
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.95);
+    transition: transform 0.15s ease;
   }
   
   .el-icon {
@@ -803,10 +770,10 @@ onMounted(() => {
   gap: 8px;
   padding: 10px 16px;
   border-radius: 8px;
-  background: #f8fafc;
-  color: #0f172a;
+  background: #f5f5f7;
+  color: #1d1d1f;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 400;
   border: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -814,11 +781,11 @@ onMounted(() => {
   &:hover {
     background: #f1f5f9;
     border-color: #cbd5e1;
-    transform: translateY(-1px);
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.95);
+    transition: transform 0.15s ease;
   }
   
   .el-icon {

@@ -639,7 +639,6 @@ const handleCurrentChange = (val) => {
 const loadLibraryStats = async () => {
   try {
     const response = await getPaperStats()
-    console.log('论文库统计数据:', response)
     // 正确获取 checked 字段并转换为数字
     const checkedValue = response?.data?.checked
     libraryStats.value = {
@@ -648,7 +647,6 @@ const loadLibraryStats = async () => {
       highSimilarity: Number(response?.data?.highSimilarity) || 0,
       avgSimilarity: Number(response?.data?.avgSimilarity) || 0
     }
-    console.log('处理后的统计数据:', libraryStats.value)
   } catch (error) {
     console.error('加载论文库统计失败:', error)
     ElMessage.error('加载统计数据失败')
@@ -722,29 +720,8 @@ const loadPaperList = async () => {
     console.error('加载论文列表失败:', error)
     ElMessage.error('加载论文列表失败')
     loading.value = false
-
-    // 降级到模拟数据
-    paperList.value = [
-      {
-        id: '1',
-        title: '基于深度学习的图像识别技术研究',
-        author: '张三',
-        studentNum: '2024001001',
-        major: 'CS',
-        grade: '2024',
-        advisor: '李教授',
-        keyword: ['深度学习', '图像识别', '卷积神经网络'],
-        summary: '本文研究了基于深度学习的图像识别技术...',
-        createTime: '2024-01-15T10:30:00Z',
-        fileSize: 2560,
-        internalCheck: {
-          score: 15.3,
-          time: '2024-01-16T09:15:00Z',
-          details: []
-        }
-      }
-    ]
-    pagination.total = 1
+    paperList.value = []
+    pagination.total = 0
   }
 }
 
@@ -894,7 +871,8 @@ const submitUpload = async () => {
       uploading.value = false
     }
   } catch (error) {
-    console.log('表单验证失败')
+    console.error('表单校验失败:', error)
+    ElMessage.error('请检查上传信息是否填写完整')
   }
 }
 
@@ -1142,12 +1120,12 @@ onMounted(async () => {
       margin: 0 0 0.5rem 0;
       font-size: 1.75rem;
       font-weight: 600;
-      color: #2c3e50;
+      color: #1d1d1f;
     }
 
     .page-desc {
       margin: 0;
-      color: #7f8c8d;
+      color: #86868b;
       font-size: 0.95rem;
     }
   }
@@ -1163,7 +1141,7 @@ onMounted(async () => {
 
   .stat-card {
     border: none;
-    border-radius: 12px;
+    border-radius: 18px;
 
     .stat-content {
       display: flex;
@@ -1175,23 +1153,23 @@ onMounted(async () => {
         justify-content: center;
         width: 48px;
         height: 48px;
-        border-radius: 12px;
+        border-radius: 18px;
         margin-right: 1rem;
 
         &.bg-primary {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: #0066cc;
         }
 
         &.bg-success {
-          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          background: #34c759;
         }
 
         &.bg-warning {
-          background: linear-gradient(135deg, #f093fb, #f5576c);
+          background: #ff9500;
         }
 
         &.bg-info {
-          background: linear-gradient(135deg, #43e97b, #38f9d7);
+          background: #5ac8fa;
         }
 
         .el-icon {
@@ -1204,13 +1182,13 @@ onMounted(async () => {
         .stat-value {
           font-size: 1.75rem;
           font-weight: 700;
-          color: #2c3e50;
+          color: #1d1d1f;
           line-height: 1;
         }
 
         .stat-label {
           font-size: 0.875rem;
-          color: #7f8c8d;
+          color: #86868b;
           margin-top: 0.25rem;
         }
       }
@@ -1220,7 +1198,7 @@ onMounted(async () => {
 
 .filter-card {
   margin-bottom: 1.5rem;
-  border-radius: 12px;
+  border-radius: 18px;
 
   :deep(.el-card__body) {
     padding: 1.25rem;
@@ -1228,11 +1206,11 @@ onMounted(async () => {
 }
 
 .table-card {
-  border-radius: 12px;
+  border-radius: 18px;
 
   :deep(.el-card__header) {
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #f1f2f6;
+    border-bottom: 1px solid #d2d2d7;
 
     .card-header {
       display: flex;
@@ -1243,11 +1221,11 @@ onMounted(async () => {
         display: flex;
         align-items: center;
         font-weight: 600;
-        color: #2c3e50;
+        color: #1d1d1f;
 
         .el-icon {
           margin-right: 0.5rem;
-          color: #667eea;
+          color: #0066cc;
         }
       }
 
@@ -1265,7 +1243,7 @@ onMounted(async () => {
 
 .paper-title {
   font-weight: 600;
-  color: #2c3e50;
+  color: #1d1d1f;
   margin-bottom: 0.5rem;
 }
 
@@ -1278,7 +1256,7 @@ onMounted(async () => {
 
 .paper-abstract {
   font-size: 0.85rem;
-  color: #7f8c8d;
+  color: #86868b;
   margin-top: 0.25rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1296,9 +1274,9 @@ onMounted(async () => {
   margin-top: 6px;
 
   .el-tag {
-    background: #f5f7fa;
-    color: #34495e;
-    border-radius: 6px;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    border-radius: 8px;
     padding: 2px 8px;
     font-size: 12px;
     line-height: 20px;
@@ -1307,7 +1285,7 @@ onMounted(async () => {
 
 .check-time {
   font-size: 0.75rem;
-  color: #7f8c8d;
+  color: #86868b;
   margin-top: 0.25rem;
 }
 
@@ -1315,7 +1293,7 @@ onMounted(async () => {
   padding: 1rem;
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid #f1f2f6;
+  border-top: 1px solid #d2d2d7;
 }
 
 .paper-detail {
@@ -1324,7 +1302,7 @@ onMounted(async () => {
 
     h3 {
       margin: 0 0 1rem 0;
-      color: #2c3e50;
+      color: #1d1d1f;
       font-size: 1.1rem;
     }
 
@@ -1337,7 +1315,7 @@ onMounted(async () => {
 
     .summary {
       line-height: 1.6;
-      color: #5a6c7d;
+      color: #86868b;
       text-align: justify;
     }
 
@@ -1350,7 +1328,7 @@ onMounted(async () => {
 
         li {
           margin-bottom: 0.25rem;
-          color: #5a6c7d;
+          color: #86868b;
         }
       }
     }

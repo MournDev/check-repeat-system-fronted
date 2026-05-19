@@ -689,7 +689,6 @@ const downloadFile = async (file) => {
         // 根据后端代码构建下载URL
         const encodedFileName = encodeURIComponent(file.originalFilename || 'document');
         const downloadUrl = `/check/api/file/download/${file.id}/${encodedFileName}`;
-        console.log('下载URL:', downloadUrl);
         window.open(downloadUrl, '_blank');
         ElMessage.success('开始下载文件');
     } catch (error) {
@@ -1167,13 +1166,11 @@ const recheckSimilarity = async () => {
 
     } catch (error) {
         // 用户取消
-        console.log('用户取消重新检测')
     }
 }
 
 const viewSimilarityReport = async () => {
     const idToUse = paperId.value
-    console.log('=== 查看相似度报告开始 ===', checkTask.value, 'paperId:', idToUse)
     
     // 检查paperId是否存在
     if (!idToUse) {
@@ -1190,7 +1187,6 @@ const viewSimilarityReport = async () => {
             reportError.value = false
             reportErrorMessage.value = ''
             try {
-                console.log('基于paperId打开报告:', idToUse)
                 similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
                 ElMessage.success('报告加载成功');
             } catch (error) {
@@ -1223,7 +1219,6 @@ const viewSimilarityReport = async () => {
         reportError.value = false
         reportErrorMessage.value = ''
         try {
-            console.log('开始获取报告预览，reportId:', checkTask.value.reportSummary.reportId)
             // 调用API获取预览URL
             similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
             ElMessage.success('报告加载成功');
@@ -1278,12 +1273,15 @@ const replyToFeedback = async () => {
         });
         
         if (value) {
-            // TODO: 调用回复接口
-            // await replyFeedbackApi(paperDetails.value.id, value)
-            
-            ElMessage.success('回复已发送给导师');
-            // 刷新数据
-            loadPaperDetails();
+            // 引导用户到导师互动页面发送消息
+            const confirmed = await ElMessageBox.confirm(
+              '回复导师反馈请前往"导师互动"页面发送消息，是否立即跳转？',
+              '提示',
+              { confirmButtonText: '立即前往', cancelButtonText: '稍后', type: 'info' }
+            ).catch(() => false)
+            if (confirmed) {
+              router.push('/student/advisor-interaction')
+            }
         }
     } catch (error) {
         if (error !== 'cancel') {
@@ -1361,8 +1359,8 @@ const getWordCountPercentage = (wordCount) => {
 }
 
 const getSimilarityColor = (similarity) => {
-    if (!similarity) return '#909399'
-    if (similarity === 0) return '#909399'
+    if (!similarity) return '#86868b'
+    if (similarity === 0) return '#86868b'
     if (similarity < 15) return '#52c41a'
     if (similarity < 30) return '#faad14'
     return '#ff4d4f'
@@ -1616,7 +1614,7 @@ onMounted(() => {
                 .percentage-value {
                     display: block;
                     font-size: 1.25rem;
-                    font-weight: 700;
+                    font-weight: 600;
                     text-align: center;
                     margin-top: 8px;
                 }
@@ -1634,15 +1632,15 @@ onMounted(() => {
                         display: flex;
                         align-items: center;
                         margin-bottom: 6px;
-                        font-size: 14px;
+                        font-size: 17px;
 
                         .detail-label {
-                            color: #7f8c8d;
+                            color: #86868b;
                             min-width: 80px;
                         }
 
                         .detail-value {
-                            color: #2c3e50;
+                            color: #1d1d1f;
                         }
                     }
                 }
@@ -1664,7 +1662,7 @@ onMounted(() => {
 // 相似度报告弹窗样式
 .similarity-report-dialog {
     :deep(.el-dialog) {
-        border-radius: 12px;
+        border-radius: 18px;
         overflow: hidden;
         max-width: 1200px;
     }
@@ -1672,7 +1670,7 @@ onMounted(() => {
     :deep(.el-dialog__header) {
         padding: 16px 20px;
         border-bottom: 1px solid #e4e7ed;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #0066cc;
         margin-right: 0;
 
         .el-dialog__title {
@@ -1708,7 +1706,7 @@ onMounted(() => {
 .preview-wrapper {
     height: 70vh;
     position: relative;
-    background: #f5f7fa;
+    background: #f5f5f7;
 
     .preview-iframe {
         width: 100%;
@@ -1731,8 +1729,8 @@ onMounted(() => {
 
         .error-detail {
             margin-top: 8px;
-            color: #909399;
-            font-size: 14px;
+            color: #86868b;
+            font-size: 17px;
             max-width: 400px;
             text-align: center;
             line-height: 1.4;
@@ -1747,7 +1745,7 @@ onMounted(() => {
 
         .empty-tip {
             margin-top: 8px;
-            color: #909399;
+            color: #86868b;
             max-width: 300px;
             text-align: center;
         }
@@ -1773,14 +1771,14 @@ onMounted(() => {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-weight: 500;
-            color: #2c3e50;
+            font-weight: 600;
+            color: #1d1d1f;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
 
             .el-icon {
-                color: #667eea;
+                color: #0066cc;
                 flex-shrink: 0;
             }
         }
@@ -1789,8 +1787,8 @@ onMounted(() => {
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #5a6c7d;
-            font-size: 14px;
+            color: #86868b;
+            font-size: 17px;
             flex-shrink: 0;
         }
     }
@@ -1805,16 +1803,15 @@ onMounted(() => {
 .paper-details-container {
     padding: 20px;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+    background: #f5f5f7;
 }
 
 // 页面头部
 .paper-header {
     margin-bottom: 24px;
-    background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-    border-radius: 16px;
+    background: #0066cc;
+    border-radius: 18px;
     padding: 24px;
-    box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
 
     .header-content {
         display: flex;
@@ -1825,7 +1822,7 @@ onMounted(() => {
             .back-btn {
                 padding-left: 0;
                 color: rgba(255, 255, 255, 0.9);
-                font-weight: 500;
+                font-weight: 600;
 
                 &:hover {
                     color: white;
@@ -1837,7 +1834,7 @@ onMounted(() => {
             .paper-title {
                 margin: 0 0 16px 0;
                 font-size: 1.75rem;
-                font-weight: 700;
+                font-weight: 600;
                 color: white;
                 line-height: 1.3;
             }
@@ -1861,7 +1858,7 @@ onMounted(() => {
                         display: flex;
                         align-items: center;
                         gap: 6px;
-                        font-size: 14px;
+                        font-size: 17px;
                         color: rgba(255, 255, 255, 0.8);
 
                         .el-icon {
@@ -1885,20 +1882,18 @@ onMounted(() => {
 .paper-content {
     .section-card {
         margin-bottom: 24px;
-        border-radius: 12px;
+        border-radius: 18px;
         border: none;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
+        transition: border-color 0.2s ease;
 
         &:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            transform: none;
         }
 
         :deep(.el-card__header) {
             padding: 16px 20px;
             border-bottom: 1px solid #f1f2f6;
-            background: #f8f9fa;
+            background: #f5f5f7;
         }
 
         :deep(.el-card__body) {
@@ -1908,20 +1903,18 @@ onMounted(() => {
 
     .sidebar-card {
         margin-bottom: 24px;
-        border-radius: 12px;
+        border-radius: 18px;
         border: none;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
+        transition: border-color 0.2s ease;
 
         &:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            transform: none;
         }
 
         :deep(.el-card__header) {
             padding: 16px;
             border-bottom: 1px solid #f1f2f6;
-            background: #f8f9fa;
+            background: #f5f5f7;
         }
 
         :deep(.el-card__body) {
@@ -1936,10 +1929,10 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #1a365d;
+    color: #1d1d1f;
 
     .el-icon {
-        color: #667eea;
+        color: #0066cc;
     }
 
     .section-title {
@@ -1950,12 +1943,12 @@ onMounted(() => {
 // 论文摘要部分
 .abstract-content {
     line-height: 1.6;
-    color: #5a6c7d;
+    color: #86868b;
     margin-bottom: 20px;
     padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #667eea;
+    background: #f5f5f7;
+    border-radius: 11px;
+    border-left: 4px solid #0066cc;
 }
 
 .abstract-footer {
@@ -1965,22 +1958,22 @@ onMounted(() => {
         gap: 8px;
         flex-wrap: wrap;
         padding: 12px;
-        background: #f0f7ff;
-        border-radius: 8px;
+        background: #f5f5f7;
+        border-radius: 11px;
 
         .count-label {
-            color: #7f8c8d;
-            font-weight: 500;
+            color: #86868b;
+            font-weight: 600;
         }
 
         .count-value {
             font-size: 1.25rem;
-            font-weight: 700;
-            color: #667eea;
+            font-weight: 600;
+            color: #0066cc;
         }
 
         .count-unit {
-            color: #7f8c8d;
+            color: #86868b;
         }
 
         .count-progress {
@@ -2002,18 +1995,18 @@ onMounted(() => {
         align-items: center;
         gap: 8px;
         padding: 12px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        background: #f5f5f7;
+        border-radius: 11px;
 
         .detail-label {
-            color: #7f8c8d;
+            color: #86868b;
             white-space: nowrap;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .detail-value {
-            color: #1a365d;
-            font-weight: 500;
+            color: #1d1d1f;
+            font-weight: 600;
         }
     }
 }
@@ -2023,14 +2016,14 @@ onMounted(() => {
     align-items: flex-start;
     gap: 12px;
     padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: #f5f5f7;
+    border-radius: 11px;
 
     .keywords-label {
-        color: #7f8c8d;
+        color: #86868b;
         white-space: nowrap;
         padding-top: 4px;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .keywords-container {
@@ -2042,7 +2035,7 @@ onMounted(() => {
             font-size: 12px;
             background: #e6f7ff;
             border-color: #91d5ff;
-            color: #1890ff;
+            color: #0066cc;
         }
 
         .no-keywords {
@@ -2060,8 +2053,8 @@ onMounted(() => {
             align-items: center;
             gap: 24px;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: #f5f5f7;
+            border-radius: 11px;
 
             @media (max-width: 768px) {
                 flex-direction: column;
@@ -2074,7 +2067,7 @@ onMounted(() => {
                 .percentage-value {
                     display: block;
                     font-size: 1.5rem;
-                    font-weight: 700;
+                    font-weight: 600;
                     text-align: center;
                     margin-top: 8px;
                 }
@@ -2092,7 +2085,7 @@ onMounted(() => {
                     align-items: center;
                     gap: 6px;
                     margin-bottom: 16px;
-                    color: #7f8c8d;
+                    color: #86868b;
 
                     .el-icon {
                         color: #faad14;
@@ -2115,27 +2108,27 @@ onMounted(() => {
 // 审核进度部分
 .progress-section {
     padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: #f5f5f7;
+    border-radius: 11px;
 
     :deep(.el-steps) {
         .el-step__head {
             .el-step__icon {
                 width: 32px;
                 height: 32px;
-                font-size: 14px;
+                font-size: 17px;
             }
         }
 
         .el-step__title {
-            font-size: 14px;
+            font-size: 17px;
             font-weight: 600;
-            color: #1a365d;
+            color: #1d1d1f;
         }
 
         .el-step__description {
             font-size: 12px;
-            color: #7f8c8d;
+            color: #86868b;
         }
     }
 }
@@ -2157,26 +2150,26 @@ onMounted(() => {
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 14px;
+            font-size: 17px;
 
             .advisor-name {
-                color: #667eea;
-                font-weight: 500;
+                color: #0066cc;
+                font-weight: 600;
             }
 
             .feedback-time {
-                color: #7f8c8d;
+                color: #86868b;
             }
         }
     }
 
     .feedback-content {
         line-height: 1.6;
-        color: #5a6c7d;
+        color: #86868b;
         padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border-left: 4px solid #667eea;
+        background: #f5f5f7;
+        border-radius: 11px;
+        border-left: 4px solid #0066cc;
         margin-bottom: 20px;
     }
 
@@ -2195,27 +2188,27 @@ onMounted(() => {
         gap: 16px;
         margin-bottom: 20px;
         padding: 16px;
-        background: #f0f7ff;
-        border-radius: 8px;
+        background: #f5f5f7;
+        border-radius: 11px;
 
         .advisor-avatar {
             flex-shrink: 0;
             border: 3px solid #fff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            /* box-shadow removed */
         }
 
         .advisor-basic {
             .advisor-name {
                 margin: 0 0 4px 0;
                 font-size: 1.125rem;
-                color: #1a365d;
+                color: #1d1d1f;
                 font-weight: 600;
             }
 
             .advisor-title {
                 margin: 0;
-                color: #667eea;
-                font-size: 14px;
+                color: #0066cc;
+                font-size: 17px;
             }
         }
     }
@@ -2223,19 +2216,19 @@ onMounted(() => {
     .advisor-contact {
         margin-bottom: 20px;
         padding: 16px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        background: #f5f5f7;
+        border-radius: 11px;
 
         .contact-item {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 8px;
-            color: #5a6c7d;
-            font-size: 14px;
+            color: #86868b;
+            font-size: 17px;
 
             .el-icon {
-                color: #667eea;
+                color: #0066cc;
                 width: 16px;
             }
         }
@@ -2254,8 +2247,8 @@ onMounted(() => {
 
     .no-advisor-tips {
         margin-top: 12px;
-        color: #7f8c8d;
-        font-size: 14px;
+        color: #86868b;
+        font-size: 17px;
     }
 }
 
@@ -2287,8 +2280,8 @@ onMounted(() => {
                 min-width: 0;
 
                 .file-name {
-                    font-weight: 500;
-                    color: #2c3e50;
+                    font-weight: 600;
+                    color: #1d1d1f;
                     margin-bottom: 4px;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -2299,7 +2292,7 @@ onMounted(() => {
                     display: flex;
                     gap: 12px;
                     font-size: 12px;
-                    color: #7f8c8d;
+                    color: #86868b;
                 }
             }
         }
@@ -2325,13 +2318,13 @@ onMounted(() => {
 .review-history {
     .review-item {
         padding: 16px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        background: #f5f5f7;
+        border-radius: 11px;
         margin-bottom: 12px;
         transition: all 0.3s ease;
 
         &:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            /* box-shadow removed */
         }
 
         .review-header {
@@ -2350,20 +2343,20 @@ onMounted(() => {
                 }
 
                 .reviewer-name {
-                    font-weight: 500;
-                    color: #1a365d;
+                    font-weight: 600;
+                    color: #1d1d1f;
                 }
             }
 
             .review-time {
                 font-size: 12px;
-                color: #7f8c8d;
+                color: #86868b;
             }
         }
 
         .review-content {
-            font-size: 14px;
-            color: #5a6c7d;
+            font-size: 17px;
+            color: #86868b;
             line-height: 1.4;
             padding-left: 32px;
         }
@@ -2434,8 +2427,8 @@ onMounted(() => {
 .file-info-container {
     .file-card {
         padding: 16px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        border-radius: 11px;
+        background: #f5f5f7;
         border: 1px solid #e0e6ef;
         margin-bottom: 16px;
     }
@@ -2450,40 +2443,40 @@ onMounted(() => {
     .file-icon-wrapper {
         width: 56px;
         height: 56px;
-        border-radius: 12px;
+        border-radius: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
 
         &.file-icon-doc {
-            background: linear-gradient(135deg, #1890ff20 0%, #1890ff40 100%);
-            color: #1890ff;
+            background: rgba(0, 102, 204, 0.10);
+            color: #0066cc;
         }
 
         &.file-icon-pdf {
-            background: linear-gradient(135deg, #ff4d4f20 0%, #ff4d4f40 100%);
+            background: rgba(255, 77, 79, 0.08);
             color: #ff4d4f;
         }
 
         &.file-icon-excel {
-            background: linear-gradient(135deg, #52c41a20 0%, #52c41a40 100%);
+            background: rgba(82, 196, 26, 0.08);
             color: #52c41a;
         }
 
         &.file-icon-ppt {
-            background: linear-gradient(135deg, #722ed120 0%, #722ed140 100%);
+            background: rgba(114, 46, 209, 0.08);
             color: #722ed1;
         }
 
         &.file-icon-txt {
-            background: linear-gradient(135deg, #faad1420 0%, #faad1440 100%);
+            background: rgba(250, 173, 20, 0.08);
             color: #faad14;
         }
 
         &.file-icon-default {
-            background: linear-gradient(135deg, #667eea20 0%, #764ba240 100%);
-            color: #667eea;
+            background: rgba(0, 102, 204, 0.10);
+            color: #0066cc;
         }
     }
 
@@ -2493,7 +2486,7 @@ onMounted(() => {
 
         .file-name {
             font-weight: 600;
-            color: #2c3e50;
+            color: #1d1d1f;
             margin-bottom: 8px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -2511,10 +2504,10 @@ onMounted(() => {
                 align-items: center;
                 gap: 4px;
                 font-size: 12px;
-                color: #5a6c7d;
+                color: #86868b;
 
                 .el-icon {
-                    color: #667eea;
+                    color: #0066cc;
                 }
             }
         }
@@ -2532,8 +2525,12 @@ onMounted(() => {
                 transition: all 0.3s ease;
 
                 &:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    /* translateY removed */
+                    /* box-shadow removed */
+                }
+
+                &:active {
+                    transform: scale(0.95);
                 }
             }
         }
@@ -2543,7 +2540,7 @@ onMounted(() => {
         margin-top: 12px;
 
         :deep(.el-alert) {
-            border-radius: 8px;
+            border-radius: 11px;
             border: 1px solid #e0e6ef;
         }
     }
@@ -2556,14 +2553,14 @@ onMounted(() => {
 
             .empty-text {
                 margin: 16px 0 8px;
-                color: #2c3e50;
-                font-weight: 500;
+                color: #1d1d1f;
+                font-weight: 600;
             }
 
             .empty-tip {
-                color: #7f8c8d;
+                color: #86868b;
                 margin-bottom: 24px;
-                font-size: 14px;
+                font-size: 17px;
             }
         }
     }
@@ -2581,7 +2578,7 @@ onMounted(() => {
     .preview-wrapper {
         height: 70vh;
         position: relative;
-        background: #f5f7fa;
+        background: #f5f5f7;
         border-radius: 4px;
         overflow: hidden;
 
@@ -2616,8 +2613,8 @@ onMounted(() => {
 
             .error-detail {
                 margin-top: 8px;
-                color: #909399;
-                font-size: 14px;
+                color: #86868b;
+                font-size: 17px;
             }
         }
     }
@@ -2629,12 +2626,12 @@ onMounted(() => {
 
         .file-info {
             .file-name {
-                font-weight: 500;
-                color: #2c3e50;
+                font-weight: 600;
+                color: #1d1d1f;
             }
 
             .file-size {
-                color: #909399;
+                color: #86868b;
                 font-size: 12px;
                 margin-left: 8px;
             }

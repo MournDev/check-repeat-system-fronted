@@ -123,10 +123,11 @@ export function useCheckProgress() {
    * 更新进度数据
    */
   const updateProgress = (data) => {
-    if (data.paperId) progress.paperId = data.paperId;
-    if (data.progress) progress.percent = data.progress;
+    if (data.paperId != null) progress.paperId = data.paperId;
+    if (data.taskId != null) progress.taskId = data.taskId;
+    if (data.progress != null) progress.percent = data.progress;
     if (data.message) progress.message = data.message;
-    if (data.similarity) progress.similarity = data.similarity;
+    if (data.similarity != null) progress.similarity = data.similarity;
     if (data.riskLevel) progress.riskLevel = data.riskLevel;
   };
 

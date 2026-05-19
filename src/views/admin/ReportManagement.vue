@@ -20,7 +20,7 @@
     </div>
 
     <!-- 搜索和筛选 -->
-    <el-card class="filter-card" shadow="hover">
+    <el-card class="filter-card" shadow="never">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="论文标题">
           <el-input v-model="searchForm.paperTitle" placeholder="输入论文标题" clearable />
@@ -56,7 +56,7 @@
     <!-- 统计信息 -->
     <el-row :gutter="20" style="margin: 20px 0;">
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
+        <el-card shadow="never" class="stat-card">
           <div class="stat-item">
             <div class="stat-value">{{ totalReports }}</div>
             <div class="stat-label">总报告数</div>
@@ -64,7 +64,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
+        <el-card shadow="never" class="stat-card">
           <div class="stat-item">
             <div class="stat-value">{{ completedReports }}</div>
             <div class="stat-label">已完成</div>
@@ -72,7 +72,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
+        <el-card shadow="never" class="stat-card">
           <div class="stat-item">
             <div class="stat-value">{{ averageSimilarity.toFixed(2) }}%</div>
             <div class="stat-label">平均相似度</div>
@@ -80,7 +80,7 @@
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
+        <el-card shadow="never" class="stat-card">
           <div class="stat-item">
             <div class="stat-value">{{ highRiskReports }}</div>
             <div class="stat-label">高风险报告</div>
@@ -90,12 +90,12 @@
     </el-row>
 
     <!-- 报告列表 -->
-    <el-card class="report-list-card" shadow="hover">
+    <el-card class="report-list-card" shadow="never">
       <template #header>
         <div class="card-header">
           <el-checkbox v-model="selectAll" @change="handleSelectAll">全选</el-checkbox>
           <span style="margin-left: 20px;">报告列表</span>
-          <span style="margin-left: 10px; color: #606266;">(共 {{ reportList.length }} 条)</span>
+          <span style="margin-left: 10px; color: #86868b;">(共 {{ total }} 条)</span>
         </div>
       </template>
 
@@ -164,7 +164,7 @@
       <div class="report-detail">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-card shadow="hover">
+            <el-card shadow="never">
               <template #header>
                 <div class="card-header">
                   <el-icon><Document /></el-icon>
@@ -199,7 +199,7 @@
             </el-card>
           </el-col>
           <el-col :span="12">
-            <el-card shadow="hover">
+            <el-card shadow="never">
               <template #header>
                 <div class="card-header">
                   <el-icon><DataAnalysis /></el-icon>
@@ -238,7 +238,7 @@
           </el-col>
         </el-row>
 
-        <el-card shadow="hover" style="margin-top: 20px;">
+        <el-card shadow="never" style="margin-top: 20px;">
           <template #header>
             <div class="card-header">
               <el-icon><Search /></el-icon>
@@ -443,9 +443,9 @@ const getSimilarityTagType = (similarity) => {
 }
 
 const getSimilarityColor = (similarity) => {
-  if (similarity <= 15) return '#67c23a'
-  if (similarity <= 30) return '#e6a23c'
-  return '#f56c6c'
+  if (similarity <= 15) return '#34c759'
+  if (similarity <= 30) return '#ff9500'
+  return '#ff3b30'
 }
 
 const getSimilarityRating = (similarity) => {
@@ -528,7 +528,7 @@ onMounted(() => {
 <style scoped>
 .admin-report-management {
   padding: 20px;
-  background-color: #f8fafc;
+  background-color: #f5f5f7;
   min-height: 100vh;
 }
 
@@ -539,7 +539,7 @@ onMounted(() => {
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  color: #1e293b;
+  color: #1d1d1f;
 }
 
 .header-actions {
@@ -549,7 +549,7 @@ onMounted(() => {
 
 .filter-card {
   margin-bottom: 20px;
-  border-radius: 12px;
+  border-radius: 18px;
 }
 
 .search-form {
@@ -559,13 +559,17 @@ onMounted(() => {
 }
 
 .stat-card {
-  border-radius: 12px;
+  border-radius: 18px;
   transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
-  transform: translateY(-4px);
+  border-color: #86868b;
+}
+
+.stat-card:active {
+  transform: scale(0.95);
+  transition: transform 0.15s ease;
 }
 
 .stat-item {
@@ -576,17 +580,17 @@ onMounted(() => {
 .stat-value {
   font-size: 32px;
   font-weight: 700;
-  color: #3b82f6;
+  color: #0066cc;
   margin-bottom: 8px;
 }
 
 .stat-label {
   font-size: 14px;
-  color: #64748b;
+  color: #86868b;
 }
 
 .report-list-card {
-  border-radius: 12px;
+  border-radius: 18px;
   margin-bottom: 20px;
 }
 
@@ -595,7 +599,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   font-weight: 600;
-  color: #1e293b;
+  color: #1d1d1f;
   font-size: 16px;
 }
 
@@ -640,12 +644,12 @@ onMounted(() => {
 .percentage {
   font-size: 24px;
   font-weight: 700;
-  color: #1e293b;
+  color: #1d1d1f;
 }
 
 .rating {
   font-size: 14px;
-  color: #64748b;
+  color: #86868b;
   margin-top: 4px;
 }
 
@@ -660,11 +664,11 @@ onMounted(() => {
 }
 
 .source-item {
-  background: #f8fafc;
-  border-radius: 12px;
+  background: #f5f5f7;
+  border-radius: 18px;
   padding: 20px;
   margin-bottom: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d2d2d7;
 }
 
 .source-header {
@@ -678,14 +682,14 @@ onMounted(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: #1d1d1f;
   flex: 1;
   margin-right: 20px;
 }
 
 .source-meta {
   margin-bottom: 16px;
-  color: #64748b;
+  color: #86868b;
   font-size: 14px;
 }
 
@@ -697,15 +701,15 @@ onMounted(() => {
   margin: 0 0 16px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: #1d1d1f;
 }
 
 .paragraph-item {
   background: #ffffff;
-  border-radius: 8px;
+  border-radius: 11px;
   padding: 16px;
   margin-bottom: 12px;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #0066cc;
 }
 
 .source-text,

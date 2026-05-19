@@ -197,7 +197,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
 // 导入管理员 API
 import {
@@ -209,6 +208,7 @@ import {
   getNotices,
   exportSchoolReport
 } from '@/api/admin/school'
+import * as echarts from 'echarts'
 
 // 图标导入
 import {
@@ -314,15 +314,12 @@ onMounted(async () => {
 })
 const loadOverviewData = async () => {
   try {
-    console.log('开始加载学校概览数据...')
     // 并行加载多个API数据
     const [overviewResponse, realtimeResponse] = await Promise.all([
       getSchoolOverview(),
       getRealtimeStats()
     ])
     
-    console.log('概览数据:', overviewResponse.data)
-    console.log('实时数据:', realtimeResponse.data)
     
     // 处理学校概览数据
     overviewStats.value = {
@@ -344,7 +341,6 @@ const loadOverviewData = async () => {
     }
     
     // 处理实时统计数据 - 根据您提供的接口数据结构
-    console.log('实时统计数据原始数据:', realtimeResponse.data)
     realtimeStats.value = {
       todayPapers: realtimeResponse.data.todayPapers || 0,
       weekReviews: realtimeResponse.data.weekReviews || 0,
@@ -354,8 +350,6 @@ const loadOverviewData = async () => {
       activeTasks: realtimeResponse.data.activeTasks || 0
     }
   } finally {
-    console.log('最终的overviewStats值:', overviewStats.value)
-    console.log('最终的realtimeStats值:', realtimeStats.value)
     // 强制触发响应式更新
     overviewStats.value = { ...overviewStats.value }
     realtimeStats.value = { ...realtimeStats.value }
@@ -532,12 +526,12 @@ const initTrendChart = async () => {
           type: 'line',
           smooth: true,
           itemStyle: {
-            color: '#409EFF'
+            color: '#0066cc'
           },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-              { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+              { offset: 0, color: 'rgba(0, 102, 204, 0.15)' },
+              { offset: 1, color: 'rgba(0, 102, 204, 0.04)' }
             ])
           }
         }
@@ -573,12 +567,12 @@ const initTrendChart = async () => {
           type: 'line',
           smooth: true,
           itemStyle: {
-            color: '#409EFF'
+            color: '#0066cc'
           },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-              { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+              { offset: 0, color: 'rgba(0, 102, 204, 0.15)' },
+              { offset: 1, color: 'rgba(0, 102, 204, 0.04)' }
             ])
           }
         }
@@ -671,9 +665,9 @@ const initSimilarityChart = async () => {
           data: chartData.map(item => item.value),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#83bff6' },
-              { offset: 0.5, color: '#188df0' },
-              { offset: 1, color: '#188df0' }
+              { offset: 0, color: '#5ac8fa' },
+              { offset: 0.5, color: '#0066cc' },
+              { offset: 1, color: '#0066cc' }
             ])
           }
         }
@@ -733,9 +727,9 @@ const initSimilarityChart = async () => {
           data: mockData.map(item => item.value),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#83bff6' },
-              { offset: 0.5, color: '#188df0' },
-              { offset: 1, color: '#188df0' }
+              { offset: 0, color: '#5ac8fa' },
+              { offset: 0.5, color: '#0066cc' },
+              { offset: 1, color: '#0066cc' }
             ])
           }
         }
@@ -931,12 +925,12 @@ onUnmounted(() => {
       margin: 0 0 0.5rem 0;
       font-size: 1.75rem;
       font-weight: 600;
-      color: #2c3e50;
+      color: #1d1d1f;
     }
     
     .page-desc {
       margin: 0;
-      color: #7f8c8d;
+      color: #86868b;
       font-size: 0.95rem;
     }
   }
@@ -952,7 +946,7 @@ onUnmounted(() => {
   
   .overview-card {
     border: none;
-    border-radius: 12px;
+    border-radius: 18px;
     
     .card-content {
       display: flex;
@@ -964,23 +958,23 @@ onUnmounted(() => {
         justify-content: center;
         width: 48px;
         height: 48px;
-        border-radius: 12px;
+        border-radius: 18px;
         margin-right: 1rem;
         
         &.bg-primary {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: #0066cc;
         }
-        
+
         &.bg-success {
-          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          background: #34c759;
         }
-        
+
         &.bg-warning {
-          background: linear-gradient(135deg, #f093fb, #f5576c);
+          background: #ff9500;
         }
-        
+
         &.bg-info {
-          background: linear-gradient(135deg, #43e97b, #38f9d7);
+          background: #5ac8fa;
         }
         
         .el-icon {
@@ -995,13 +989,13 @@ onUnmounted(() => {
         .card-value {
           font-size: 1.75rem;
           font-weight: 700;
-          color: #2c3e50;
+          color: #1d1d1f;
           line-height: 1;
         }
         
         .card-label {
           font-size: 0.875rem;
-          color: #7f8c8d;
+          color: #86868b;
           margin: 0.25rem 0;
         }
         
@@ -1011,11 +1005,11 @@ onUnmounted(() => {
           font-size: 0.75rem;
           
           &.positive {
-            color: #4caf50;
+            color: #34c759;
           }
           
           &.negative {
-            color: #f44336;
+            color: #ff3b30;
           }
           
           .el-icon {
@@ -1029,13 +1023,13 @@ onUnmounted(() => {
 
 .charts-section {
   .chart-card {
-    border-radius: 12px;
-    border: 1px solid #f1f2f6;
+    border-radius: 18px;
+    border: 1px solid #d2d2d7;
     margin-bottom: 1rem;
     
     :deep(.el-card__header) {
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid #f1f2f6;
+      border-bottom: 1px solid #d2d2d7;
       
       .card-header {
         display: flex;
@@ -1045,11 +1039,11 @@ onUnmounted(() => {
           display: flex;
           align-items: center;
           font-weight: 600;
-          color: #2c3e50;
+          color: #1d1d1f;
           
           .el-icon {
             margin-right: 0.5rem;
-            color: #667eea;
+            color: #0066cc;
           }
         }
       }
@@ -1070,13 +1064,13 @@ onUnmounted(() => {
 }
 
 .info-card {
-  border-radius: 12px;
-  border: 1px solid #f1f2f6;
+  border-radius: 18px;
+  border: 1px solid #d2d2d7;
   margin-bottom: 1rem;
   
   :deep(.el-card__header) {
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #f1f2f6;
+    border-bottom: 1px solid #d2d2d7;
     
     .card-header {
       display: flex;
@@ -1086,11 +1080,11 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         font-weight: 600;
-        color: #2c3e50;
+        color: #1d1d1f;
         
         .el-icon {
           margin-right: 0.5rem;
-          color: #667eea;
+          color: #0066cc;
         }
       }
     }
@@ -1106,22 +1100,27 @@ onUnmounted(() => {
     transition: all 0.3s ease;
     
     &:hover {
-      transform: translateX(4px);
+      filter: brightness(0.95);
+    }
+
+    &:active {
+      transform: scale(0.95);
+      transition: transform 0.15s ease;
     }
     
     &.info {
-      background: #e3f2fd;
-      border-left: 4px solid #2196f3;
+      background: #f5f5f7;
+      border-left: 4px solid #0066cc;
     }
     
     &.warning {
-      background: #fff3e0;
-      border-left: 4px solid #ff9800;
+      background: #f5f5f7;
+      border-left: 4px solid #ff9500;
     }
     
     &.success {
-      background: #e8f5e8;
-      border-left: 4px solid #4caf50;
+      background: #f5f5f7;
+      border-left: 4px solid #34c759;
     }
     
     .notice-icon {
@@ -1139,19 +1138,19 @@ onUnmounted(() => {
         margin: 0 0 0.25rem 0;
         font-size: 0.95rem;
         font-weight: 600;
-        color: #2c3e50;
+        color: #1d1d1f;
       }
       
       .notice-desc {
         margin: 0 0 0.5rem 0;
         font-size: 0.875rem;
-        color: #5a6c7d;
+        color: #86868b;
         line-height: 1.4;
       }
       
       .notice-time {
         font-size: 0.75rem;
-        color: #7f8c8d;
+        color: #86868b;
       }
     }
   }
@@ -1163,7 +1162,7 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 0;
-    border-bottom: 1px solid #f8f9fa;
+    border-bottom: 1px solid #f5f5f7;
     
     &:last-child {
       border-bottom: none;
@@ -1171,13 +1170,13 @@ onUnmounted(() => {
     
     .stat-label {
       font-size: 0.875rem;
-      color: #7f8c8d;
+      color: #86868b;
     }
     
     .stat-value {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #2c3e50;
+      color: #1d1d1f;
     }
   }
 }

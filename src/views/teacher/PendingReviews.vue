@@ -479,7 +479,7 @@
               <li v-if="currentPaper.pageCount">页数：{{ currentPaper.pageCount }}</li>
             </ul>
           </div>
-          <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+          <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 8px;">
             <p><strong>调试信息：</strong></p>
             <p>预览URL: {{ previewUrl || '无' }}</p>
             <p>加载状态: {{ previewLoading ? '加载中' : '已完成' }}</p>
@@ -487,7 +487,7 @@
           </div>
           
           <!-- 备用操作 -->
-          <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
+          <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
             <p><strong>🔧 备用方案：</strong></p>
             <el-button 
               type="warning" 
@@ -527,8 +527,8 @@
 <style scoped>
 .teacher-pending {
   min-height: 100vh;
-  background: #f8fafc; /* Slate-50 */
-  color: #0f172a; /* Slate-900 */
+  background: #f5f5f7; /* Slate-50 */
+  color: #1d1d1f; /* Slate-900 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -542,13 +542,13 @@
   align-items: center;
   background: #ffffff;
   padding: 24px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */
+    border-color: #d2d2d7;
   }
 }
 
@@ -556,7 +556,7 @@
   margin: 0 0 8px 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #1d1d1f;
   line-height: 1.2;
 }
 
@@ -570,7 +570,7 @@
   margin-bottom: 24px;
   
   :deep(.el-alert) {
-    border-radius: 8px;
+    border-radius: 11px;
     border-left-width: 4px;
   }
   
@@ -585,10 +585,10 @@
   :deep(.el-button) {
     font-size: 0.75rem;
     padding: 4px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     
     &:hover {
-      transform: translateY(-1px);
+      /* translateY removed for Apple HIG */;
     }
   }
 }
@@ -602,8 +602,8 @@
 
 .stat-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -611,15 +611,14 @@
   transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* translateY + box-shadow removed for Apple HIG */
+    border-color: #d2d2d7;
   }
   
   .stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -638,7 +637,7 @@
     
     &.time-icon {
       background: #dbeafe;
-      color: #1e40af;
+      color: #0066cc;
     }
     
     &.reviewed-icon {
@@ -653,7 +652,7 @@
     .stat-value {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #1d1d1f;
       line-height: 1.2;
       margin-bottom: 4px;
     }
@@ -668,14 +667,14 @@
 .action-card {
   margin-bottom: 24px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 20px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */
+    border-color: #d2d2d7;
   }
 }
 
@@ -701,36 +700,36 @@
   width: 180px;
   
   :deep(.el-input__wrapper) {
-    border-radius: 8px;
+    border-radius: 11px;
     
     &:hover {
       box-shadow: none;
-      border-color: #cbd5e1;
+      border-color: #d2d2d7;
     }
     
     &.is-focus {
-      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
     }
   }
 }
 
 :deep(.el-button) {
-  border-radius: 8px;
+  border-radius: 11px;
   font-size: 0.875rem;
   padding: 8px 16px;
   transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-1px);
+    /* translateY removed for Apple HIG */;
   }
   
   &:active {
-    transform: translateY(0);
+    transform: scale(0.97);
   }
   
   &.el-button--primary {
-    background: #1e40af;
-    border-color: #1e40af;
+    background: #0066cc;
+    border-color: #0066cc;
     
     &:hover {
       background: #1e3a8a;
@@ -741,34 +740,34 @@
 
 .list-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   overflow: hidden;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */
+    border-color: #d2d2d7;
   }
 }
 
 :deep(.el-table) {
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   
   .el-table__header-wrapper {
     .el-table__header {
-      background: #f8fafc;
+      background: #f5f5f7;
       
       th {
-        background: #f8fafc;
+        background: #f5f5f7;
         color: #64748b;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         padding: 12px 16px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #d2d2d7;
       }
     }
   }
@@ -778,14 +777,14 @@
       transition: all 0.2s ease;
       
       &:hover {
-        background-color: #f8fafc !important;
+        background-color: #f5f5f7 !important;
       }
       
       td {
         padding: 16px;
         border-bottom: 1px solid #f1f5f9;
         font-size: 0.875rem;
-        color: #0f172a;
+        color: #1d1d1f;
       }
     }
   }
@@ -798,10 +797,10 @@
     }
     
     .el-button {
-      border-radius: 8px;
+      border-radius: 11px;
       
       &:hover {
-        transform: translateY(-1px);
+        /* translateY removed for Apple HIG */;
       }
     }
   }
@@ -835,7 +834,7 @@
 
 .student-name {
   font-weight: 600;
-  color: #0f172a;
+  color: #1d1d1f;
   font-size: 0.875rem;
   white-space: nowrap;
   overflow: hidden;
@@ -848,7 +847,7 @@
 }
 
 :deep(.el-tag) {
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.75rem;
   padding: 2px 8px;
   
@@ -861,7 +860,7 @@
   &.el-tag--primary {
     background: #dbeafe;
     border-color: #dbeafe;
-    color: #1e40af;
+    color: #0066cc;
   }
   
   &.el-tag--success {
@@ -897,7 +896,7 @@
   color: #64748b;
   
   .el-icon {
-    font-size: 14px;
+    font-size: 17px;
   }
 }
 
@@ -922,7 +921,7 @@
 
 .paper-title {
   font-weight: 600;
-  color: #0f172a;
+  color: #1d1d1f;
   font-size: 0.875rem;
   line-height: 1.4;
   overflow: hidden;
@@ -958,10 +957,10 @@
   color: #64748b;
   background: #f1f5f9;
   padding: 4px 12px;
-  border-radius: 16px;
+  border-radius: 18px;
   
   .el-icon {
-    font-size: 14px;
+    font-size: 17px;
   }
 }
 
@@ -987,7 +986,7 @@
 .similarity-percentage {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #1d1d1f;
   
   &.high {
     color: #ef4444;
@@ -1031,7 +1030,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: #d2d2d7;
   transition: all 0.2s ease;
   
   &.active {
@@ -1053,17 +1052,17 @@
 :deep(.el-button--small) {
   font-size: 0.75rem;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 8px;
   
   &:hover {
-    transform: translateY(-1px);
+    /* translateY removed for Apple HIG */;
   }
 }
 
 .waiting-time {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #0f172a;
+  color: #1d1d1f;
   text-align: center;
   padding: 8px 0;
   
@@ -1097,7 +1096,7 @@
   margin-top: 4px;
   
   .el-icon {
-    font-size: 14px;
+    font-size: 17px;
   }
 }
 
@@ -1146,9 +1145,9 @@
 }
 
 :deep(.el-dropdown-menu) {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  /* box-shadow removed for Apple HIG */
+  border: 1px solid #d2d2d7;
   
   .el-dropdown-menu__item {
     font-size: 0.875rem;
@@ -1156,16 +1155,16 @@
     transition: all 0.2s ease;
     
     &:hover {
-      background: #f8fafc;
-      color: #0f172a;
+      background: #f5f5f7;
+      color: #1d1d1f;
     }
   }
 }
 
 .batch-actions {
   padding: 16px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: #f5f5f7;
+  border-top: 1px solid #d2d2d7;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -1174,18 +1173,18 @@
 }
 
 .preview-dialog {
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   
   :deep(.el-dialog__header) {
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: #f5f5f7;
+    border-bottom: 1px solid #d2d2d7;
     padding: 20px 24px;
     
     .el-dialog__title {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
     }
     
     .el-dialog__headerbtn {
@@ -1196,7 +1195,7 @@
         color: #64748b;
         
         &:hover {
-          color: #0f172a;
+          color: #1d1d1f;
         }
       }
     }
@@ -1227,7 +1226,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: #f5f5f7;
 }
 
 .error-placeholder {
@@ -1240,7 +1239,7 @@
   gap: 16px;
   text-align: center;
   color: #64748b;
-  background: #f8fafc;
+  background: #f5f5f7;
   padding: 48px;
   
   .el-icon {
@@ -1265,18 +1264,18 @@
 }
 
 .report-dialog {
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   
   :deep(.el-dialog__header) {
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: #f5f5f7;
+    border-bottom: 1px solid #d2d2d7;
     padding: 20px 24px;
     
     .el-dialog__title {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
     }
   }
   
@@ -1290,16 +1289,16 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 20px 24px;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-top: 1px solid #d2d2d7;
+  background: #f5f5f7;
   
   :deep(.el-button) {
     font-size: 0.875rem;
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: 11px;
     
     &:hover {
-      transform: translateY(-1px);
+      /* translateY removed for Apple HIG */;
     }
   }
 }
@@ -1453,7 +1452,6 @@ const showOnlyOverdue = ref(false)
 // 论文预览功能
 const viewPaper = async (paper) => {
   try {
-    console.log('查看论文:', paper)
     
     // 重置所有状态
     previewLoading.value = true
@@ -1468,7 +1466,6 @@ const viewPaper = async (paper) => {
     })
     
     const paperId = paper.paperId || paper.id || paper.paperBaseInfo?.paperId
-    console.log('论文ID:', paperId)
     
     if (!paperId) {
       ElMessage.error('论文ID不存在')
@@ -1482,20 +1479,16 @@ const viewPaper = async (paper) => {
       getPaperPreviewUrl(paperId)
     ])
     
-    console.log('论文内容响应:', contentRes)
-    console.log('预览URL响应:', previewRes)
     
     // 处理论文内容
     if (contentRes.code === 200 && contentRes.data) {
       currentPaper.value = contentRes.data
-      console.log('当前论文数据:', currentPaper.value)
     } else {
       console.warn('获取论文内容失败:', contentRes.message)
     }
     
     // 处理预览URL
     if (previewRes.code === 200 && previewRes.data) {
-      console.log('预览响应完整数据:', previewRes)
       
       // 检查多种可能的数据结构
       const rawUrl = previewRes.data.previewUrl || 
@@ -1504,7 +1497,6 @@ const viewPaper = async (paper) => {
                     previewRes.data.preview_url ||
                     (typeof previewRes.data === 'string' ? previewRes.data : null)
       
-      console.log('提取的原始URL:', rawUrl)
       
       // 检查是否为null值
       if (rawUrl === null || rawUrl === undefined) {
@@ -1533,7 +1525,6 @@ const viewPaper = async (paper) => {
       // 如果是KKFileView的onlinePreview URL，直接使用
       if (rawUrl && rawUrl.includes('onlinePreview')) {
         finalUrl = rawUrl
-        console.log('使用KKFileView预览URL:', finalUrl)
       } else {
         // 如果是文件下载URL，尝试包装成KKFileView格式
         try {
@@ -1541,12 +1532,11 @@ const viewPaper = async (paper) => {
             const urlParam = new URLSearchParams(rawUrl.split('?')[1]).get('url')
             if (urlParam) {
               finalUrl = decodeURIComponent(atob(urlParam))
-              console.log('解码后的文件URL:', finalUrl)
               
               // 重新包装为KKFileView格式
               const encodedFileUrl = btoa(finalUrl)
-              finalUrl = `http://192.168.30.138:8080/onlinePreview?url=${encodedFileUrl}`
-              console.log('重新包装的KKFileView URL:', finalUrl)
+              const previewBase = import.meta.env.VITE_KKFILEVIEW_BASE_URL || ''
+              finalUrl = `${previewBase}/onlinePreview?url=${encodedFileUrl}`
             }
           }
         } catch (decodeError) {
@@ -1556,7 +1546,6 @@ const viewPaper = async (paper) => {
       }
       
       previewUrl.value = finalUrl
-      console.log('最终预览URL:', previewUrl.value)
       
       if (previewUrl.value) {
         previewVisible.value = true
@@ -1616,7 +1605,6 @@ const closePreview = () => {
 }
 
 const handlePreviewLoad = () => {
-  console.log('iframe加载完成')
   previewLoading.value = false
   
   // 显示成功信息
@@ -1627,7 +1615,6 @@ const handlePreviewLoad = () => {
 
 const handlePreviewError = (event) => {
   console.error('iframe加载错误:', event)
-  console.log('当前previewUrl:', previewUrl.value)
   previewLoading.value = false
   previewError.value = true
   
@@ -1641,7 +1628,6 @@ const handlePreviewError = (event) => {
 
 // 重试预览
 const retryPreview = async (paper) => {
-  console.log('重新加载预览:', paper)
   previewError.value = false
   previewLoading.value = true
   previewUrl.value = ''
@@ -1664,7 +1650,8 @@ const retryPreview = async (paper) => {
             if (urlParam) {
               const decodedUrl = decodeURIComponent(atob(urlParam))
               const encodedFileUrl = btoa(decodedUrl)
-              finalUrl = `http://192.168.30.138:8080/onlinePreview?url=${encodedFileUrl}`
+              const previewBase = import.meta.env.VITE_KKFILEVIEW_BASE_URL || ''
+              finalUrl = `${previewBase}/onlinePreview?url=${encodedFileUrl}`
             }
           }
         } catch (decodeError) {
@@ -1673,7 +1660,6 @@ const retryPreview = async (paper) => {
       }
       
       previewUrl.value = finalUrl
-      console.log('重试预览URL:', previewUrl.value)
       
       if (previewUrl.value) {
         previewError.value = false
@@ -1845,7 +1831,6 @@ const handleSelectionChange = (selection) => {
 
 const handleRowClick = (row) => {
   // 可以选择查看详情
-  console.log('点击行:', row)
 }
 
 const toggleSort = () => {
@@ -1988,7 +1973,6 @@ const viewSimilarityReport = (paper) => {
 
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
-  console.log('全屏状态切换:', isFullscreen.value)
   
   // 给用户明确的视觉反馈
   if (isFullscreen.value) {
@@ -2094,14 +2078,24 @@ const handleMoreAction = async (paper, command) => {
           confirmButtonText: '确认委托',
           cancelButtonText: '取消'
         })
-        
+
         if (reason) {
-          // 这里需要选择委托教师，简化处理
-          ElMessage.info('委托审核功能开发中')
+          const paperId = paper.paperId || paper.paperBaseInfo?.paperId || paper.id
+          const res = await delegateReview({
+            paperId: String(paperId),
+            reason,
+            studentId: String(paper.studentId ?? paper.studentNo ?? '')
+          })
+          if (res?.code === 200) {
+            ElMessage.success(res.message || '委托审核请求已提交')
+          } else {
+            ElMessage.error(res?.message || '委托审核请求提交失败')
+          }
         }
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('委托操作失败')
+          console.error('委托操作失败:', error)
+          ElMessage.error('委托操作失败，请重试')
         }
       }
       break
@@ -2231,14 +2225,14 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-$primary-color: #1a365d;
-$secondary-color: #63b3ed;
-$success-color: #67c23a;
-$warning-color: #e6a23c;
-$danger-color: #f56c6c;
-$gray-color: #666;
-$light-gray: #f5f7fa;
-$border-color: #e4e7ed;
+$primary-color: #0066cc;
+$secondary-color: #0066cc;
+$success-color: #34c759;
+$warning-color: #ff9500;
+$danger-color: #ff3b30;
+$gray-color: #86868b;
+$light-gray: #f5f5f7;
+$border-color: #d2d2d7;
 
 .teacher-pending {
   min-height: 100vh;
@@ -2258,10 +2252,9 @@ $border-color: #e4e7ed;
   flex-wrap: wrap;
   gap: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-  border-radius: 12px;
+  background: #0066cc;
+  border-radius: 18px;
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .header-left .page-title {
@@ -2281,15 +2274,15 @@ $border-color: #e4e7ed;
   transition: all 0.3s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    /* translateY + box-shadow removed for Apple HIG */
   }
 }
 
 .urgent-alert {
   margin-bottom: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 11px;
+  /* box-shadow removed for Apple HIG */
+  border: 1px solid #d2d2d7;
 }
 
 .stats-row {
@@ -2298,15 +2291,14 @@ $border-color: #e4e7ed;
 
 .stat-card {
   height: 100%;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  border: 1px solid #d2d2d7;
   border: none;
   transition: all 0.3s ease;
   overflow: hidden;
   
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    /* translateY + box-shadow removed for Apple HIG */
   }
   
   :deep(.el-card__body) {
@@ -2323,7 +2315,7 @@ $border-color: #e4e7ed;
 .stat-icon-wrapper {
   width: 64px;
   height: 64px;
-  border-radius: 12px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2345,15 +2337,15 @@ $border-color: #e4e7ed;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 17px;
   color: $gray-color;
   margin: 0;
 }
 
 .action-card {
   margin-bottom: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  border: 1px solid #d2d2d7;
   border: none;
   
   :deep(.el-card__body) {
@@ -2380,8 +2372,8 @@ $border-color: #e4e7ed;
     transition: all 0.3s ease;
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      /* translateY removed for Apple HIG */;
+      border: 1px solid #d2d2d7;
     }
   }
   
@@ -2392,8 +2384,8 @@ $border-color: #e4e7ed;
 
 .list-card {
   margin-bottom: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  border: 1px solid #d2d2d7;
   border: none;
   overflow: hidden;
   
@@ -2441,13 +2433,13 @@ $border-color: #e4e7ed;
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: #f5f5f7;
+  border-radius: 11px;
   transition: all 0.3s ease;
-  
+
   &:hover {
     background: #f0f7ff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* box-shadow removed for Apple HIG */
   }
 }
 
@@ -2468,7 +2460,7 @@ $border-color: #e4e7ed;
 .student-name {
   font-weight: 600;
   color: $primary-color;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
 }
 
@@ -2505,20 +2497,20 @@ $border-color: #e4e7ed;
 }
 
 .paper-title {
-  font-weight: 500;
+  font-weight: 400;
   color: $primary-color;
   line-height: 1.4;
   cursor: pointer;
   flex: 1;
   padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
+  background: #f5f5f7;
+  border-radius: 8px;
   transition: all 0.3s ease;
   
   &:hover {
     color: $secondary-color;
     background: #f0f7ff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* box-shadow removed for Apple HIG */
   }
 }
 
@@ -2540,9 +2532,9 @@ $border-color: #e4e7ed;
   gap: 4px;
   font-size: 12px;
   color: $gray-color;
-  background: #f8f9fa;
+  background: #f5f5f7;
   padding: 4px 8px;
-  border-radius: 12px;
+  border-radius: 18px;
   
   .el-icon {
     color: $secondary-color;
@@ -2555,12 +2547,12 @@ $border-color: #e4e7ed;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: #f5f5f7;
+  border-radius: 11px;
   transition: all 0.3s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d2d2d7;
   }
 }
 
@@ -2581,7 +2573,7 @@ $border-color: #e4e7ed;
   font-size: 18px;
   padding: 4px 12px;
   background: white;
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -2593,7 +2585,7 @@ $border-color: #e4e7ed;
 
 .similarity-progress {
   :deep(.el-progress__bar) {
-    border-radius: 6px;
+    border-radius: 8px;
   }
   
   :deep(.el-progress__text) {
@@ -2601,8 +2593,8 @@ $border-color: #e4e7ed;
   }
   
   :deep(.el-progress__bar__outer) {
-    background: #e4e7ed;
-    border-radius: 6px;
+    background: #d2d2d7;
+    border-radius: 8px;
   }
 }
 
@@ -2625,7 +2617,7 @@ $border-color: #e4e7ed;
   
   &.current {
     transform: scale(1.5);
-    box-shadow: 0 0 0 4px rgba(26, 54, 93, 0.1);
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.15);
   }
 }
 
@@ -2641,15 +2633,15 @@ $border-color: #e4e7ed;
   transition: all 0.3s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* translateY removed for Apple HIG */;
+    border: 1px solid #d2d2d7;
   }
 }
 
 /* 等待时间样式 */
 .waiting-time {
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 400;
+  font-size: 17px;
 }
 
 .waiting-short {
@@ -2669,7 +2661,7 @@ $border-color: #e4e7ed;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: 17px;
 }
 
 .deadline-warning {
@@ -2706,38 +2698,38 @@ $border-color: #e4e7ed;
 
 .action-btn {
   transition: all 0.3s ease;
-  border-radius: 6px;
+  border-radius: 8px;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* translateY removed for Apple HIG */;
+    border: 1px solid #d2d2d7;
   }
 }
 
 .primary-action {
   background-color: $primary-color;
   border-color: $primary-color;
-  
+
   &:hover {
-    background-color: darken($primary-color, 10%);
-    border-color: darken($primary-color, 10%);
+    background-color: #005bb8;
+    border-color: #005bb8;
   }
 }
 
 .secondary-action {
   background-color: $secondary-color;
   border-color: $secondary-color;
-  
+
   &:hover {
-    background-color: darken($secondary-color, 10%);
-    border-color: darken($secondary-color, 10%);
+    background-color: #7a4cd6;
+    border-color: #7a4cd6;
   }
 }
 
 .more-dropdown {
   .el-button {
     transition: all 0.3s ease;
-    border-radius: 6px;
+    border-radius: 8px;
     
     &:hover {
       color: $primary-color;
@@ -2750,7 +2742,7 @@ $border-color: #e4e7ed;
 .batch-actions {
   padding: 20px;
   border-top: 1px solid $border-color;
-  background-color: #f8f9fa;
+  background-color: #f5f5f7;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -2761,23 +2753,23 @@ $border-color: #e4e7ed;
   span {
     font-weight: 600;
     color: $primary-color;
-    font-size: 14px;
+    font-size: 17px;
   }
   
   .el-button {
     transition: all 0.3s ease;
-    border-radius: 6px;
+    border-radius: 8px;
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      /* translateY removed for Apple HIG */;
+      border: 1px solid #d2d2d7;
     }
   }
 }
 
 /* 报告对话框样式 */
 .report-dialog {
-  border-radius: 8px;
+  border-radius: 11px;
   overflow: hidden;
 }
 
@@ -2797,7 +2789,7 @@ $border-color: #e4e7ed;
 
 /* 论文预览对话框样式 */
 .preview-dialog {
-  border-radius: 8px;
+  border-radius: 11px;
   overflow: hidden;
 }
 

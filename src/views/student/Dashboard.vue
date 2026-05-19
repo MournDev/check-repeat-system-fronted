@@ -223,6 +223,9 @@
                   <div class="info-value">
                     <el-icon><User /></el-icon>
                     {{ latestPaper.advisorName }}
+                    <el-tag size="small" :type="getAllocationStatusTagType(latestPaper.allocationStatus)" style="margin-left: 8px">
+                      {{ getAllocationStatusText(latestPaper.allocationStatus) }}
+                    </el-tag>
                   </div>
                 </div>
                 <div class="info-item">
@@ -401,9 +404,9 @@ import { ref, onMounted, computed, nextTick, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
 import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking } from "@/api/student.js"
+import * as echarts from 'echarts'
 
 // 图标导入
 import {
@@ -668,7 +671,11 @@ const loadDashboardData = async () => {
     
     // 处理相似度趋势数据
     if (trendRes.code === 200) {
-      Object.assign(similarityTrendData, trendRes.data || {})
+      const trendData = trendRes.data || {}
+      if (trendData.similarities) {
+        trendData.similarities = trendData.similarities.map(v => handleSimilarity(v))
+      }
+      Object.assign(similarityTrendData, trendData)
     } else {
       ElMessage.error(trendRes.message || '获取相似度趋势失败')
     }
@@ -764,7 +771,6 @@ const contactAdvisor = () => {
       {
         confirmButtonText: '我知道了',
         callback: () => {
-          console.log('联系导师')
         }
       }
     )
@@ -781,6 +787,24 @@ const getStatusType = (status) => {
 
 const getStatusText = (status) => {
   return getPaperStatusText(status)
+}
+
+const getAllocationStatusText = (allocationStatus) => {
+  const map = {
+    'pending': '等待教师确认',
+    'confirmed': '教师已确认',
+    'rejected': '已拒绝，重新分配中'
+  }
+  return map[allocationStatus] || allocationStatus || '未知'
+}
+
+const getAllocationStatusTagType = (allocationStatus) => {
+  const map = {
+    'pending': 'warning',
+    'confirmed': 'success',
+    'rejected': 'danger'
+  }
+  return map[allocationStatus] || 'info'
 }
 
 const getSimilarityTrendClass = (similarity) => {
@@ -988,8 +1012,38 @@ const getSimilarityStatusClass = (similarity) => {
 };
 
 const addAllToCalendar = () => {
-  ElMessage.success('已将所有时间节点添加到日历');
-  // TODO: 实现添加到日历功能
+  const formatICSDate = (date) => {
+    if (!date) return ''
+    const d = new Date(date)
+    return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  }
+  const events = [
+    { title: '论文提交截止', date: deadlines.submissionDeadline },
+    { title: '审核截止', date: deadlines.reviewDeadline },
+    { title: '答辩时间', date: deadlines.defenseDate },
+    { title: '预计毕业', date: deadlines.graduationDate }
+  ].filter(e => e.date)
+  if (events.length === 0) {
+    ElMessage.warning('暂无可用的时间节点')
+    return
+  }
+  const icsLines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CheckRepeatSystem//CN']
+  events.forEach((e, i) => {
+    icsLines.push(
+      'BEGIN:VEVENT',
+      `UID:deadline-${i}@checkrepeat`,
+      `DTSTART:${formatICSDate(e.date)}`,
+      `SUMMARY:${e.title}`,
+      'END:VEVENT'
+    )
+  })
+  icsLines.push('END:VCALENDAR')
+  const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url; link.download = '论文时间节点.ics'; link.click()
+  window.URL.revokeObjectURL(url)
+  ElMessage.success('日历文件已下载')
 };
 
 // 图表初始化方法
@@ -1004,8 +1058,8 @@ const initRadarChart = () => {
       indicator: [
         { name: '论文数量', max: 10 },
         { name: '通过率', max: 100 },
-        { name: '平均相似度', max: 30 },
-        { name: '修改次数', max: 5 },
+        { name: '平均相似度', max: 100 },
+        { name: '修改次数', max: 10 },
         { name: '按时提交', max: 100 },
         { name: '导师评分', max: 100 }
       ],
@@ -1019,20 +1073,21 @@ const initRadarChart = () => {
           value: [
             abilityRadarData.paperCount || 3,
             abilityRadarData.passRate || 85,
-            abilityRadarData.averageSimilarity || 15.2,
+            // 相似度取反：100 - 相似度，这样越低越好
+            (100 - (abilityRadarData.averageSimilarity || 15.2)),
             abilityRadarData.revisionTimes || 2,
             abilityRadarData.onTimeSubmission || 100,
             abilityRadarData.advisorRating || 90
           ],
           name: '我的能力',
           areaStyle: {
-            color: 'rgba(64, 158, 255, 0.3)'
+            color: 'rgba(0, 102, 204, 0.3)'
           },
           lineStyle: {
-            color: '#409EFF'
+            color: '#0066cc'
           },
           itemStyle: {
-            color: '#409EFF'
+            color: '#0066cc'
           }
         }
       ]
@@ -1066,7 +1121,7 @@ const initTrendChart = () => {
       type: 'value',
       name: '相似度 (%)',
       min: 0,
-      max: 50
+      max: 100
     },
     series: [{
       name: '相似度',
@@ -1129,8 +1184,8 @@ const initComparisonChart = () => {
         data: majorComparisonData.myLevel || [85, 78, 92, 88, 90],
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: '#667eea' },
-            { offset: 1, color: '#764ba2' }
+            { offset: 0, color: '#0066cc' },
+            { offset: 1, color: '#0055aa' }
           ])
         }
       },
@@ -1154,8 +1209,8 @@ const initComparisonChart = () => {
 .student-dashboard {
   padding: 24px;
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
-  color: #0f172a; // Slate-900
+  background: #f5f5f7; // Slate-50
+  color: #1d1d1f; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -1173,15 +1228,15 @@ const initComparisonChart = () => {
       
       .welcome-title {
         font-size: 2rem;
-        font-weight: 700;
-        color: #0f172a;
+        font-weight: 600;
+        color: #1d1d1f;
         margin: 0 0 8px 0;
         line-height: 1.2;
       }
       
       .welcome-subtitle {
         font-size: 1rem;
-        color: #64748b;
+        color: #86868b;
         margin: 0;
       }
     }
@@ -1203,7 +1258,7 @@ const initComparisonChart = () => {
 .stat-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -1211,15 +1266,15 @@ const initComparisonChart = () => {
   transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    /* translateY removed */
+    /* box-shadow removed */
     border-color: #cbd5e1;
   }
   
   .stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1227,23 +1282,23 @@ const initComparisonChart = () => {
     flex-shrink: 0;
     
     &.paper-icon {
-      background: #f0f9ff;
-      color: #0ea5e9;
+      background: #f5f5f7;
+      color: #0066cc;
     }
     
     &.pending-icon {
-      background: #fef3c7;
-      color: #f59e0b;
+      background: #f5f5f7;
+      color: #ff9500;
     }
     
     &.approved-icon {
-      background: #d1fae5;
-      color: #10b981;
+      background: #f5f5f7;
+      color: #34c759;
     }
     
     &.revision-icon {
-      background: #fee2e2;
-      color: #ef4444;
+      background: #f5f5f7;
+      color: #ff3b30;
     }
   }
   
@@ -1252,16 +1307,16 @@ const initComparisonChart = () => {
     
     .stat-value {
       font-size: 1.75rem;
-      font-weight: 700;
-      color: #0f172a;
+      font-weight: 600;
+      color: #1d1d1f;
       line-height: 1.2;
       margin-bottom: 4px;
     }
     
     .stat-label {
       font-size: 0.875rem;
-      color: #64748b;
-      font-weight: 500;
+      color: #86868b;
+      font-weight: 600;
     }
   }
 }
@@ -1282,10 +1337,10 @@ const initComparisonChart = () => {
       gap: 8px;
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       
       .el-icon {
-        color: #64748b;
+        color: #86868b;
       }
     }
   }
@@ -1304,7 +1359,7 @@ const initComparisonChart = () => {
 .deadline-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 20px;
   display: flex;
   align-items: flex-start;
@@ -1312,38 +1367,38 @@ const initComparisonChart = () => {
   transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    /* translateY removed */
+    /* box-shadow removed */
     border-color: #cbd5e1;
   }
   
   &.submission {
-    border-left: 4px solid #10b981;
+    border-left: 4px solid #34c759;
   }
   
   &.review {
-    border-left: 4px solid #0ea5e9;
+    border-left: 4px solid #0066cc;
   }
   
   &.defense {
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid #ff9500;
   }
   
   &.graduation {
-    border-left: 4px solid #8b5cf6;
+    border-left: 4px solid #0066cc;
   }
   
   .deadline-icon {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
-    background: #f1f5f9;
-    color: #64748b;
+    background: #f5f5f7;
+    color: #86868b;
   }
   
   .deadline-content {
@@ -1351,15 +1406,15 @@ const initComparisonChart = () => {
     
     .deadline-label {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #86868b;
       margin-bottom: 6px;
-      font-weight: 500;
+      font-weight: 600;
     }
     
     .deadline-date {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       margin-bottom: 8px;
     }
     
@@ -1368,28 +1423,28 @@ const initComparisonChart = () => {
       .countdown-badge {
         display: inline-block;
         padding: 4px 12px;
-        border-radius: 16px;
+        border-radius: 18px;
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 600;
         
         &.danger {
-          background: #fee2e2;
-          color: #ef4444;
+          background: #f5f5f7;
+          color: #ff3b30;
         }
         
         &.warning {
-          background: #fef3c7;
-          color: #f59e0b;
+          background: #f5f5f7;
+          color: #ff9500;
         }
         
         &.success {
-          background: #d1fae5;
-          color: #10b981;
+          background: #f5f5f7;
+          color: #34c759;
         }
         
         &.goal {
-          background: #ede9fe;
-          color: #8b5cf6;
+          background: #f5f5f7;
+          color: #0066cc;
         }
       }
     }
@@ -1411,13 +1466,13 @@ const initComparisonChart = () => {
 .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    /* box-shadow removed */
     border-color: #cbd5e1;
   }
   
@@ -1433,10 +1488,10 @@ const initComparisonChart = () => {
       gap: 8px;
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       
       .el-icon {
-        color: #64748b;
+        color: #86868b;
       }
     }
     
@@ -1464,38 +1519,38 @@ const initComparisonChart = () => {
         margin: 0;
         font-size: 1.125rem;
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       .progress-status {
         padding: 4px 12px;
-        border-radius: 16px;
+        border-radius: 18px;
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 600;
         
         &.status-info {
-          background: #e0f2fe;
-          color: #0284c7;
+          background: #f5f5f7;
+          color: #0066cc;
         }
         
         &.status-primary {
-          background: #dbeafe;
-          color: #1e40af;
+          background: #f5f5f7;
+          color: #0066cc;
         }
         
         &.status-warning {
-          background: #fef3c7;
-          color: #f59e0b;
+          background: #f5f5f7;
+          color: #ff9500;
         }
         
         &.status-danger {
-          background: #fee2e2;
-          color: #ef4444;
+          background: #f5f5f7;
+          color: #ff3b30;
         }
         
         &.status-success {
-          background: #d1fae5;
-          color: #10b981;
+          background: #f5f5f7;
+          color: #34c759;
         }
       }
     }
@@ -1531,38 +1586,38 @@ const initComparisonChart = () => {
           .step-title {
             font-size: 14px;
             font-weight: 600;
-            color: #0f172a;
+            color: #1d1d1f;
             margin-bottom: 2px;
           }
           
           .step-description {
             font-size: 12px;
-            color: #64748b;
+            color: #86868b;
           }
         }
         
         &.step-active {
           .step-number {
-            background: #10b981;
+            background: #34c759;
             color: white;
           }
         }
         
         &.step-current {
           .step-number {
-            background: #0ea5e9;
+            background: #0066cc;
             color: white;
           }
         }
         
         &.step-pending {
           .step-number {
-            background: #f1f5f9;
-            color: #64748b;
+            background: #f5f5f7;
+            color: #86868b;
           }
           
           .step-title {
-            color: #64748b;
+            color: #86868b;
           }
         }
       }
@@ -1572,18 +1627,18 @@ const initComparisonChart = () => {
       display: flex;
       gap: 24px;
       padding: 16px;
-      background: #f8fafc;
-      border-radius: 8px;
+      background: #f5f5f7;
+      border-radius: 11px;
       
       .summary-item {
         display: flex;
         align-items: center;
         gap: 8px;
         font-size: 0.875rem;
-        color: #64748b;
+        color: #86868b;
         
         .el-icon {
-          color: #94a3b8;
+          color: #86868b;
         }
       }
     }
@@ -1604,7 +1659,7 @@ const initComparisonChart = () => {
         margin: 0;
         font-size: 1rem;
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       .paper-status {
@@ -1614,35 +1669,35 @@ const initComparisonChart = () => {
         
         .status-badge {
           padding: 4px 12px;
-          border-radius: 16px;
+          border-radius: 18px;
           font-size: 0.75rem;
-          font-weight: 500;
+          font-weight: 600;
           
           &.status-info {
-            background: #e0f2fe;
-            color: #0284c7;
+            background: #f5f5f7;
+            color: #0066cc;
           }
           &.status-primary {
-            background: #dbeafe;
-            color: #1e40af;
+            background: #f5f5f7;
+            color: #0066cc;
           }
           &.status-warning {
-            background: #fef3c7;
-            color: #f59e0b;
+            background: #f5f5f7;
+            color: #ff9500;
           }
           &.status-danger {
-            background: #fee2e2;
-            color: #ef4444;
+            background: #f5f5f7;
+            color: #ff3b30;
           }
           &.status-success {
-            background: #d1fae5;
-            color: #10b981;
+            background: #f5f5f7;
+            color: #34c759;
           }
         }
         
         .paper-id {
           font-size: 0.875rem;
-          color: #64748b;
+          color: #86868b;
         }
       }
     }
@@ -1668,9 +1723,9 @@ const initComparisonChart = () => {
         
         .info-label {
           font-size: 0.75rem;
-          color: #64748b;
+          color: #86868b;
           margin-bottom: 8px;
-          font-weight: 500;
+          font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
@@ -1680,13 +1735,13 @@ const initComparisonChart = () => {
           align-items: center;
           gap: 8px;
           font-size: 0.95rem;
-          color: #0f172a;
-          font-weight: 500;
+          color: #1d1d1f;
+          font-weight: 600;
           
           &.title {
             font-size: 1rem;
             font-weight: 600;
-            color: #1e40af;
+            color: #0066cc;
             
             span {
               display: block;
@@ -1714,16 +1769,16 @@ const initComparisonChart = () => {
                 border-radius: 3px;
                 
                 &.similarity-low {
-                  background: #10b981;
+                  background: #34c759;
                 }
                 &.similarity-medium {
-                  background: #f59e0b;
+                  background: #ff9500;
                 }
                 &.similarity-high {
-                  background: #ef4444;
+                  background: #ff3b30;
                 }
                 &.similarity-neutral {
-                  background: #94a3b8;
+                  background: #86868b;
                 }
               }
               
@@ -1733,59 +1788,59 @@ const initComparisonChart = () => {
                 min-width: 48px;
                 
                 &.similarity-low {
-                  color: #10b981;
+                  color: #34c759;
                 }
                 &.similarity-medium {
-                  color: #f59e0b;
+                  color: #ff9500;
                 }
                 &.similarity-high {
-                  color: #ef4444;
+                  color: #ff3b30;
                 }
                 &.similarity-neutral {
-                  color: #94a3b8;
+                  color: #86868b;
                 }
               }
             }
             
             .similarity-status {
               padding: 2px 8px;
-              border-radius: 12px;
+              border-radius: 18px;
               font-size: 0.75rem;
-              font-weight: 500;
+              font-weight: 600;
               
               &.status-info {
-                background: #e0f2fe;
-                color: #0284c7;
+                background: #f5f5f7;
+                color: #0066cc;
               }
               &.status-success {
-                background: #d1fae5;
-                color: #10b981;
+                background: #f5f5f7;
+                color: #34c759;
               }
               &.status-warning {
-                background: #fef3c7;
-                color: #f59e0b;
+                background: #f5f5f7;
+                color: #ff9500;
               }
               &.status-danger {
-                background: #fee2e2;
-                color: #ef4444;
+                background: #f5f5f7;
+                color: #ff3b30;
               }
             }
           }
           
           .word-count, .version {
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 18px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             
             &.word-count {
-              background: #d1fae5;
-              color: #10b981;
+              background: #f5f5f7;
+              color: #34c759;
             }
             
             &.version {
-              background: #dbeafe;
-              color: #1e40af;
+              background: #f5f5f7;
+              color: #0066cc;
             }
           }
         }
@@ -1795,8 +1850,8 @@ const initComparisonChart = () => {
     .paper-feedback {
       margin: 20px 0;
       padding: 16px;
-      background: #f8fafc;
-      border-radius: 8px;
+      background: #f5f5f7;
+      border-radius: 11px;
       
       .feedback-header {
         display: flex;
@@ -1805,17 +1860,17 @@ const initComparisonChart = () => {
         margin-bottom: 12px;
         
         .el-icon {
-          color: #64748b;
+          color: #86868b;
         }
         
         span {
           font-weight: 600;
-          color: #0f172a;
+          color: #1d1d1f;
         }
       }
       
       .feedback-content {
-        color: #475569;
+        color: #86868b;
         line-height: 1.5;
         font-size: 0.875rem;
       }
@@ -1836,7 +1891,7 @@ const initComparisonChart = () => {
       
       .empty-icon {
         font-size: 48px;
-        color: #94a3b8;
+        color: #86868b;
         margin-bottom: 16px;
       }
       
@@ -1844,12 +1899,12 @@ const initComparisonChart = () => {
         margin: 0 0 8px 0;
         font-size: 1.125rem;
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       p {
         margin: 0 0 24px 0;
-        color: #64748b;
+        color: #86868b;
         font-size: 0.875rem;
       }
     }
@@ -1898,13 +1953,13 @@ const initComparisonChart = () => {
         width: 80px;
         height: 80px;
         border-radius: 50%;
-        background: #f1f5f9;
+        background: #f5f5f7;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 24px;
         font-weight: 600;
-        color: #64748b;
+        color: #86868b;
         margin: 0 auto 12px;
         background-size: cover;
         background-position: center;
@@ -1916,7 +1971,7 @@ const initComparisonChart = () => {
         justify-content: center;
         gap: 6px;
         font-size: 0.75rem;
-        color: #64748b;
+        color: #86868b;
         
         .status-indicator {
           width: 8px;
@@ -1924,7 +1979,7 @@ const initComparisonChart = () => {
           border-radius: 50%;
           
           &.online {
-            background: #10b981;
+            background: #34c759;
           }
         }
       }
@@ -1938,13 +1993,13 @@ const initComparisonChart = () => {
         margin: 0 0 4px 0;
         font-size: 1.125rem;
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       .advisor-title {
         margin: 0 0 16px 0;
         font-size: 0.875rem;
-        color: #64748b;
+        color: #86868b;
       }
       
       .advisor-expertise {
@@ -1956,10 +2011,10 @@ const initComparisonChart = () => {
         
         .expertise-tag {
           padding: 4px 12px;
-          border-radius: 16px;
+          border-radius: 18px;
           font-size: 0.75rem;
-          background: #f1f5f9;
-          color: #64748b;
+          background: #f5f5f7;
+          color: #86868b;
         }
       }
       
@@ -1970,7 +2025,7 @@ const initComparisonChart = () => {
           align-items: center;
           gap: 8px;
           font-size: 0.875rem;
-          color: #64748b;
+          color: #86868b;
           margin-bottom: 8px;
           
           &:last-child {
@@ -1978,7 +2033,7 @@ const initComparisonChart = () => {
           }
           
           .el-icon {
-            color: #94a3b8;
+            color: #86868b;
             flex-shrink: 0;
           }
         }
@@ -1997,15 +2052,15 @@ const initComparisonChart = () => {
         
         .stat-number {
           font-size: 1.25rem;
-          font-weight: 700;
-          color: #0f172a;
+          font-weight: 600;
+          color: #1d1d1f;
           margin-bottom: 4px;
         }
         
         .stat-label {
           font-size: 0.75rem;
-          color: #64748b;
-          font-weight: 500;
+          color: #86868b;
+          font-weight: 600;
         }
       }
     }
@@ -2019,7 +2074,7 @@ const initComparisonChart = () => {
       
       .empty-icon {
         font-size: 48px;
-        color: #94a3b8;
+        color: #86868b;
         margin-bottom: 16px;
       }
       
@@ -2027,12 +2082,12 @@ const initComparisonChart = () => {
         margin: 0 0 8px 0;
         font-size: 1.125rem;
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       p {
         margin: 0 0 24px 0;
-        color: #64748b;
+        color: #86868b;
         font-size: 0.875rem;
       }
     }
@@ -2045,23 +2100,22 @@ const initComparisonChart = () => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 8px;
-  background: #1e40af;
+  border-radius: 11px;
+  background: #0066cc;
   color: white;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #1e3a8a;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+    background: #0055aa;
+    /* translateY and box-shadow removed */
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.95);
   }
   
   .el-icon {
@@ -2074,11 +2128,11 @@ const initComparisonChart = () => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 8px;
-  background: #f1f5f9;
-  color: #0f172a;
+  border-radius: 11px;
+  background: #f5f5f7;
+  color: #1d1d1f;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   border: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -2086,11 +2140,11 @@ const initComparisonChart = () => {
   &:hover {
     background: #e2e8f0;
     border-color: #cbd5e1;
-    transform: translateY(-1px);
+    /* translateY removed */
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.95);
   }
   
   .el-icon {
@@ -2103,18 +2157,18 @@ const initComparisonChart = () => {
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 11px;
   background: transparent;
-  color: #64748b;
+  color: #86868b;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: #f5f5f7;
+    color: #1d1d1f;
   }
   
   .el-icon {
@@ -2128,16 +2182,16 @@ const initComparisonChart = () => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 11px;
   background: transparent;
-  color: #64748b;
+  color: #86868b;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: #f5f5f7;
+    color: #1d1d1f;
   }
   
   .el-icon {

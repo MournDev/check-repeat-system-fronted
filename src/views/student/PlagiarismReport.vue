@@ -1,5 +1,5 @@
 <template>
-  <div class="report-page">
+  <div class="plagiarism-report-page">
     <!-- 页面头部 -->
     <div class="page-header">
       <el-page-header @back="goBack">
@@ -34,7 +34,7 @@
       <el-card class="paper-info-card" shadow="never">
         <div class="paper-basic-info">
           <div class="info-icon">
-            <el-icon size="24" color="#667eea"><Document /></el-icon>
+            <el-icon size="24" color="#0066cc"><Document /></el-icon>
           </div>
           <div class="info-content">
             <h2 class="paper-title">{{ reportData.paperTitle || '暂无标题' }}</h2>
@@ -294,7 +294,7 @@
                     :key="index"
                     class="recommendation-item"
                   >
-                    <el-icon color="#667eea"><Check /></el-icon>
+                    <el-icon color="#0066cc"><Check /></el-icon>
                     <span>{{ rec }}</span>
                   </div>
                   <div v-if="recommendations.length === 0" class="empty-recommendations">
@@ -323,8 +323,8 @@
                       {{ record.changes }}
                     </div>
                     <div class="history-actions">
-                      <el-button text size="small" @click="viewHistoricalReport(record.reportId)">
-                        查看报告
+                      <el-button text size="small" @click="viewHistoricalReport(record)">
+                        查看此版本
                       </el-button>
                     </div>
                   </div>
@@ -456,8 +456,13 @@ const viewComparison = (source) => {
   showComparisonDialog.value = true
 }
 
-const shareReport = () => {
-  ElMessage.info('分享功能开发中...')
+const shareReport = async () => {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    ElMessage.success('报告链接已复制到剪贴板')
+  } catch {
+    ElMessage.info('分享功能开发中...')
+  }
 }
 
 const handleExport = (command) => {
@@ -472,7 +477,8 @@ const handleExport = (command) => {
 const exportReport = async (format) => {
   try {
     // 先获取论文的最新报告ID
-    const reportListRes = await getSimpleCheckReport(route.params.paperId);
+    const paperId = route.params.paperId;
+    const reportListRes = await getSimpleCheckReport(paperId);
     if (reportListRes.code === 200 && reportListRes.data && reportListRes.data.length > 0) {
       const latestReport = reportListRes.data[0];
       const response = await exportCheckReport(latestReport.id, format)
@@ -494,12 +500,12 @@ const exportReport = async (format) => {
 }
 
 const loadReportData = async () => {
-  // 参数校验
-  const paperId = route.query.paperId || route.params.paperId;
-  const reportId = route.params.id;
-  
-  if (!paperId || paperId === 'undefined') {
-    ElMessage.error('缺少论文 ID 参数');
+  // 参数校验：paperId 始终来自路由参数，reportId 可选来自查询参数
+  const paperId = route.params.paperId;
+  const reportId = route.query.reportId;
+
+  if (!paperId || paperId === 'undefined' || !/^\d+$/.test(paperId)) {
+    ElMessage.error('论文 ID 参数无效');
     router.back();
     return;
   }
@@ -507,8 +513,8 @@ const loadReportData = async () => {
   loading.value = true;
   try {
     let targetReportId = reportId;
-    // 如果没有报告ID，获取最新的报告
-    if (!targetReportId) {
+    // 如果没有报告ID或格式无效，获取最新的报告
+    if (!targetReportId || !/^\d+$/.test(targetReportId)) {
       const reportListRes = await getSimpleCheckReport(paperId);
       if (reportListRes.code === 200 && reportListRes.data && reportListRes.data.length > 0) {
         targetReportId = reportListRes.data[0].id;
@@ -531,6 +537,9 @@ const loadReportData = async () => {
     if (reportRes.code === 200) {
       // 处理后端返回的 ReportDataDTO 数据结构
       const data = reportRes.data;
+      const sections = data.sections || {};
+      const sourceList = data.similarSourceList || [];
+
       reportData.value = {
         // 基本信息
         paperTitle: data.paperTitle || '暂无标题',
@@ -539,19 +548,28 @@ const loadReportData = async () => {
         totalSimilarity: data.totalSimilarity || 0,
         checkTime: data.checkTime || null,
         submitTime: data.submitTime || null,
-        
+
         // 统计信息
         wordCount: data.wordCount || 0,
         citationCount: data.citationCount || 0,
         similarSources: data.similarSources || data.similarSourceCount || 0,
         checkEngines: data.checkEngines || ['本地查重引擎'],
-        
+
         // 章节信息
-        sections: data.sections || {},
-        
+        sections,
+
         // 相似来源
-        similarSources: data.similarSourceList || data.similarSources || []
+        similarSources: sourceList
       };
+
+      // 从 sections 推导相似度分布数据
+      deriveDistributionData(sections);
+
+      // 从相似来源推导关键词
+      deriveKeywords(sourceList);
+
+      // 基于实际数据生成修改建议
+      deriveRecommendations(data.totalSimilarity || 0, sections, sourceList);
     } else {
       ElMessage.error(reportRes.message || '获取报告失败');
       // 重定向回之前的页面
@@ -570,20 +588,21 @@ const loadReportData = async () => {
         // 计算版本号（从1开始）
         const version = sortedReports.length - index;
         // 根据查重率计算评级
+        const rate = report.totalSimilarity || 0;
         let rating = 'excellent';
-        if (report.checkRate >= 30) {
+        if (rate >= 30) {
           rating = 'danger';
-        } else if (report.checkRate >= 15) {
+        } else if (rate >= 15) {
           rating = 'warning';
-        } else if (report.checkRate >= 5) {
+        } else if (rate >= 5) {
           rating = 'good';
         }
-        
+
         return {
           version,
           reportId: report.id,
           checkTime: report.createTime,
-          similarity: report.checkRate || 0,
+          similarity: rate,
           rating,
           changes: `查重报告 #${report.reportNo}`
         };
@@ -596,6 +615,88 @@ const loadReportData = async () => {
       loading.value = false;
     }
   }
+};
+
+// 从 sections 推导相似度分布数据
+const deriveDistributionData = (sections) => {
+  const sectionList = Object.values(sections || {});
+  if (sectionList.length === 0) {
+    distributionData.value = [];
+    return;
+  }
+
+  const ranges = [
+    { range: '0-15%', min: 0, max: 15 },
+    { range: '15-30%', min: 15, max: 30 },
+    { range: '30-50%', min: 30, max: 50 },
+    { range: '50-70%', min: 50, max: 70 },
+    { range: '70-100%', min: 70, max: 100 }
+  ];
+
+  distributionData.value = ranges.map(r => {
+    const count = sectionList.filter(s => {
+      const sim = Number(s.similarity) || 0;
+      return sim >= r.min && sim < r.max;
+    }).length;
+    return {
+      range: r.range,
+      percentage: sectionList.length > 0 ? Math.round((count / sectionList.length) * 100) : 0
+    };
+  }).filter(d => d.percentage > 0);
+};
+
+// 从相似来源推导关键词
+const deriveKeywords = (sourceList) => {
+  const words = new Set();
+  const riskWords = new Set();
+
+  (sourceList || []).forEach(source => {
+    const sim = Number(source.similarity) || 0;
+    if (source.author) {
+      (sim >= 30 ? riskWords : words).add(source.author);
+    }
+    if (source.title && source.title.length > 2) {
+      const titleWords = source.title.split(/[\s,，、]+/).filter(w => w.length >= 2);
+      titleWords.forEach(w => (sim >= 30 ? riskWords : words).add(w));
+    }
+  });
+
+  normalKeywords.value = [...words].filter(w => !riskWords.has(w)).slice(0, 12);
+  highRiskKeywords.value = [...riskWords].slice(0, 8);
+};
+
+// 基于实际数据生成修改建议
+const deriveRecommendations = (totalSimilarity, sections, sourceList) => {
+  const recs = [];
+
+  if (totalSimilarity >= 30) {
+    recs.push(`论文整体相似度为 ${Math.round(totalSimilarity)}%，建议重点修改高相似度段落，增加原创性表述。`);
+  } else if (totalSimilarity >= 15) {
+    recs.push(`论文整体相似度为 ${Math.round(totalSimilarity)}%，建议对相似度较高的章节进行修改，降低重复率。`);
+  } else if (totalSimilarity > 0) {
+    recs.push('论文整体相似度较低，但仍建议检查引用标注是否规范。');
+  }
+
+  const sectionList = Object.entries(sections || {});
+  const highSimSections = sectionList.filter(([, s]) => (Number(s.similarity) || 0) >= 30);
+  if (highSimSections.length > 0) {
+    const names = highSimSections.map(([key]) => getSectionName(key)).join('、');
+    recs.push(`${names}章节相似度偏高，建议重点修改和补充原创内容。`);
+  }
+
+  const highSimSources = (sourceList || []).filter(s => (Number(s.similarity) || 0) >= 30);
+  if (highSimSources.length > 0) {
+    recs.push(`与 ${highSimSources.length} 篇文献相似度超过30%，请逐一核对并规范引用。`);
+  }
+
+  if (recs.length === 0) {
+    recs.push('论文原创性良好，建议定期使用查重工具检查，确保符合学术规范。');
+    recs.push('请确认所有引用均已正确标注，参考文献格式符合学校要求。');
+  }
+
+  recs.push('建议在最终提交前再次进行查重检测，确保论文质量。');
+
+  recommendations.value = recs;
 };
 
 const getSimilarityColor = (similarity) => {
@@ -613,7 +714,7 @@ const getSimilarityRating = (similarity) => {
 
 const getBarColor = (index) => {
   const colors = ['#67c23a', '#90c657', '#e6a23c', '#f59a4c', '#f56c6c']
-  return colors[index] || '#909399'
+  return colors[index] || '#86868b'
 }
 
 const getSectionName = (key) => {
@@ -660,8 +761,22 @@ const formatDateTime = (date) => {
   return new Date(date).toLocaleString('zh-CN')
 }
 
-const viewHistoricalReport = (reportId) => {
-  ElMessage.info(`查看历史报告: ${reportId}`)
+const viewHistoricalReport = async (record) => {
+  if (!record.reportId) {
+    ElMessage.warning('该版本暂无报告')
+    return
+  }
+  const currentReportId = route.query.reportId
+  if (String(record.reportId) === String(currentReportId)) {
+    ElMessage.info('已经是当前查看的版本')
+    return
+  }
+  // 切换查看的历史版本：更新URL查询参数并重新加载报告数据
+  await router.replace({
+    path: route.path,
+    query: { ...route.query, reportId: record.reportId }
+  })
+  loadReportData()
 }
 
 // 标记组件是否已卸载
@@ -678,18 +793,18 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-// 现代配色方案
-$primary-color: #3b82f6;
-$primary-dark: #2563eb;
-$secondary-color: #8b5cf6;
-$success-color: #10b981;
-$warning-color: #f59e0b;
-$danger-color: #ef4444;
-$info-color: #64748b;
-$light-bg: #f8fafc;
+// Apple 配色方案
+$primary-color: #0066cc;
+$primary-dark: #0055aa;
+$secondary-color: #0066cc;
+$success-color: #34c759;
+$warning-color: #ff9500;
+$danger-color: #ff3b30;
+$info-color: #86868b;
+$light-bg: #f5f5f7;
 $card-bg: #ffffff;
-$text-primary: #1e293b;
-$text-secondary: #64748b;
+$text-primary: #1d1d1f;
+$text-secondary: #86868b;
 $border-color: #e2e8f0;
 
 .plagiarism-report-page {
@@ -714,7 +829,7 @@ $border-color: #e2e8f0;
     
     .page-title {
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 600;
       color: $text-primary;
       margin-bottom: 8px;
     }
@@ -725,11 +840,11 @@ $border-color: #e2e8f0;
       
       .el-button {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 8px;
+        border-radius: 11px;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+          /* translateY removed */
+          /* box-shadow removed */
         }
       }
     }
@@ -737,14 +852,14 @@ $border-color: #e2e8f0;
 
   .paper-info-card {
     margin-bottom: 24px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    /* box-shadow removed */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     
     &:hover {
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-      transform: translateY(-4px);
+      /* box-shadow removed */
+      /* translateY removed */
     }
     
     .paper-basic-info {
@@ -755,23 +870,10 @@ $border-color: #e2e8f0;
       
       .info-icon {
         padding: 20px;
-        background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
-        border-radius: 16px;
+        background: $primary-color;
+        border-radius: 18px;
         color: white;
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-        animation: pulse 2s infinite;
-        
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-          }
-          50% {
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
-          }
-          100% {
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-          }
-        }
+        /* box-shadow and pulse animation removed */
       }
       
       .info-content {
@@ -780,7 +882,7 @@ $border-color: #e2e8f0;
         .paper-title {
           margin: 0 0 16px 0;
           font-size: 24px;
-          font-weight: 700;
+          font-weight: 600;
           color: $text-primary;
           line-height: 1.4;
           animation: slideInLeft 0.6s ease-out;
@@ -819,7 +921,7 @@ $border-color: #e2e8f0;
             align-items: center;
             gap: 8px;
             color: $text-secondary;
-            font-size: 14px;
+            font-size: 17px;
             
             .el-icon {
               color: $primary-color;
@@ -831,8 +933,8 @@ $border-color: #e2e8f0;
   }
 
   .tab-card {
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    /* box-shadow removed */
     overflow: hidden;
     
     :deep(.el-tabs__content) {
@@ -848,7 +950,7 @@ $border-color: #e2e8f0;
       .el-tabs__item {
         color: $text-secondary;
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         padding: 16px 24px;
         margin-right: 16px;
         transition: all 0.3s ease;
@@ -879,13 +981,13 @@ $border-color: #e2e8f0;
       .similarity-card {
         text-align: center;
         padding: 32px;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+        background: #f5f5f7;
+        border-radius: 18px;
+        /* box-shadow removed */
         transition: all 0.3s ease;
         
         &:hover {
-          box-shadow: 0 6px 24px rgba(59, 130, 246, 0.15);
+          /* box-shadow removed */
         }
         
         .similarity-value {
@@ -900,7 +1002,7 @@ $border-color: #e2e8f0;
             
             .percentage {
               font-size: 32px;
-              font-weight: 700;
+              font-weight: 600;
               color: $text-primary;
             }
             
@@ -916,8 +1018,8 @@ $border-color: #e2e8f0;
       .distribution-chart {
         padding: 28px;
         background: $card-bg;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-radius: 18px;
+        /* box-shadow removed */
         
         h3 {
           margin: 0 0 20px 0;
@@ -931,7 +1033,7 @@ $border-color: #e2e8f0;
             margin-bottom: 16px;
             
             .bar-label {
-              font-size: 14px;
+              font-size: 17px;
               color: $text-secondary;
               margin-bottom: 8px;
             }
@@ -945,12 +1047,12 @@ $border-color: #e2e8f0;
                 height: 28px;
                 border-radius: 14px;
                 transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                /* box-shadow removed */
               }
               
               .bar-percentage {
                 min-width: 50px;
-                font-size: 14px;
+                font-size: 17px;
                 font-weight: 600;
                 color: $text-primary;
               }
@@ -965,20 +1067,20 @@ $border-color: #e2e8f0;
         text-align: center;
         padding: 24px;
         background: $card-bg;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 18px;
+        /* box-shadow removed */
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border: 1px solid $border-color;
         
         &:hover {
-          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
-          transform: translateY(-4px);
+          /* box-shadow removed */
+          /* translateY removed */
           border-color: $primary-color;
         }
         
         .stat-value {
           font-size: 32px;
-          font-weight: 700;
+          font-weight: 600;
           color: $primary-color;
           margin-bottom: 8px;
           animation: countUp 1s ease-out;
@@ -996,9 +1098,9 @@ $border-color: #e2e8f0;
         }
         
         .stat-label {
-          font-size: 14px;
+          font-size: 17px;
           color: $text-secondary;
-          font-weight: 500;
+          font-weight: 600;
         }
       }
     }
@@ -1008,8 +1110,8 @@ $border-color: #e2e8f0;
   .analysis-content {
     .section-analysis-card {
       margin-bottom: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 18px;
+      /* box-shadow removed */
       overflow: hidden;
       
       .card-header {
@@ -1034,12 +1136,12 @@ $border-color: #e2e8f0;
           padding: 20px;
           margin-bottom: 16px;
           background: $light-bg;
-          border-radius: 12px;
+          border-radius: 18px;
           transition: all 0.3s ease;
           border: 1px solid $border-color;
           
           &:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            /* box-shadow removed */
             border-color: $primary-color;
           }
           
@@ -1060,7 +1162,7 @@ $border-color: #e2e8f0;
             .section-stats {
               display: flex;
               gap: 24px;
-              font-size: 14px;
+              font-size: 17px;
               color: $text-secondary;
             }
           }
@@ -1075,7 +1177,7 @@ $border-color: #e2e8f0;
               min-width: 50px;
               font-weight: 600;
               color: $text-primary;
-              font-size: 14px;
+              font-size: 17px;
             }
           }
         }
@@ -1083,8 +1185,8 @@ $border-color: #e2e8f0;
     }
     
     .keywords-card {
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 18px;
+      /* box-shadow removed */
       overflow: hidden;
       
       .card-header {
@@ -1111,16 +1213,16 @@ $border-color: #e2e8f0;
             margin: 8px;
             background: $light-bg;
             color: $primary-color;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 18px;
+            font-size: 17px;
             transition: all 0.3s ease;
             border: 1px solid $border-color;
             
             &:hover {
               background: $primary-color;
               color: white;
-              transform: translateY(-2px);
-              box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+              /* translateY removed */
+              /* box-shadow removed */
             }
           }
         }
@@ -1136,24 +1238,24 @@ $border-color: #e2e8f0;
             color: $danger-color;
             white-space: nowrap;
             margin-top: 8px;
-            font-size: 14px;
+            font-size: 17px;
           }
           
           .keyword-tag.risk {
-            background: #fef2f2;
+            background: $light-bg;
             color: $danger-color;
             padding: 8px 16px;
             margin: 8px;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 18px;
+            font-size: 17px;
             transition: all 0.3s ease;
-            border: 1px solid #fecaca;
+            border: 1px solid $border-color;
             
             &:hover {
               background: $danger-color;
               color: white;
-              transform: translateY(-2px);
-              box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+              /* translateY removed */
+              /* box-shadow removed */
             }
           }
         }
@@ -1165,15 +1267,15 @@ $border-color: #e2e8f0;
   .sources-content {
     .source-card {
       margin-bottom: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 18px;
+      /* box-shadow removed */
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
       border: 1px solid $border-color;
       
       &:hover {
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-        transform: translateY(-4px);
+        /* box-shadow removed */
+        /* translateY removed */
         border-color: $primary-color;
       }
       
@@ -1200,7 +1302,7 @@ $border-color: #e2e8f0;
         gap: 24px;
         margin-bottom: 20px;
         color: $text-secondary;
-        font-size: 14px;
+        font-size: 17px;
         padding: 0 24px;
         
         .el-icon {
@@ -1221,19 +1323,19 @@ $border-color: #e2e8f0;
         
         .paragraph-item {
           background: $light-bg;
-          border-radius: 12px;
+          border-radius: 18px;
           padding: 20px;
           margin-bottom: 16px;
           border-left: 4px solid $primary-color;
           transition: all 0.3s ease;
           
           &:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            /* box-shadow removed */
           }
           
           .source-text, .paper-text {
             margin-bottom: 12px;
-            font-size: 14px;
+            font-size: 17px;
             line-height: 1.6;
             
             strong {
@@ -1244,7 +1346,7 @@ $border-color: #e2e8f0;
           
           .match-similarity {
             text-align: right;
-            font-size: 14px;
+            font-size: 17px;
             color: $danger-color;
             font-weight: 600;
           }
@@ -1257,8 +1359,8 @@ $border-color: #e2e8f0;
   .suggestions-content {
     .recommendations-card {
       margin-top: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 18px;
+      /* box-shadow removed */
       overflow: hidden;
       
       .card-header {
@@ -1282,14 +1384,14 @@ $border-color: #e2e8f0;
           gap: 16px;
           padding: 16px 20px;
           margin-bottom: 12px;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          border-radius: 12px;
+          background: #f5f5f7;
+          border-radius: 18px;
           transition: all 0.3s ease;
-          border: 1px solid #dbeafe;
+          border: 1px solid $border-color;
           
           &:hover {
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
-            transform: translateX(8px);
+            /* box-shadow removed */
+            /* translateX removed */
           }
           
           &:last-child {
@@ -1306,7 +1408,7 @@ $border-color: #e2e8f0;
             flex: 1;
             color: $text-primary;
             line-height: 1.6;
-            font-size: 14px;
+            font-size: 17px;
           }
         }
       }
@@ -1320,15 +1422,15 @@ $border-color: #e2e8f0;
     .history-item {
       padding: 20px;
       background: $card-bg;
-      border-radius: 12px;
+      border-radius: 18px;
       margin-bottom: 20px;
       transition: all 0.3s ease;
       border: 1px solid $border-color;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      /* box-shadow removed */
       
       &:hover {
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-        transform: translateY(-2px);
+        /* box-shadow removed */
+        /* translateY removed */
         border-color: $primary-color;
       }
       
@@ -1349,14 +1451,14 @@ $border-color: #e2e8f0;
         color: $text-secondary;
         margin-bottom: 16px;
         line-height: 1.6;
-        font-size: 14px;
+        font-size: 17px;
       }
       
       .history-actions {
         .el-button {
           padding: 0;
           color: $primary-color;
-          font-weight: 500;
+          font-weight: 600;
           
           &:hover {
             color: $primary-dark;
@@ -1380,7 +1482,7 @@ $border-color: #e2e8f0;
     
     :deep(.el-empty__description) {
       color: $text-secondary;
-      font-size: 14px;
+      font-size: 17px;
     }
   }
 }
@@ -1466,7 +1568,7 @@ $border-color: #e2e8f0;
         padding: 0 16px;
         
         .el-tabs__item {
-          font-size: 14px;
+          font-size: 17px;
           padding: 12px 16px;
         }
       }
@@ -1481,7 +1583,7 @@ $border-color: #e2e8f0;
       .keywords-card {
         .card-header {
           padding: 16px 20px;
-          font-size: 14px;
+          font-size: 17px;
         }
         
         .sections-list,
@@ -1526,7 +1628,7 @@ $border-color: #e2e8f0;
       .recommendations-card {
         .card-header {
           padding: 16px 20px;
-          font-size: 14px;
+          font-size: 17px;
         }
         
         .recommendations-list {
@@ -1553,12 +1655,12 @@ $border-color: #e2e8f0;
 
 ::-webkit-scrollbar-track {
   background: $light-bg;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: $border-color;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 

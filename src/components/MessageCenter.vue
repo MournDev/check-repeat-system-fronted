@@ -591,11 +591,11 @@ const getNotificationIcon = (messageType) => {
 const getNotificationColor = (messageType) => {
   const colorMap = {
     'SUCCESS': '#67C23A',
-    'INFO': '#409EFF',
+    'INFO': '#0066cc',
     'WARNING': '#E6A23C',
     'ERROR': '#F56C6C'
   }
-  return colorMap[messageType] || '#409EFF'
+  return colorMap[messageType] || '#0066cc'
 }
 
 const getMessageTypeText = (messageType) => {
@@ -954,7 +954,7 @@ watch(
 
         &.deadline {
           color: #f56c6c;
-          font-weight: 500;
+          font-weight: 400;
         }
       }
     }
@@ -971,7 +971,7 @@ watch(
 
     .deadline-text {
       color: #f56c6c;
-      font-weight: 500;
+      font-weight: 600;
     }
   }
 }
@@ -1010,7 +1010,7 @@ watch(
       padding: 20px;
       border-radius: 8px;
       text-align: center;
-      border-left: 4px solid #409EFF;
+      border-left: 4px solid #0066cc;
 
       &.unread {
         border-left-color: #F56C6C;
@@ -1065,13 +1065,13 @@ watch(
       cursor: pointer;
 
       &:hover {
-        border-color: #409EFF;
+        border-color: #0066cc;
         box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
       }
 
       &.unread {
         background-color: #f0f8ff;
-        border-left: 4px solid #409EFF;
+        border-left: 4px solid #0066cc;
       }
 
       .message-checkbox {
@@ -1156,8 +1156,8 @@ watch(
     margin-top: 20px;
 
     .selected-count {
-      color: #409EFF;
-      font-weight: 500;
+      color: #0066cc;
+      font-weight: 600;
     }
   }
 

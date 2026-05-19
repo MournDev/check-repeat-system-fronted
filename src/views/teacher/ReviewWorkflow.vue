@@ -327,7 +327,7 @@ onMounted(() => {
         
         .step-item {
           border: 1px solid #ebeef5;
-          border-radius: 8px;
+          border-radius: 11px;
           padding: 16px;
           margin-bottom: 16px;
           
@@ -346,14 +346,14 @@ onMounted(() => {
               .step-number {
                 width: 24px;
                 height: 24px;
-                background-color: #409eff;
+                background-color: #0066cc;
                 color: white;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 14px;
-                font-weight: 500;
+                font-size: 17px;
+                font-weight: 400;
               }
               
               .el-input {

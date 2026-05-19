@@ -64,7 +64,7 @@
           </div>
           <div class="chat-header-actions">
             <el-dropdown @command="handleChatAction">
-              <el-button type="text">
+              <el-button link>
                 <el-icon><Setting /></el-icon>
               </el-button>
               <template #dropdown>
@@ -79,7 +79,7 @@
         </div>
 
         <div class="chat-messages" ref="chatMessagesRef" v-loading="loadingMessages">
-          <div v-for="message in messages" :key="message.id" class="message-item" :class="{ 'own-message': message.senderId === userStore.userInfo?.userId }">
+          <div v-for="message in messages" :key="message.id" class="message-item" :class="{ 'own-message': String(message.senderId) === String(userStore.userInfo?.userId) }">
             <div class="message-avatar">
               <el-avatar :size="32" :src="message.senderAvatar || defaultAvatar">
                 {{ message.senderName.charAt(0) }}
@@ -103,7 +103,7 @@
             style="display: none"
             @change="handleFileSelect"
           />
-          <el-button type="text" @click="$refs.fileInput.click()">
+          <el-button link @click="$refs.fileInput.click()">
             <el-icon><Document /></el-icon>
           </el-button>
           <el-input
@@ -506,7 +506,7 @@ watch(
 .chat-center {
   padding: 20px;
   background: white;
-  border-radius: 8px;
+  border-radius: 11px;
   min-height: 600px;
 
   .header {
@@ -515,11 +515,11 @@ watch(
     align-items: center;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #e4e7ed;
+    border-bottom: 1px solid #d2d2d7;
 
     h1 {
       margin: 0;
-      color: #2c3e50;
+      color: #1d1d1f;
       font-size: 24px;
     }
 
@@ -532,19 +532,19 @@ watch(
   .chat-container {
     display: flex;
     height: 600px;
-    border: 1px solid #e4e7ed;
-    border-radius: 8px;
+    border: 1px solid #d2d2d7;
+    border-radius: 11px;
     overflow: hidden;
 
     .session-list {
       width: 300px;
-      border-right: 1px solid #e4e7ed;
+      border-right: 1px solid #d2d2d7;
       display: flex;
       flex-direction: column;
 
       .session-search {
         padding: 16px;
-        border-bottom: 1px solid #e4e7ed;
+        border-bottom: 1px solid #d2d2d7;
       }
 
       .session-items {
@@ -559,12 +559,12 @@ watch(
           transition: all 0.3s ease;
 
           &:hover {
-            background-color: #f5f7fa;
+            background-color: #f5f5f7;
           }
 
           &.active {
             background-color: #ecf5ff;
-            border-left: 4px solid #409EFF;
+            border-left: 4px solid #0066cc;
           }
 
           .session-avatar {
@@ -580,9 +580,9 @@ watch(
               align-items: center;
               justify-content: space-between;
               font-weight: 600;
-              color: #2c3e50;
+              color: #1d1d1f;
               margin-bottom: 4px;
-              font-size: 14px;
+              font-size: 17px;
             }
 
             .session-last-message {
@@ -624,7 +624,7 @@ watch(
         justify-content: space-between;
         align-items: center;
         padding: 16px;
-        border-bottom: 1px solid #e4e7ed;
+        border-bottom: 1px solid #d2d2d7;
 
         .chat-header-info {
           display: flex;
@@ -635,8 +635,8 @@ watch(
 
             .chat-header-name {
               font-weight: 600;
-              color: #2c3e50;
-              font-size: 14px;
+              color: #1d1d1f;
+              font-size: 17px;
             }
 
             .chat-header-members {
@@ -656,7 +656,7 @@ watch(
         flex: 1;
         padding: 20px;
         overflow-y: auto;
-        background-color: #fafafa;
+        background-color: #f5f5f7;
 
         .message-item {
           display: flex;
@@ -669,9 +669,9 @@ watch(
               align-items: flex-end;
 
               .message-text {
-                background-color: #409EFF;
+                background-color: #0066cc;
                 color: white;
-                border-radius: 12px 12px 0 12px;
+                border-radius: 18px 12px 0 12px;
               }
             }
           }
@@ -695,8 +695,8 @@ watch(
             .message-text {
               background-color: white;
               padding: 12px;
-              border-radius: 12px 12px 12px 0;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+              border-radius: 18px 12px 12px 0;
+              /* box-shadow removed for Apple HIG */
               word-break: break-all;
             }
 
@@ -718,7 +718,7 @@ watch(
         display: flex;
         align-items: flex-end;
         padding: 16px;
-        border-top: 1px solid #e4e7ed;
+        border-top: 1px solid #d2d2d7;
         gap: 12px;
 
         .upload-demo {
@@ -740,7 +740,7 @@ watch(
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #fafafa;
+      background-color: #f5f5f7;
     }
   }
 }
@@ -768,7 +768,7 @@ watch(
         width: 100%;
         height: 200px;
         border-right: none;
-        border-bottom: 1px solid #e4e7ed;
+        border-bottom: 1px solid #d2d2d7;
 
         .session-items {
           display: flex;

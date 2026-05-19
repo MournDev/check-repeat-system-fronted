@@ -29,10 +29,10 @@
     <!-- 主要统计卡片 -->
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
+        <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-              <span style="color: white; font-size: 24px;">📄</span>
+            <div class="stat-icon-wrapper" style="background: #0066cc;">
+              <el-icon color="white" size="24"><Document /></el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.totalReviews }}</div>
@@ -47,10 +47,10 @@
       </el-col>
 
       <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
+        <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-              <span style="color: white; font-size: 24px;">⏰</span>
+            <div class="stat-icon-wrapper" style="background: #0066cc;">
+              <el-icon color="white" size="24"><Clock /></el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.pendingReviews }}</div>
@@ -65,10 +65,10 @@
       </el-col>
 
       <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
+        <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-              <span style="color: white; font-size: 24px;">✅</span>
+            <div class="stat-icon-wrapper" style="background: #0066cc;">
+              <el-icon color="white" size="24"><CircleCheck /></el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.approvedReviews }}</div>
@@ -83,10 +83,10 @@
       </el-col>
 
       <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="stat-card" shadow="hover">
+        <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-              <span style="color: white; font-size: 24px;">👨‍🎓</span>
+            <div class="stat-icon-wrapper" style="background: #0066cc;">
+              <el-icon color="white" size="24"><User /></el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.currentStudents }}</div>
@@ -203,7 +203,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElLoading } from 'element-plus'
-// ECharts 通过 CDN 引入，全局 window.echarts 可用
 
 // API 接口导入
 import {
@@ -215,10 +214,12 @@ import {
   getCollegeDistribution,
   exportData as exportTeacherData
 } from '@/api/teacher'
+import * as echarts from 'echarts'
 
 // 图标导入
 import {
-  TrendCharts, PieChart as PieChartIcon, Histogram, OfficeBuilding, List, Download
+  TrendCharts, PieChart as PieChartIcon, Histogram, OfficeBuilding, List, Download,
+  Document, Clock, CircleCheck, User
 } from '@element-plus/icons-vue'
 
 // Store
@@ -434,9 +435,9 @@ const initStatusDistributionChart = async () => {
             ],
             emphasis: {
               itemStyle: {
-                shadowBlur: 10,
+                shadowBlur: 0,
                 shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                shadowColor: 'transparent'
               }
             }
           }
@@ -508,11 +509,7 @@ const initSimilarityChart = async () => {
             type: 'bar',
             data: [45, 32, 28, 15, 8],
             itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#83bff6' },
-                { offset: 0.5, color: '#188df0' },
-                { offset: 1, color: '#188df0' }
-              ])
+              color: '#0066cc'
             }
           }
         ]
@@ -537,9 +534,9 @@ const initSimilarityChart = async () => {
           data: [45, 32, 28, 15, 8],
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#83bff6' },
-              { offset: 0.5, color: '#188df0' },
-              { offset: 1, color: '#188df0' }
+              { offset: 0, color: '#0066cc' },
+              { offset: 0.5, color: '#0066cc' },
+              { offset: 1, color: '#0066cc' }
             ])
           }
         }
@@ -579,7 +576,7 @@ const initCollegeChart = async () => {
             type: 'bar',
             data: [25, 18, 12, 8],
             itemStyle: {
-              color: '#409eff'
+              color: '#0066cc'
             }
           }
         ]
@@ -603,7 +600,7 @@ const initCollegeChart = async () => {
           type: 'bar',
           data: [25, 18, 12, 8],
           itemStyle: {
-            color: '#409eff'
+            color: '#0066cc'
           }
         }
       ]
@@ -732,7 +729,7 @@ onUnmounted(() => {
           justify-content: center;
           width: 56px;
           height: 56px;
-          border-radius: 12px;
+          border-radius: 18px;
           margin-right: 16px;
         }
         
@@ -745,7 +742,7 @@ onUnmounted(() => {
           }
           
           .stat-label {
-            font-size: 14px;
+            font-size: 17px;
             color: #909399;
             margin: 8px 0 4px 0;
           }

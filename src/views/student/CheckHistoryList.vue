@@ -19,11 +19,11 @@
             clearable
             @change="fetchPapers"
           >
-            <el-option label="草稿" value="DRAFT"></el-option>
-            <el-option label="已提交" value="SUBMITTED"></el-option>
-            <el-option label="审核中" value="UNDER_REVIEW"></el-option>
-            <el-option label="通过" value="PASSED"></el-option>
-            <el-option label="驳回" value="REJECTED"></el-option>
+            <el-option label="待分配" value="pending"></el-option>
+            <el-option label="待查重" value="checking"></el-option>
+            <el-option label="待审核" value="auditing"></el-option>
+            <el-option label="审核通过" value="completed"></el-option>
+            <el-option label="审核驳回" value="rejected"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="论文类型">
@@ -271,11 +271,13 @@ const getPaperTypeText = (type) => {
 
 const getStatusTagType = (status) => {
   const statusMap = {
-    'DRAFT': 'info',
-    'SUBMITTED': 'primary',
-    'UNDER_REVIEW': 'warning',
-    'PASSED': 'success',
-    'REJECTED': 'danger'
+    'pending': 'info',
+    'assigned': '',
+    'checking': 'primary',
+    'auditing': 'warning',
+    'completed': 'success',
+    'rejected': 'danger',
+    'withdrawn': 'info'
   }
   return statusMap[status] || 'info'
 }
@@ -318,7 +320,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .check-history-list-page {
   padding: 20px;
-  background-color: #f5f7fa;
+  background-color: #f5f5f7;
   min-height: 100vh;
 
   .page-header {
@@ -327,13 +329,13 @@ onMounted(() => {
     .page-title {
       font-size: 18px;
       font-weight: 600;
-      color: #303133;
+      color: #1d1d1f;
     }
   }
 
   .filter-card {
     margin-bottom: 20px;
-    border-radius: 12px;
+    border-radius: 18px;
     
     :deep(.el-card__body) {
       padding: 20px;
@@ -341,7 +343,7 @@ onMounted(() => {
   }
 
   .papers-card {
-    border-radius: 12px;
+    border-radius: 18px;
     
     .card-header {
       display: flex;
@@ -349,12 +351,12 @@ onMounted(() => {
       justify-content: space-between;
       gap: 8px;
       font-weight: 600;
-      color: #303133;
-      
+      color: #1d1d1f;
+
       .header-right {
         .total-count {
-          font-size: 14px;
-          color: #909399;
+          font-size: 17px;
+          color: #86868b;
           font-weight: normal;
         }
       }
@@ -371,18 +373,18 @@ onMounted(() => {
     gap: 8px;
     
     .paper-title {
-      font-weight: 500;
-      color: #303133;
+      font-weight: 600;
+      color: #1d1d1f;
       cursor: pointer;
-      
+
       &:hover {
-        color: #409eff;
+        color: #0066cc;
       }
     }
   }
 
   .similarity-excellent { color: #67c23a; }
-  .similarity-good { color: #409eff; }
+  .similarity-good { color: #0066cc; }
   .similarity-warning { color: #e6a23c; }
   .similarity-danger { color: #f56c6c; }
   

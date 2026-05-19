@@ -240,7 +240,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PaperDetail from '@/views/student/PaperDetail.vue'
-import { getReviewedList } from '@/api/teacher.js'
+import { getReviewedList, downloadPaper, contactStudent } from '@/api/teacher.js'
 import { getStatusText, getStatusType } from '@/utils/reviewStatus.js'
 import { formatDateTime } from '@/utils/dataType.js'
 import {
@@ -363,7 +363,8 @@ const viewPaperDetail = (row) => {
   detailDialogVisible.value = true
 }
 
-const handleMoreAction = (row, command) => {
+const handleMoreAction = async (row, command) => {
+  const paperId = row.paperId || row.paperBaseInfo?.paperId
   switch (command) {
     case 'reAudit':
       ElMessageBox.confirm('确定要重新审核这篇论文吗？', '重新审核', {
@@ -373,16 +374,55 @@ const handleMoreAction = (row, command) => {
       })
       break
     case 'download':
-      ElMessage.success('开始下载论文文件')
+      if (!paperId) {
+        ElMessage.error('无法获取论文ID')
+        return
+      }
+      try {
+        const res = await downloadPaper(paperId)
+        const blob = new Blob([res.data], { type: 'application/octet-stream' })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `论文_${paperId}.docx`
+        link.click()
+        window.URL.revokeObjectURL(url)
+        ElMessage.success('论文下载成功')
+      } catch (error) {
+        console.error('下载论文失败:', error)
+        ElMessage.error('下载论文失败，请稍后重试')
+      }
       break
     case 'contact':
-      ElMessage.info(`联系学生：${row.studentName || row.studentBaseInfo?.studentName || row.studentBaseInfo?.realName || '未知学生'} (${row.studentId || row.studentBaseInfo?.studentId || row.studentBaseInfo?.studentNo || '未知学号'})`)
+      if (!paperId) {
+        ElMessage.error('无法获取论文信息')
+        return
+      }
+      try {
+        const { value: content } = await ElMessageBox.prompt('请输入要发送给学生的消息', '联系学生', {
+          inputType: 'textarea',
+          confirmButtonText: '发送',
+          cancelButtonText: '取消'
+        })
+        if (content) {
+          const res = await contactStudent({ paperId: String(paperId), content })
+          if (res.code === 200) {
+            ElMessage.success('消息已发送给学生')
+          } else {
+            ElMessage.error(res.message || '发送失败')
+          }
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('联系学生失败:', error)
+          ElMessage.error('发送消息失败，请稍后重试')
+        }
+      }
       break
   }
 }
 
 const handleSortChange = ({ prop, order }) => {
-  console.log('排序变化:', prop, order)
   fetchReviewData()
 }
 
@@ -403,7 +443,7 @@ onMounted(() => {
 
 <style scoped>
 .teacher-review {
-  background-color: #f5f7fa;
+  background-color: #f5f5f7;
 }
 
 .page-header {
@@ -427,7 +467,7 @@ onMounted(() => {
 
 .header-left .page-subtitle {
   margin: 8px 0 0;
-  font-size: 14px;
+  font-size: 17px;
   color: #909399;
 }
 
@@ -461,7 +501,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   color: #303133;
 }
 
@@ -472,7 +512,7 @@ onMounted(() => {
 }
 
 .student-name {
-  font-weight: 500;
+  font-weight: 400;
   color: #303133;
 }
 
@@ -494,7 +534,7 @@ onMounted(() => {
 }
 
 .paper-title {
-  font-weight: 500;
+  font-weight: 400;
   color: #303133;
   line-height: 1.4;
 }
@@ -508,7 +548,7 @@ onMounted(() => {
 }
 
 .version {
-  background-color: #f0f2f5;
+  background-color: #f5f5f7;
   padding: 2px 6px;
   border-radius: 3px;
 }
@@ -527,8 +567,8 @@ onMounted(() => {
 .similarity-value {
   min-width: 45px;
   text-align: right;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 400;
 }
 
 .similarity-low {

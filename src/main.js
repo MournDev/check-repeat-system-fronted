@@ -2,8 +2,9 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import '@/assets/scss/index.scss' // 全局样式
-import '@/styles/global-styles.scss' // 统一设计风格样式
+import '@/assets/scss/index.scss' // 全局样式入口 (design tokens, Element Plus theme, typography)
+import '@/styles/global-styles.scss' // Apple design utility styles
+import './style.css' // Apple base overrides
 //导入Element Plus
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css' // Element Plus样式

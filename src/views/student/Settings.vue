@@ -313,7 +313,7 @@
               justify-content: space-between;
               align-items: center;
             ">
-            <div class="page-size-selector" style="color: #606266">
+            <div class="page-size-selector" style="color: #86868b">
               <span>每页显示：</span>
               <el-select v-model="pageSize" @change="handleSizeChange" style="width: 100px">
                 <el-option label="5 条" :value="5" />
@@ -474,7 +474,6 @@ const showEmailVerifyDialog = () => {
 
 // 发送验证邮件
 const sendVerificationEmail = async () => {
-  console.log("🔍 发送验证邮件开始");
 
   if (userInfo.value.emailVerified) {
     ElMessage.info("邮箱已验证");
@@ -764,7 +763,6 @@ const onAvatarSelected = async (event) => {
     // 根据后端返回结构调整取值
     const avatarUrl = res.data;
     if (avatarUrl) {
-      console.log("上传成功，头像 URL：", avatarUrl);
       // 使用 userStore 的 updateAvatar 方法
       userStore.updateAvatar(avatarUrl);
       await nextTick();
@@ -848,12 +846,6 @@ const displayUserInfo = computed(() => {
     ? userInfo.value
     : userStore.userInfo || {};
 
-  console.log("🔄 displayUserInfo 计算:", {
-    userInfo: userInfo.value?.emailVerified,
-    userStore: userStore.userInfo?.emailVerified,
-    result: source.emailVerified
-  });
-
   return source;
 });
 // 计算属性
@@ -911,7 +903,6 @@ const saveProfile = async () => {
 
     // 保存操作
     const response = await updateUserInfo(submitData);
-    console.log("更新用户信息接口响应：", response);
     if (response.data) {
       // 确保保留原有的头像信息
       const updatedUserInfo = {
@@ -1036,11 +1027,6 @@ const confirmChangePassword = async () => {
 const initializeUserData = () => {
   // 从 userStore 获取用户信息
   const storeInfo = userStore.userInfo;
-  console.log("初始化数据源:", {
-    storeInfo: storeInfo,
-    storeEmailVerified: storeInfo?.emailVerified,
-    currentUserInfo: userInfo.value?.emailVerified
-  });
 
   if (storeInfo) {
     // 更新 userInfo 响应式数据
@@ -1106,7 +1092,6 @@ const checkEmailVerification = async () => {
   }
 
   const token = route.query.verify_token || route.query.token;
-  console.log("检查邮箱验证token:", token); // 添加调试信息
   if (token) {
     try {
       const loading = ElLoading.service({
@@ -1115,7 +1100,6 @@ const checkEmailVerification = async () => {
       });
 
       const response = await verifyEmailAPI(token);
-      console.log("邮箱响应:", response);
 
       loading.close();
 
@@ -1163,19 +1147,19 @@ const checkEmailVerification = async () => {
     margin: 0 0 0.5rem 0;
     font-size: 1.75rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: #1d1d1f;
   }
 
   .page-desc {
     margin: 0;
-    color: #7f8c8d;
+    color: #86868b;
     font-size: 0.95rem;
   }
 }
 
 .profile-content {
   .el-card {
-    border-radius: 12px;
+    border-radius: 18px;
     border: 1px solid #f1f2f6;
     margin-bottom: 1.5rem;
 
@@ -1192,11 +1176,11 @@ const checkEmailVerification = async () => {
           display: flex;
           align-items: center;
           font-weight: 600;
-          color: #2c3e50;
+          color: #1d1d1f;
 
           .el-icon {
             margin-right: 0.5rem;
-            color: #667eea;
+            color: #0066cc;
           }
         }
       }
@@ -1222,7 +1206,7 @@ const checkEmailVerification = async () => {
   .user-details {
     .user-name {
       margin: 0 0 0.5rem 0;
-      color: #2c3e50;
+      color: #1d1d1f;
       font-size: 1.25rem;
     }
 
@@ -1235,11 +1219,11 @@ const checkEmailVerification = async () => {
       align-items: center;
       justify-content: flex-start;
       margin: 0.75rem 0;
-      color: #5a6c7d;
+      color: #86868b;
 
       .el-icon {
         margin-right: 0.5rem;
-        color: #667eea;
+        color: #0066cc;
         width: 16px;
       }
 
@@ -1250,7 +1234,7 @@ const checkEmailVerification = async () => {
       }
 
       strong {
-        color: #2c3e50;
+        color: #1d1d1f;
       }
     }
   }
@@ -1262,14 +1246,14 @@ const checkEmailVerification = async () => {
 
     .stat-number {
       font-size: 1.5rem;
-      font-weight: 700;
-      color: #2c3e50;
+      font-weight: 600;
+      color: #1d1d1f;
       line-height: 1;
     }
 
     .stat-label {
       font-size: 0.875rem;
-      color: #7f8c8d;
+      color: #86868b;
       margin-top: 0.25rem;
     }
   }
@@ -1281,7 +1265,7 @@ const checkEmailVerification = async () => {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 0;
-    border-bottom: 1px solid #f8f9fa;
+    border-bottom: 1px solid #f5f5f7;
 
     &:last-child {
       border-bottom: none;
@@ -1293,20 +1277,20 @@ const checkEmailVerification = async () => {
 
       .el-icon {
         margin-right: 0.75rem;
-        color: #667eea;
+        color: #0066cc;
         font-size: 1.25rem;
       }
 
       .security-details {
         .security-title {
-          font-weight: 500;
-          color: #2c3e50;
+          font-weight: 600;
+          color: #1d1d1f;
           margin-bottom: 0.25rem;
         }
 
         .security-desc {
           font-size: 0.875rem;
-          color: #7f8c8d;
+          color: #86868b;
         }
       }
     }

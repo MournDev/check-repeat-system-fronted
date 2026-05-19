@@ -74,7 +74,7 @@ export const batchThirdPartyCheck = (paperIds) => {
 // 获取论文库统计
 export const getPaperStats = () => {
   return request({
-    url: '/api/admin/papers/stats',
+    url: '/api/admin/papers/statistics',
     method: 'get'
   })
 }

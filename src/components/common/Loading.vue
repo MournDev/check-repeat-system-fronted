@@ -47,16 +47,16 @@ const props = defineProps({
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #0066cc;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .loading-text {
-  font-size: 16px;
-  color: #667eea;
-  font-weight: 500;
+  font-size: 17px;
+  color: #0066cc;
+  font-weight: 400;
 }
 
 @keyframes spin {

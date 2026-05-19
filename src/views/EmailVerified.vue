@@ -50,10 +50,8 @@ const email = ref('');
 const verifyEmail = async (token) => {
   try {
     loading.value = true;
-    console.log('开始验证，token:', token);
     
     const response = await verifyEmailAPI(token);
-    console.log('验证响应:', response);
     
     if (response.success || response.code === 200) {
       success.value = true;
@@ -89,7 +87,6 @@ const goToHome = () => {
 };
 
 onMounted(() => {
-  console.log('路由参数:', route.query);
   
   const token = route.query.token || route.query.verify_token;
   
@@ -110,7 +107,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc; /* Slate-50 */
+  background: #f5f5f7; /* Slate-50 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 24px;
 }
@@ -122,13 +119,11 @@ onMounted(() => {
   max-width: 500px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 48px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-  
+
   &:hover {
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
     border-color: #cbd5e1;
   }
   
@@ -156,9 +151,12 @@ onMounted(() => {
         margin: 0 8px;
         
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-          border-color: #93c5fd;
+          filter: brightness(0.95);
+        }
+
+        &:active {
+          transform: scale(0.95);
+          transition: transform 0.15s ease;
         }
       }
     }

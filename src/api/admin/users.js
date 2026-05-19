@@ -53,36 +53,20 @@ export const updateUserStatus = (userId, status) => {
   })
 }
 
-// 重置用户密码
-export const resetUserPassword = (userId, newPassword) => {
-  return request({
-    url: `/api/admin/users/${userId}/reset-password`,
-    method: 'put',
-    data: { newPassword: newPassword }
-  })
-}
-
-// 获取用户详细信息
-export const getUserDetail = (userId) => {
-  return request({
-    url: `/api/admin/users/${userId}`,
-    method: 'get'
-  })
-}
-
-// 获取学生详细信息
+// 获取学生详细信息（复用 /api/admin/users/{userId} 端点）
 export const getStudentDetail = (studentId) => {
   return request({
-    url: `/api/admin/students/${studentId}`,
+    url: `/api/admin/users/${studentId}`,
     method: 'get'
   })
 }
 
-// 获取用户登录历史
-export const getUserLoginHistory = (userId, params) => {
+// 导出用户列表
+export const exportUsers = (params) => {
   return request({
-    url: `/api/admin/users/${userId}/login-history`,
+    url: '/api/admin/users/export',
     method: 'get',
-    params: params
+    params: params,
+    responseType: 'blob'
   })
 }

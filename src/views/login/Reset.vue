@@ -113,7 +113,7 @@
 
     <div class="signup-row">
       已有账号？
-      <el-button type="text" @click="goLogin" class="signup-link">
+      <el-button link @click="goLogin" class="signup-link">
         返回登录
       </el-button>
     </div>
@@ -180,12 +180,10 @@ const resetRules = {
 
 const handleReset = async () => {
   try {
-    console.log('开始重置密码验证...')
     await resetFormRef.value.validate()
     loading.value = true
     error.value = ''
 
-    console.log('表单验证通过，准备调用接口...')
     
     // 构建请求数据
     const payload = {
@@ -194,11 +192,9 @@ const handleReset = async () => {
       newPassword: resetForm.value.newPassword
     }
 
-    console.log('调用忘记密码接口，数据:', payload)
     
     // 调用忘记密码接口
     const res = await forgetPassword(payload)
-    console.log('重置密码成功，响应:', res.data)
 
     ElMessage.success('密码重置成功，请使用新密码登录')
     
@@ -237,44 +233,44 @@ const goLogin = () => {
 
   :deep(.el-input__wrapper) {
     height: 48px !important;
-    background: #fafafa !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 10px !important;
+    background: #f5f5f7 !important;
+    border: 1px solid #d2d2d7 !important;
+    border-radius: 9999px !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
   }
 
   :deep(.el-input__wrapper:hover) {
-    border-color: #3b82f6 !important;
+    border-color: #0066cc !important;
   }
 
   :deep(.el-input__wrapper.is-focus),
   :deep(.el-input__wrapper:focus) {
-    border-color: #1e40af !important;
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.08) !important;
+    border-color: #0066cc !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12) !important;
     background: #ffffff !important;
   }
 
   :deep(.el-input__inner) {
     background: transparent !important;
     font-size: 14px !important;
-    color: #111827 !important;
+    color: #1d1d1f !important;
   }
 
   :deep(.el-input__inner::placeholder) {
-    color: #c0c4cc !important;
+    color: #86868b !important;
   }
 }
 
 .field-label {
   font-size: 13px;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 400;
+  color: #1d1d1f;
   margin-bottom: 6px;
   letter-spacing: 0.2px;
 }
 
 .eye-toggle {
-  color: #6b7280;
+  color: #86868b;
   cursor: pointer;
   font-size: 16px;
   display: flex;
@@ -283,7 +279,7 @@ const goLogin = () => {
 }
 
 .eye-toggle:hover {
-  color: #374151;
+  color: #1d1d1f;
 }
 
 .submit-btn {
@@ -291,17 +287,17 @@ const goLogin = () => {
   height: 48px !important;
   font-size: 15px !important;
   font-weight: 600 !important;
-  border-radius: 10px !important;
-  background: #1e40af !important;
-  border-color: #1e40af !important;
+  border-radius: 9999px !important;
+  background: #0066cc !important;
+  border-color: #0066cc !important;
   letter-spacing: 1px;
   transition: background 0.2s, opacity 0.2s !important;
   cursor: pointer;
 }
 
 .submit-btn:hover {
-  background: #1d4ed8 !important;
-  border-color: #1d4ed8 !important;
+  background: #0055aa !important;
+  border-color: #0055aa !important;
   opacity: 1 !important;
 }
 
@@ -314,7 +310,7 @@ const goLogin = () => {
   align-items: center;
   gap: 12px;
   margin: 20px 0 0;
-  color: #d1d5db;
+  color: #d2d2d7;
   font-size: 13px;
 }
 
@@ -323,30 +319,30 @@ const goLogin = () => {
   content: '';
   flex: 1;
   height: 1px;
-  background: #e5e7eb;
+  background: #d2d2d7;
 }
 
 .divider span {
-  color: #9ca3af;
+  color: #86868b;
   white-space: nowrap;
 }
 
 .signup-row {
   text-align: center;
   font-size: 13px;
-  color: #6b7280;
+  color: #86868b;
   margin-top: 28px;
 }
 
 .signup-link {
-  color: #1e40af !important;
-  font-weight: 500;
+  color: #0066cc !important;
+  font-weight: 400;
   text-decoration: none;
   cursor: pointer;
 }
 
 .signup-link:hover {
   text-decoration: underline;
-  color: #1d4ed8 !important;
+  color: #0055aa !important;
 }
 </style>

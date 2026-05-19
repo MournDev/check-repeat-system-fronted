@@ -238,7 +238,7 @@
                     </div>
                     
                     <div class="advice-section general-tips">
-                      <h3><el-icon color="#409eff"><InfoFilled /></el-icon> 通用改进建议</h3>
+                      <h3><el-icon color="#0066cc"><InfoFilled /></el-icon> 通用改进建议</h3>
                       <div class="tips-list">
                         <div 
                           v-for="(tip, index) in personalAdvice.generalTips" 
@@ -544,11 +544,10 @@ const updateChecklist = async (item, index) => {
 
 const openResource = async (resource) => {
   try {
-    // 如果资源有URL，打开链接
     if (resource.url) {
       window.open(resource.url, '_blank')
     } else {
-      ElMessage.info(`正在打开资源: ${resource.title}`)
+      ElMessage.warning(`资源"${resource.title}"暂无可用链接`)
     }
   } catch (error) {
     ElMessage.error('打开资源失败')
@@ -558,10 +557,10 @@ const openResource = async (resource) => {
 const getResourceColor = (type) => {
   const colors = {
     book: '#67c23a',
-    online: '#409eff',
+    online: '#0066cc',
     video: '#e6a23c',
     document: '#909399',
-    course: '#764ba2'
+    course: '#0066cc'
   }
   return colors[type] || '#909399'
 }
@@ -604,7 +603,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .academic-integrity-page {
   padding: 20px;
-  background-color: #f5f7fa;
+  background-color: #f5f5f7;
   min-height: 100vh;
 
   .page-header {
@@ -613,20 +612,20 @@ onUnmounted(() => {
     
     .page-title {
       font-size: 28px;
-      font-weight: 700;
-      color: #303133;
+      font-weight: 600;
+      color: #1d1d1f;
       margin-bottom: 12px;
     }
     
     .page-subtitle {
       font-size: 16px;
-      color: #606266;
+      color: #86868b;
       margin: 0;
     }
   }
 
   .navigation-card {
-    border-radius: 16px;
+    border-radius: 18px;
     overflow: hidden;
     
     :deep(.el-tabs__content) {
@@ -636,7 +635,7 @@ onUnmounted(() => {
 
   .tab-content {
     .content-card {
-      border-radius: 12px;
+      border-radius: 18px;
       height: 100%;
       
       .card-header {
@@ -644,7 +643,7 @@ onUnmounted(() => {
         align-items: center;
         gap: 8px;
         font-weight: 600;
-        color: #303133;
+        color: #1d1d1f;
         
         .el-tag {
           margin-left: auto;
@@ -660,10 +659,10 @@ onUnmounted(() => {
           
           li {
             margin-bottom: 8px;
-            color: #606266;
+            color: #86868b;
             
             strong {
-              color: #303133;
+              color: #1d1d1f;
             }
           }
         }
@@ -678,13 +677,13 @@ onUnmounted(() => {
             gap: 16px;
             margin-bottom: 20px;
             padding: 16px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: #f5f5f7;
+            border-radius: 11px;
             
             .step-number {
               width: 32px;
               height: 32px;
-              background: #667eea;
+              background: #0066cc;
               color: white;
               border-radius: 50%;
               display: flex;
@@ -697,12 +696,12 @@ onUnmounted(() => {
             .step-content {
               h4 {
                 margin: 0 0 8px 0;
-                color: #303133;
+                color: #1d1d1f;
               }
               
               p {
                 margin: 0;
-                color: #606266;
+                color: #86868b;
               }
             }
           }
@@ -710,7 +709,7 @@ onUnmounted(() => {
         
         .comparison-section {
           padding: 20px;
-          border-radius: 12px;
+          border-radius: 18px;
           margin-bottom: 20px;
           
           &.good {
@@ -744,7 +743,7 @@ onUnmounted(() => {
             
             li {
               margin-bottom: 12px;
-              color: #303133;
+              color: #1d1d1f;
             }
           }
         }
@@ -754,28 +753,28 @@ onUnmounted(() => {
           
           h3 {
             margin: 0 0 20px 0;
-            color: #303133;
+            color: #1d1d1f;
           }
           
           .format-example {
             h4 {
               margin: 0 0 12px 0;
-              color: #606266;
+              color: #86868b;
               font-size: 16px;
             }
             
             .example {
-              background: #f8f9fa;
+              background: #f5f5f7;
               padding: 12px;
-              border-radius: 6px;
+              border-radius: 11px;
               font-family: monospace;
               margin-bottom: 8px;
-              color: #303133;
+              color: #1d1d1f;
             }
             
             .example-text {
-              color: #606266;
-              font-size: 14px;
+              color: #86868b;
+              font-size: 17px;
               margin-bottom: 20px;
             }
           }
@@ -784,7 +783,7 @@ onUnmounted(() => {
     }
     
     .sidebar-card {
-      border-radius: 12px;
+      border-radius: 18px;
       height: fit-content;
       
       .card-header {
@@ -792,7 +791,7 @@ onUnmounted(() => {
         align-items: center;
         gap: 8px;
         font-weight: 600;
-        color: #303133;
+        color: #1d1d1f;
       }
       
       .checklist {
@@ -831,7 +830,7 @@ onUnmounted(() => {
           .advice-item {
             background: #fef0f0;
             border: 1px solid #fab6b6;
-            border-radius: 12px;
+            border-radius: 18px;
             padding: 20px;
             margin-bottom: 16px;
             
@@ -847,7 +846,7 @@ onUnmounted(() => {
               margin-bottom: 12px;
               
               .similarity-rate {
-                font-weight: 700;
+                font-weight: 600;
                 font-size: 18px;
                 color: #f56c6c;
                 
@@ -858,21 +857,21 @@ onUnmounted(() => {
             }
             
             .area-issue {
-              color: #303133;
+              color: #1d1d1f;
               margin-bottom: 12px;
-              font-weight: 500;
+              font-weight: 600;
             }
             
             .area-suggestion {
               display: flex;
               align-items: flex-start;
               gap: 8px;
-              color: #606266;
+              color: #86868b;
               line-height: 1.5;
               
               .el-icon {
                 margin-top: 3px;
-                color: #409eff;
+                color: #0066cc;
               }
             }
           }
@@ -883,8 +882,8 @@ onUnmounted(() => {
               align-items: flex-start;
               gap: 12px;
               padding: 16px;
-              background: #f8f9fa;
-              border-radius: 8px;
+              background: #f5f5f7;
+              border-radius: 11px;
               margin-bottom: 12px;
               
               .el-icon {
@@ -894,7 +893,7 @@ onUnmounted(() => {
               
               span {
                 flex: 1;
-                color: #303133;
+                color: #1d1d1f;
                 line-height: 1.5;
               }
             }
@@ -904,7 +903,7 @@ onUnmounted(() => {
     }
     
     .resource-card {
-      border-radius: 12px;
+      border-radius: 18px;
       height: fit-content;
       
       .card-header {
@@ -912,7 +911,7 @@ onUnmounted(() => {
         align-items: center;
         gap: 8px;
         font-weight: 600;
-        color: #303133;
+        color: #1d1d1f;
       }
       
       .resources {
@@ -921,14 +920,17 @@ onUnmounted(() => {
           align-items: center;
           gap: 12px;
           padding: 16px;
-          border-radius: 8px;
+          border-radius: 11px;
           margin-bottom: 12px;
           cursor: pointer;
           transition: all 0.3s ease;
           
           &:hover {
             background: #f0f2f5;
-            transform: translateX(4px);
+          }
+
+          &:active {
+            transform: scale(0.95);
           }
           
           .resource-icon {
@@ -939,14 +941,14 @@ onUnmounted(() => {
             flex: 1;
             
             .resource-title {
-              font-weight: 500;
-              color: #303133;
+              font-weight: 600;
+              color: #1d1d1f;
               margin-bottom: 4px;
             }
             
             .resource-type {
               font-size: 12px;
-              color: #909399;
+              color: #86868b;
             }
           }
         }
@@ -954,14 +956,14 @@ onUnmounted(() => {
     }
     
     .case-card {
-      border-radius: 12px;
+      border-radius: 18px;
       
       .card-header {
         display: flex;
         align-items: center;
         gap: 8px;
         font-weight: 600;
-        color: #303133;
+        color: #1d1d1f;
         
         .el-tag {
           margin-left: auto;
@@ -974,11 +976,11 @@ onUnmounted(() => {
           
           h4 {
             margin: 0 0 8px 0;
-            color: #303133;
+            color: #1d1d1f;
           }
           
           p {
-            color: #606266;
+            color: #86868b;
             line-height: 1.5;
           }
         }
@@ -988,29 +990,29 @@ onUnmounted(() => {
           
           h4 {
             margin: 0 0 12px 0;
-            color: #303133;
+            color: #1d1d1f;
           }
           
           .example-content {
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: #f5f5f7;
+            border-radius: 11px;
             padding: 20px;
             
             .quote {
               font-style: italic;
               margin: 0 0 16px 0;
-              color: #303133;
+              color: #1d1d1f;
               line-height: 1.6;
             }
             
             .citation {
               text-align: right;
-              color: #606266;
-              font-size: 14px;
+              color: #86868b;
+              font-size: 17px;
               
               &.warning {
                 color: #f56c6c;
-                font-weight: 500;
+                font-weight: 600;
               }
             }
           }
@@ -1019,7 +1021,7 @@ onUnmounted(() => {
         .case-analysis {
           h4 {
             margin: 0 0 12px 0;
-            color: #303133;
+            color: #1d1d1f;
           }
           
           ul {
@@ -1027,7 +1029,7 @@ onUnmounted(() => {
             
             li {
               margin-bottom: 8px;
-              color: #606266;
+              color: #86868b;
             }
           }
         }
@@ -1035,7 +1037,7 @@ onUnmounted(() => {
     }
     
     .contact-card {
-      border-radius: 12px;
+      border-radius: 18px;
       height: fit-content;
       
       .card-header {
@@ -1043,12 +1045,12 @@ onUnmounted(() => {
         align-items: center;
         gap: 8px;
         font-weight: 600;
-        color: #303133;
+        color: #1d1d1f;
       }
       
       .contact-content {
         p {
-          color: #606266;
+          color: #86868b;
           margin-bottom: 20px;
           line-height: 1.5;
         }
@@ -1059,16 +1061,16 @@ onUnmounted(() => {
             align-items: center;
             gap: 12px;
             padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: #f5f5f7;
+            border-radius: 11px;
             margin-bottom: 12px;
             
             .el-icon {
-              color: #409eff;
+              color: #0066cc;
             }
             
             span {
-              color: #303133;
+              color: #1d1d1f;
             }
           }
         }
@@ -1084,12 +1086,12 @@ onUnmounted(() => {
   :deep(.el-collapse) {
     .el-collapse-item__header {
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 600;
       padding: 20px;
       
       .el-icon {
         margin-right: 12px;
-        color: #409eff;
+        color: #0066cc;
       }
     }
     
@@ -1102,25 +1104,25 @@ onUnmounted(() => {
       
       .faq-answer {
         p {
-          color: #606266;
+          color: #86868b;
           line-height: 1.6;
           margin-bottom: 16px;
         }
         
         .faq-example {
-          background: #f8f9fa;
-          border-radius: 8px;
+          background: #f5f5f7;
+          border-radius: 11px;
           padding: 16px;
           margin-top: 16px;
           
           h4 {
             margin: 0 0 8px 0;
-            color: #303133;
+            color: #1d1d1f;
           }
           
           p {
             margin: 0;
-            color: #606266;
+            color: #86868b;
             font-style: italic;
           }
         }

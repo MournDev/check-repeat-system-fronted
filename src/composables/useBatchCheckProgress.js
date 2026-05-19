@@ -16,7 +16,7 @@
  * ```
  */
 
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createBatchCheckTasks } from '@/api/student';
 import { useCheckProgress } from './useCheckProgress';
@@ -24,13 +24,16 @@ import { useCheckProgress } from './useCheckProgress';
 export function useBatchCheckProgress() {
   // 任务列表
   const tasks = reactive([]);
-  
+
   // 总体进度
   const overallProgress = ref(0);
-  
+
   // 是否正在批量处理
   const isBatchProcessing = ref(false);
-  
+
+  // WebSocket disconnect 函数列表（用于清理）
+  const disconnectFns = [];
+
   // 统计信息
   const statistics = reactive({
     total: 0,
@@ -121,13 +124,14 @@ export function useBatchCheckProgress() {
    */
   const monitorBatchTasks = (successList) => {
     successList.forEach(item => {
-      const { connect } = useCheckProgress();
-      
+      const { connect, disconnect } = useCheckProgress();
+      disconnectFns.push(disconnect);
+
       // 连接到 WebSocket 并监听进度
       connect(item.taskId, (data) => {
         // 更新任务进度
         updateTaskProgress(item.taskId, {
-          stage: data.type === 'complete' ? 'COMPLETED' : 
+          stage: data.type === 'complete' ? 'COMPLETED' :
                  data.type === 'error' ? 'FAILED' : 'PROCESSING',
           percent: data.progress || 0,
           message: data.message || ''
@@ -135,6 +139,21 @@ export function useBatchCheckProgress() {
       });
     });
   };
+
+  /**
+   * 清理所有 WebSocket 连接
+   */
+  const disconnectAll = () => {
+    disconnectFns.forEach(disconnect => {
+      try { disconnect(); } catch (e) { /* ignore */ }
+    });
+    disconnectFns.length = 0;
+  };
+
+  // 组件卸载时自动清理
+  onUnmounted(() => {
+    disconnectAll();
+  });
 
   /**
    * 更新任务进度
@@ -207,6 +226,7 @@ export function useBatchCheckProgress() {
     statistics,
     isBatchProcessing,
     getStatusText,
-    getStatusColor
+    getStatusColor,
+    disconnectAll
   };
 }

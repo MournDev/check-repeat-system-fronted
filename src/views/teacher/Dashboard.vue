@@ -467,7 +467,6 @@ import { ref, onMounted, onUnmounted, reactive, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
-// ECharts 通过 CDN 引入，全局 window.echarts 可用
 import { getPaperStatusText, getPaperStatusType } from '@/utils/dataType'
 
 // API 接口导入
@@ -477,11 +476,10 @@ import {
   getStudentStats,
   downloadPaper,
   exportTeacherData,
-  getReviewStats,
+  getReviewStatusDistribution,
   getCollegeDistribution
 } from '@/api/teacher.js'
-
-
+import * as echarts from 'echarts'
 
 // 图标引入
 import {
@@ -557,15 +555,13 @@ const loadDashboardData = async () => {
     }
 
     // 并行请求多个接口，使用更优雅的错误处理
-    const [dashboardRes, pendingRes, studentRes, reviewStatsRes] = await Promise.all([
+    const [dashboardRes, pendingRes, studentRes, reviewStatusDistRes, collegeDistRes] = await Promise.all([
       getTeacherDashboardStats(teacherId),
       getPendingReviewList(1, 10),
       getStudentStats(teacherId),
-      getReviewStats({ teacherId, timeRange: 'all' })
+      getReviewStatusDistribution({ teacherId, timeRange: 'all' }),
+      getCollegeDistribution({ teacherId, timeRange: 'all' })
     ])
-    
-    // 学院分布数据从审核统计数据中获取
-    const collegeDistRes = reviewStatsRes
 
     // 处理仪表盘统计数据
     if (dashboardRes.code === 200) {
@@ -597,50 +593,62 @@ const loadDashboardData = async () => {
     }
     loading.pending = false
 
-    // 处理学生状态统计
+    // 处理学生状态统计（total = 各状态论文数之和，保证百分比之和=100%）
     if (studentRes.code === 200) {
+      const submitted = Number(studentRes.data.submittedPapers) || 0
+      const reviewing = Number(studentRes.data.auditingPapers) || 0
+      const approved = Number(studentRes.data.passedPapers) || 0
+      const rejected = Number(studentRes.data.needModifyPapers) || 0
+      const paperTotal = submitted + reviewing + approved + rejected
+
       Object.assign(studentStats, {
-        total: studentRes.data.totalStudents || 0,
-        submitted: studentRes.data.submittedPapers || 0,
-        reviewing: studentRes.data.auditingPapers || 0,
-        approved: studentRes.data.passedPapers || 0,
-        rejected: studentRes.data.needModifyPapers || 0
+        total: paperTotal,
+        totalStudents: Number(studentRes.data.totalStudents) || 0,
+        submitted,
+        reviewing,
+        approved,
+        rejected
       })
     }
     loading.student = false
 
-    // 处理审核统计数据（用于论文状态分布图表）
-    if (reviewStatsRes.code === 200) {
-      // 存储原始数据用于详情显示
-      if (reviewStatsRes.data.chartData) {
-        reviewStatusDistribution.value = reviewStatsRes.data.chartData.labels.map((label, index) => ({
-          status: index === 0 ? '3' : '4', // 0=通过, 1=拒绝
-          statusName: label,
-          count: reviewStatsRes.data.chartData.values[index],
-          percentage: reviewStatsRes.data.chartData.values[index] > 0 ? 
-            Math.round((reviewStatsRes.data.chartData.values[index] / 
-              reviewStatsRes.data.chartData.values.reduce((a, b) => a + b, 0)) * 100) : 0,
-          color: reviewStatsRes.data.chartData.colors[index]
-        }))
+    // 处理审核状态分布数据（用于论文状态分布饼图）
+    if (reviewStatusDistRes.code === 200) {
+      const distData = reviewStatusDistRes.data || []
+      const colors = ['#34c759', '#ff9500', '#007aff', '#ff3b30', '#af52de']
+      const totalCount = distData.reduce((sum, item) => sum + (Number(item.value) || 0), 0)
+
+      reviewStatusDistribution.value = distData.map((item, index) => ({
+        status: index,
+        statusName: item.name,
+        count: Number(item.value) || 0,
+        percentage: totalCount > 0 ? Math.round((Number(item.value) || 0) / totalCount * 100) : 0,
+        color: colors[index % colors.length]
+      }))
+
+      // 构建图表数据
+      reviewChartData.value = {
+        labels: distData.map(item => item.name),
+        values: distData.map(item => Number(item.value) || 0),
+        colors: distData.map((_, i) => colors[i % colors.length])
       }
-      
-      // 存储图表数据
-      reviewChartData.value = reviewStatsRes.data.chartData || null
-      
-      // 初始化或更新图表
-      if (reviewChartData.value) {
-        if (statusChartInstance) {
-          updateStatusChart()
-        } else {
-          initStatusChart()
-        }
+
+      if (statusChartInstance) {
+        updateStatusChart()
+      } else {
+        initStatusChart()
       }
     }
     loading.review = false
 
     // 处理学院分布数据（用于各专业审核情况图表）
-    if (collegeDistRes.code === 200) {
-      collegeDistribution.value = collegeDistRes.data?.collegeDistribution || []
+    if (collegeDistRes.code === 200 && collegeDistRes.data) {
+      const categories = collegeDistRes.data.categories || []
+      const seriesData = collegeDistRes.data.series?.[0]?.data || []
+      collegeDistribution.value = categories.map((label, i) => ({
+        label,
+        value: Number(seriesData[i]) || 0
+      }))
     }
     loading.college = false
 
@@ -804,17 +812,17 @@ const initStatusChart = () => {
         return `${params.seriesName}<br/>${params.name}: ${params.value} (${params.percent}%)`
       },
       backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      borderColor: '#667eea',
+      borderColor: '#0066cc',
       borderWidth: 1,
       textStyle: {
-        color: '#1a365d'
+        color: '#1d1d1f'
       }
     },
     legend: {
       orient: 'vertical',
       left: 'left',
       textStyle: {
-        color: '#1a365d'
+        color: '#1d1d1f'
       }
     },
     series: [
@@ -832,7 +840,7 @@ const initStatusChart = () => {
             show: true,
             fontSize: '16',
             fontWeight: 'bold',
-            color: '#1a365d'
+            color: '#1d1d1f'
           },
           itemStyle: {
             shadowBlur: 10,
@@ -860,7 +868,6 @@ const initStatusChart = () => {
   
   // 添加点击事件
   statusChartInstance.on('click', function(params) {
-    console.log('点击了:', params.name, params.value)
     // 可以根据点击的状态跳转到相应的页面
     // 例如：router.push(`/teacher/paper-review?status=${params.name}`)
   })
@@ -868,7 +875,6 @@ const initStatusChart = () => {
   // 添加鼠标悬停事件
   statusChartInstance.on('mouseover', function(params) {
     // 可以添加悬停效果，例如显示更详细的信息
-    console.log('悬停:', params.name, params.value)
   })
 }
 
@@ -935,8 +941,8 @@ onMounted(() => {
 .teacher-dashboard {
   padding: 24px;
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
-  color: #0f172a; // Slate-900
+  background: #f5f5f7; // Slate-50
+  color: #1d1d1f; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -955,7 +961,7 @@ onMounted(() => {
       .welcome-title {
         font-size: 2rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #1d1d1f;
         margin: 0 0 8px 0;
         line-height: 1.2;
       }
@@ -980,8 +986,8 @@ onMounted(() => {
     gap: 16px;
     padding: 20px;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 18px;
     
     .today-stat-item {
       text-align: center;
@@ -989,7 +995,7 @@ onMounted(() => {
       .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #1d1d1f;
         margin-bottom: 4px;
       }
       
@@ -1011,8 +1017,8 @@ onMounted(() => {
 
 .stat-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -1020,15 +1026,16 @@ onMounted(() => {
   transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
+  }
+  &:active {
+    transform: scale(0.97);
   }
   
   .stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1062,7 +1069,7 @@ onMounted(() => {
     .stat-value {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #1d1d1f;
       line-height: 1.2;
       margin-bottom: 4px;
     }
@@ -1078,7 +1085,7 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
     
     &.positive {
       color: #10b981;
@@ -1110,7 +1117,7 @@ onMounted(() => {
       gap: 8px;
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       
       .el-icon {
         color: #64748b;
@@ -1129,16 +1136,15 @@ onMounted(() => {
     align-items: center;
     padding: 16px;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 18px;
     transition: all 0.2s ease;
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-      border-color: #cbd5e1;
+      /* translateY + box-shadow removed for Apple HIG */
+      border-color: #d2d2d7;
     }
-    
+
     &.high {
       border-left: 4px solid #ef4444;
     }
@@ -1165,7 +1171,7 @@ onMounted(() => {
       
       .todo-title {
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
         margin-bottom: 4px;
       }
       
@@ -1183,9 +1189,9 @@ onMounted(() => {
       
       .priority-badge {
         padding: 4px 12px;
-        border-radius: 16px;
+        border-radius: 18px;
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 400;
         
         &.high {
           background: #fee2e2;
@@ -1226,15 +1232,15 @@ onMounted(() => {
 // 通用卡片样式
 .card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    /* box-shadow removed for Apple HIG */
+    border-color: #d2d2d7;
   }
   
   .card-header {
@@ -1249,7 +1255,7 @@ onMounted(() => {
       gap: 8px;
       font-size: 1.125rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       
       .el-icon {
         color: #64748b;
@@ -1257,9 +1263,9 @@ onMounted(() => {
       
       .badge {
         padding: 2px 8px;
-        border-radius: 12px;
+        border-radius: 18px;
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 400;
         
         &.danger {
           background: #fee2e2;
@@ -1278,17 +1284,16 @@ onMounted(() => {
     align-items: flex-start;
     padding: 20px;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 18px;
     margin-bottom: 16px;
     transition: all 0.2s ease;
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-      border-color: #cbd5e1;
+      /* translateY + box-shadow removed for Apple HIG */
+      border-color: #d2d2d7;
     }
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -1317,7 +1322,7 @@ onMounted(() => {
         
         .paper-title {
           margin: 0;
-          color: #0f172a;
+          color: #1d1d1f;
           font-size: 1.125rem;
           font-weight: 600;
           flex: 1;
@@ -1331,9 +1336,9 @@ onMounted(() => {
           
           .tag {
             padding: 4px 12px;
-            border-radius: 12px;
+            border-radius: 18px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 400;
             
             &.warning {
               background: #fef3c7;
@@ -1372,7 +1377,7 @@ onMounted(() => {
           gap: 6px;
           
           .el-icon {
-            font-size: 14px;
+            font-size: 17px;
             color: #94a3b8;
           }
         }
@@ -1385,7 +1390,7 @@ onMounted(() => {
         color: #64748b;
         
         .college {
-          font-weight: 500;
+          font-weight: 400;
         }
         
         .word-count {
@@ -1394,7 +1399,7 @@ onMounted(() => {
           gap: 6px;
           
           .el-icon {
-            font-size: 14px;
+            font-size: 17px;
             color: #94a3b8;
           }
         }
@@ -1428,7 +1433,7 @@ onMounted(() => {
     margin: 0 0 8px 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #0f172a;
+    color: #1d1d1f;
   }
   
   p {
@@ -1454,7 +1459,7 @@ onMounted(() => {
   .chart-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #0f172a;
+    color: #1d1d1f;
     margin-bottom: 16px;
   }
   
@@ -1475,12 +1480,12 @@ onMounted(() => {
       justify-content: space-between;
       align-items: center;
       padding: 12px;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid #d2d2d7;
       transition: all 0.2s ease;
       
       &:hover {
-        background-color: #f8fafc;
-        border-radius: 8px;
+        background-color: #f5f5f7;
+        border-radius: 11px;
       }
       
       &:last-child {
@@ -1500,9 +1505,9 @@ onMounted(() => {
         }
         
         .status-name {
-          color: #0f172a;
+          color: #1d1d1f;
           font-size: 0.875rem;
-          font-weight: 500;
+          font-weight: 400;
         }
       }
       
@@ -1512,7 +1517,7 @@ onMounted(() => {
         align-items: center;
         
         .status-count {
-          color: #0f172a;
+          color: #1d1d1f;
           font-weight: 600;
           font-size: 0.875rem;
         }
@@ -1520,9 +1525,9 @@ onMounted(() => {
         .status-percentage {
           color: #64748b;
           font-size: 0.75rem;
-          background-color: #f8fafc;
+          background-color: #f5f5f7;
           padding: 4px 12px;
-          border-radius: 12px;
+          border-radius: 18px;
         }
       }
     }
@@ -1541,21 +1546,21 @@ onMounted(() => {
     .bar-label {
       min-width: 100px;
       font-size: 0.875rem;
-      color: #0f172a;
-      font-weight: 500;
+      color: #1d1d1f;
+      font-weight: 400;
     }
     
     .bar-container {
       flex: 1;
       height: 6px;
-      background: #e2e8f0;
-      border-radius: 3px;
+      background: #d2d2d7;
+      border-radius: 8px;
       overflow: hidden;
       
       .bar-fill {
         height: 100%;
         background: #0ea5e9;
-        border-radius: 3px;
+        border-radius: 8px;
         transition: width 0.5s ease;
       }
     }
@@ -1564,7 +1569,7 @@ onMounted(() => {
       min-width: 40px;
       font-size: 0.875rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       text-align: right;
     }
   }
@@ -1582,7 +1587,7 @@ onMounted(() => {
     .empty-text {
       font-size: 1rem;
       font-weight: 600;
-      color: #0f172a;
+      color: #1d1d1f;
       margin-bottom: 8px;
     }
     
@@ -1611,7 +1616,7 @@ onMounted(() => {
       .status-value {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #1d1d1f;
       }
       
       .status-label {
@@ -1622,19 +1627,19 @@ onMounted(() => {
       .status-percentage {
         font-size: 0.875rem;
         font-weight: 600;
-        color: #0f172a;
+        color: #1d1d1f;
       }
     }
     
     .progress-bar {
       height: 6px;
-      background: #e2e8f0;
-      border-radius: 3px;
+      background: #d2d2d7;
+      border-radius: 8px;
       overflow: hidden;
       
       .progress-fill {
         height: 100%;
-        border-radius: 3px;
+        border-radius: 8px;
         transition: width 0.5s ease;
         
         &.warning {
@@ -1657,8 +1662,8 @@ onMounted(() => {
     
     .empty-progress {
       height: 6px;
-      background: #e2e8f0;
-      border-radius: 3px;
+      background: #d2d2d7;
+      border-radius: 8px;
       font-size: 0.75rem;
       color: #94a3b8;
       text-align: center;
@@ -1677,18 +1682,21 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 11px;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
     transition: all 0.2s ease;
     
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(15, 23, 42, 0.1);
+      /* translateY + box-shadow removed for Apple HIG */
+    }
+
+    &:active {
+      transform: scale(0.97);
     }
     
     &.primary {
-      background: #1e40af;
+      background: #0066cc;
       color: white;
       border: none;
       
@@ -1698,13 +1706,13 @@ onMounted(() => {
     }
     
     &:not(.primary) {
-      background: #f8fafc;
-      color: #0f172a;
-      border: 1px solid #e2e8f0;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      border: 1px solid #d2d2d7;
       
       &:hover {
         background: #f1f5f9;
-        border-color: #cbd5e1;
+        border-color: #d2d2d7;
       }
     }
     
@@ -1724,8 +1732,8 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    background: #f8fafc;
-    border-radius: 8px;
+    background: #f5f5f7;
+    border-radius: 11px;
     
     .efficiency-label {
       font-size: 0.875rem;
@@ -1735,7 +1743,7 @@ onMounted(() => {
     .efficiency-value {
       font-size: 1.125rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #1d1d1f;
     }
   }
 }
@@ -1746,23 +1754,21 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 8px;
-  background: #1e40af;
+  border-radius: 11px;
+  background: #0066cc;
   color: white;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 400;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #1e3a8a;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+    background: #004499;
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.97);
   }
   
   .el-icon {
@@ -1775,23 +1781,22 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 8px;
-  background: #f8fafc;
-  color: #0f172a;
+  border-radius: 11px;
+  background: #f5f5f7;
+  color: #1d1d1f;
   font-size: 0.875rem;
-  font-weight: 500;
-  border: 1px solid #e2e8f0;
+  font-weight: 400;
+  border: 1px solid #d2d2d7;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
     background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: translateY(-1px);
+    border-color: #d2d2d7;
   }
-  
+
   &:active {
-    transform: translateY(0);
+    transform: scale(0.97);
   }
   
   .el-icon {
@@ -1804,22 +1809,22 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: #64748b;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 400;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
     background: #f1f5f9;
-    color: #0f172a;
+    color: #1d1d1f;
   }
   
   .el-icon {
-    font-size: 14px;
+    font-size: 17px;
   }
 }
 
@@ -1829,7 +1834,7 @@ onMounted(() => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: #64748b;
   border: none;
@@ -1838,7 +1843,7 @@ onMounted(() => {
   
   &:hover {
     background: #f1f5f9;
-    color: #0f172a;
+    color: #1d1d1f;
   }
   
   .el-icon {

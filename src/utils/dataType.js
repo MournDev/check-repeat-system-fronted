@@ -183,14 +183,13 @@ export const getSimilarityStatus = (similarity) => {
  */
 export const getPaperStatusText = (status) => {
   const statusMap = {
-    'submitted': '已提交',
-    'assigned': '已分配导师',
+    'pending': '待分配',
+    'assigned': '已分配',
+    'checking': '待查重',
     'auditing': '待审核',
-    'completed': '已通过',
-    'rejected': '需修改',
-    'draft': '草稿',
-    'revised': '已修改',
-    'UNDER_REVIEW': '审核中'
+    'completed': '审核通过',
+    'rejected': '审核不通过',
+    'withdrawn': '已取消'
   };
   return statusMap[status] || '未知状态';
 };
@@ -202,14 +201,13 @@ export const getPaperStatusText = (status) => {
  */
 export const getPaperStatusType = (status) => {
   const typeMap = {
-    'submitted': 'info',
+    'pending': 'info',
     'assigned': 'primary',
-    'auditing': 'primary',
+    'checking': 'primary',
+    'auditing': 'warning',
     'completed': 'success',
     'rejected': 'danger',
-    'draft': 'info',
-    'revised': 'warning',
-    'UNDER_REVIEW': 'warning'
+    'withdrawn': 'info'
   };
   return typeMap[status] || 'info';
 };

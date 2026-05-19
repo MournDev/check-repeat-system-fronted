@@ -418,10 +418,7 @@
             <el-button type="primary" @click="exportConfig" :loading="exporting">
               导出配置
             </el-button>
-            <el-button @click="importConfig">
-              导入配置
-            </el-button>
-            <el-button type="warning" @click="resetConfig">
+<el-button type="warning" @click="resetConfig">
               恢复默认
             </el-button>
           </div>
@@ -701,10 +698,6 @@ const exportConfig = async () => {
   }
 }
 
-const importConfig = () => {
-  ElMessage.info('配置导入功能开发中...')
-}
-
 const resetConfig = async () => {
   try {
     await ElMessageBox.confirm(
@@ -740,8 +733,8 @@ onMounted(() => {
 <style lang="scss" scoped>
 .system-config {
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
-  color: #0f172a; // Slate-900
+  background: #f5f5f7; // Slate-50
+  color: #1d1d1f; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 24px;
 }
@@ -752,14 +745,13 @@ onMounted(() => {
   align-items: flex-start;
   margin-bottom: 24px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 24px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   .header-content {
@@ -767,12 +759,12 @@ onMounted(() => {
       margin: 0 0 8px 0;
       font-size: 1.75rem;
       font-weight: 700;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
     }
     
     .page-desc {
       margin: 0;
-      color: #64748b; // Slate-500
+      color: #86868b; // Slate-500
       font-size: 0.95rem;
     }
   }
@@ -784,12 +776,10 @@ onMounted(() => {
     .el-button {
       border-radius: 8px;
       transition: all 0.2s ease;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #d2d2d7;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-        border-color: #cbd5e1;
+        border-color: #d2d2d7;
       }
     }
   }
@@ -798,13 +788,12 @@ onMounted(() => {
 .nav-card {
   margin-bottom: 24px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   :deep(.el-card__body) {
@@ -817,7 +806,7 @@ onMounted(() => {
       
       &:hover {
         .el-step__title {
-          color: #3b82f6; // Blue-500
+          color: #0066cc; // Blue-500
         }
       }
     }
@@ -826,13 +815,12 @@ onMounted(() => {
 
 .config-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   :deep(.el-card__body) {
@@ -843,9 +831,9 @@ onMounted(() => {
     .tab-title {
       margin: 0 0 24px 0;
       font-size: 1.25rem;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
       padding-bottom: 12px;
-      border-bottom: 2px solid #e2e8f0;
+      border-bottom: 2px solid #d2d2d7;
     }
     
     .config-form {
@@ -853,8 +841,8 @@ onMounted(() => {
         margin-bottom: 24px;
         
         .el-form-item__label {
-          font-weight: 500;
-          color: #64748b; // Slate-500
+          font-weight: 400;
+          color: #86868b; // Slate-500
         }
         
         .el-input,
@@ -864,23 +852,23 @@ onMounted(() => {
           
           :deep(.el-input__wrapper) {
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #d2d2d7;
             transition: all 0.2s ease;
             
             &:hover {
-              border-color: #cbd5e1;
-              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+              border-color: #d2d2d7;
+              /* box-shadow removed for Apple HIG */
             }
           }
           
           :deep(.el-select__wrapper) {
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #d2d2d7;
             transition: all 0.2s ease;
             
             &:hover {
-              border-color: #cbd5e1;
-              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+              border-color: #d2d2d7;
+              /* box-shadow removed for Apple HIG */
             }
           }
         }
@@ -888,26 +876,24 @@ onMounted(() => {
         .el-button {
           border-radius: 8px;
           transition: all 0.2s ease;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #d2d2d7;
           
           &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-            border-color: #cbd5e1;
+            border-color: #86868b;
           }
         }
       }
       
       .form-tip {
         font-size: 0.875rem;
-        color: #94a3b8; // Slate-400
+        color: #86868b; // Slate-400
         margin-top: 4px;
         line-height: 1.4;
       }
       
       .unit {
         margin-left: 8px;
-        color: #94a3b8; // Slate-400
+        color: #86868b; // Slate-400
         font-size: 0.875rem;
       }
     }
@@ -917,19 +903,18 @@ onMounted(() => {
 .help-card,
 .backup-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   :deep(.el-card__header) {
     padding: 16px 20px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border-bottom: 1px solid #d2d2d7;
+    background: #f5f5f7;
     
     .card-header {
       display: flex;
@@ -939,7 +924,7 @@ onMounted(() => {
         display: flex;
         align-items: center;
         font-weight: 600;
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
         
         .el-icon {
           margin-right: 8px;
@@ -958,7 +943,7 @@ onMounted(() => {
   .help-content {
     h4 {
       margin: 0 0 12px 0;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
       font-size: 1rem;
     }
     
@@ -969,10 +954,10 @@ onMounted(() => {
       li {
         margin-bottom: 8px;
         line-height: 1.5;
-        color: #64748b; // Slate-500
+        color: #86868b; // Slate-500
         
         strong {
-          color: #0f172a; // Slate-900
+          color: #1d1d1f; // Slate-900
         }
       }
     }
@@ -989,12 +974,14 @@ onMounted(() => {
     width: 100%;
     border-radius: 8px;
     transition: all 0.2s ease;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #d2d2d7;
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-      border-color: #cbd5e1;
+      border-color: #86868b;
+    }
+    &:active {
+      transform: scale(0.95);
+      transition: transform 0.15s ease;
     }
   }
 }
@@ -1003,7 +990,7 @@ onMounted(() => {
   p {
     margin: 4px 0;
     font-size: 0.875rem;
-    color: #94a3b8; // Slate-400
+    color: #86868b; // Slate-400
   }
 }
 

@@ -167,7 +167,7 @@
                 </button>
                 <!-- 申请修改 -->
                 <button
-                  v-if="paper.paperStatus === 'PASSED'"
+                  v-if="paper.paperStatus === 'completed'"
                   class="action-button info"
                   @click="requestModification(paper)"
                 >
@@ -183,16 +183,16 @@
                   <span>下载</span>
                 </button>
                 <!-- 查重功能按钮 -->
-                <button 
-                  v-if="paper.paperStatus !== 'DRAFT'" 
+                <button
+                  v-if="paper.paperStatus === 'completed' || paper.similarityRate != null"
                   class="action-button"
                   @click="viewPlagiarismReport(paper.id)"
                 >
                   <el-icon><Document /></el-icon>
                   <span>查重报告</span>
                 </button>
-                <button 
-                  v-if="paper.paperStatus !== 'DRAFT'" 
+                <button
+                  v-if="paper.paperStatus === 'checking'"
                   class="action-button"
                   @click="monitorCheckProgress(paper.id)"
                 >
@@ -251,15 +251,15 @@
                   <div class="timeline-timestamp">{{ formatDate(version.submitTime) }}</div>
                   <div class="version-item">
                     <div class="version-header">
-                      <span class="version-title">版本 v{{ version.version }}</span>
+                      <span class="version-title">版本 v{{ version.submitVersion }}</span>
                       <span v-if="version.isCurrent" class="current-badge">当前版本</span>
                     </div>
                     <div class="version-actions">
                       <label class="checkbox-label">
-                        <input 
-                          type="checkbox" 
-                          v-model="selectedVersionIds" 
-                          :value="version.id" 
+                        <input
+                          type="checkbox"
+                          v-model="selectedVersionIds"
+                          :value="version.submitVersion"
                           @change="handleVersionSelection"
                           class="checkbox-input"
                         />
@@ -508,6 +508,7 @@ import {
   batchDownloadPapers,
   batchDeletePapers,
   getVersionDetail,
+  getPaperVersions,
   comparePaperVersions,
   downloadVersionCompare,
   downloadVersion as downloadVersionApi,
@@ -664,7 +665,6 @@ const goToPaperSubmit = () => {
 };
 
 const viewPaperDetail = (paper) => {
-  console.log("查看论文详情:", paper);
   currentPaper.value = paper;
   detailDialogVisible.value = true;
 };
@@ -710,11 +710,24 @@ const resubmitPaper = (paper) => {
   });
 };
 
-const toggleVersions = (paperId) => {
-  const paper = papers.value.find((p) => p.id === paperId);
-  if (paper) {
-    paper.showVersions = !paper.showVersions;
+const toggleVersions = async (paperId) => {
+  const paper = papers.value.find((p) => String(p.id) === String(paperId));
+  if (!paper) return;
+  if (!paper.showVersions) {
+    // 展开：加载版本列表
+    try {
+      const res = await getPaperVersions(paperId)
+      if (res.code === 200) {
+        paper.versions = res.data || []
+      } else {
+        paper.versions = []
+      }
+    } catch (error) {
+      console.error('加载版本列表失败:', error)
+      paper.versions = []
+    }
   }
+  paper.showVersions = !paper.showVersions;
 };
 
 // 状态映射
@@ -850,21 +863,9 @@ const requestModification = async (paper) => {
 };
 
 // 查重功能相关方法
-const viewPlagiarismReport = async (paperId) => {
-  try {
-    // 先获取该论文的查重报告列表
-    const res = await getSimpleCheckReport(paperId);
-    if (res.code === 200 && res.data && res.data.length > 0) {
-      // 获取最新的报告ID（假设列表按时间倒序）
-      const latestReport = res.data[0];
-      router.push(`/student/plagiarism-report/${latestReport.id}?paperId=${paperId}`);
-    } else {
-      ElMessage.error('未找到查重报告');
-    }
-  } catch (error) {
-    console.error('获取查重报告失败:', error);
-    ElMessage.error('获取查重报告失败，请稍后重试');
-  }
+const viewPlagiarismReport = (paperId) => {
+  // PlagiarismReport页面会自动获取最新报告，无需此处重复请求
+  router.push(`/student/plagiarism-report/${paperId}`)
 };
 
 const monitorCheckProgress = (paperId) => {
@@ -893,8 +894,8 @@ const openVersionCompare = async () => {
     }
     
     // 获取当前论文的 ID（从选中的版本中获取）
-    const paperId = papers.value.find(p => 
-      p.versions?.some(v => selectedVersionIds.value.includes(v.id))
+    const paperId = papers.value.find(p =>
+      p.versions?.some(v => selectedVersionIds.value.includes(v.submitVersion))
     )?.id;
     
     if (!paperId) {
@@ -912,19 +913,6 @@ const openVersionCompare = async () => {
     } else {
       ElMessage.error(res.message || '版本对比失败');
     }
-  } catch (error) {
-    console.error('版本对比失败:', error);
-    ElMessage.error('版本对比失败，请稍后重试');
-  }
-};
-
-const compareTwoVersions = async () => {
-  try {
-    // TODO: 调用版本对比接口
-    // const res = await comparePaperVersions(paperId, selectedVersionIds.value);
-    // compareData.value = res.data;
-    
-    ElMessage.success('版本对比数据已加载');
   } catch (error) {
     console.error('版本对比失败:', error);
     ElMessage.error('版本对比失败，请稍后重试');
@@ -962,7 +950,7 @@ const downloadCompareReport = async () => {
     
     // 获取论文 ID
     const paperId = papers.value.find(p => 
-      p.versions?.some(v => selectedVersionIds.value.includes(v.id))
+      p.versions?.some(v => selectedVersionIds.value.includes(v.submitVersion))
     )?.id;
     
     if (!paperId) {
@@ -993,17 +981,17 @@ const downloadCompareReport = async () => {
 const viewVersionDetail = async (version) => {
   try {
     // 获取论文 ID
-    const paperId = papers.value.find(p => 
-      p.versions?.some(v => v.id === version.id)
+    const paperId = papers.value.find(p =>
+      p.versions?.some(v => v.submitVersion === version.submitVersion)
     )?.id;
-    
+
     if (!paperId) {
       ElMessage.error('无法获取论文信息');
       return;
     }
-    
-    // 调用获取版本详情接口
-    const res = await getVersionDetail(paperId, version.id);
+
+    // 调用获取版本详情接口（后端按submit_version查询）
+    const res = await getVersionDetail(paperId, version.submitVersion);
     
     if (res.code === 200) {
       ElMessageBox.alert(
@@ -1032,7 +1020,7 @@ const viewVersionDetail = async (version) => {
 // 下载版本
 const downloadVersion = async (version) => {
   try {
-    await ElMessageBox.confirm(`确定要下载版本 V${version.version} 吗？`, '下载确认', {
+    await ElMessageBox.confirm(`确定要下载版本 V${version.submitVersion} 吗？`, '下载确认', {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     });
@@ -1232,7 +1220,7 @@ const batchDelete = async () => {
 // 全局样式
 .my-papers-page {
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
+  background: #f5f5f7; // Slate-50
   color: #0f172a; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 24px 0;
@@ -1254,7 +1242,7 @@ const batchDelete = async () => {
       .page-title {
         margin: 0 0 8px 0;
         font-size: 1.5rem;
-        font-weight: 700;
+        font-weight: 600;
         color: #0f172a;
       }
       
@@ -1271,19 +1259,19 @@ const batchDelete = async () => {
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background: #1e40af;
+        background: #0066cc;
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 11px;
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
         
         &:hover {
-          background: #1e3a8a;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+          background: #0055aa;
+          /* translateY removed */
+          /* box-shadow removed */
         }
       }
     }
@@ -1299,12 +1287,12 @@ const batchDelete = async () => {
   .filter-form {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 24px;
     transition: all 0.2s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      /* box-shadow removed */
       border-color: #cbd5e1;
     }
     
@@ -1318,7 +1306,7 @@ const batchDelete = async () => {
         .form-label {
           display: block;
           font-size: 0.75rem;
-          font-weight: 500;
+          font-weight: 600;
           color: #64748b;
           margin-bottom: 8px;
           text-transform: uppercase;
@@ -1329,7 +1317,7 @@ const batchDelete = async () => {
           width: 100%;
           padding: 8px 12px;
           border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 11px;
           font-size: 0.875rem;
           transition: all 0.2s ease;
           
@@ -1340,7 +1328,7 @@ const batchDelete = async () => {
           &:focus {
             outline: none;
             border-color: #0ea5e9;
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
           }
         }
         
@@ -1348,7 +1336,7 @@ const batchDelete = async () => {
           width: 100%;
           
           :deep(.el-input__wrapper) {
-            border-radius: 8px;
+            border-radius: 11px;
             
             &:hover {
               box-shadow: none;
@@ -1356,7 +1344,7 @@ const batchDelete = async () => {
             }
             
             &.is-focus {
-              box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+              box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
             }
           }
         }
@@ -1377,7 +1365,7 @@ const batchDelete = async () => {
             padding-left: 36px;
             
             :deep(.el-input__wrapper) {
-              border-radius: 8px;
+              border-radius: 11px;
               
               &:hover {
                 box-shadow: none;
@@ -1385,7 +1373,7 @@ const batchDelete = async () => {
               }
               
               &.is-focus {
-                box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+                box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
               }
             }
           }
@@ -1401,19 +1389,19 @@ const batchDelete = async () => {
           align-items: center;
           gap: 6px;
           padding: 8px 16px;
-          background: #1e40af;
+          background: #0066cc;
           color: white;
           border: none;
-          border-radius: 8px;
+          border-radius: 11px;
           font-size: 0.875rem;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
           
           &:hover {
-            background: #1e3a8a;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+            background: #0055aa;
+            /* translateY removed */
+            /* box-shadow removed */
           }
         }
         
@@ -1425,16 +1413,16 @@ const batchDelete = async () => {
           background: white;
           color: #475569;
           border: 1px solid #e2e8f0;
-          border-radius: 8px;
+          border-radius: 11px;
           font-size: 0.875rem;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
           
           &:hover {
             border-color: #cbd5e1;
-            background: #f8fafc;
-            transform: translateY(-1px);
+            background: #f5f5f7;
+            /* translateY removed */
           }
         }
       }
@@ -1451,7 +1439,7 @@ const batchDelete = async () => {
   .card-header {
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 12px 12px 0 0;
+    border-radius: 18px 12px 0 0;
     padding: 20px 24px;
     display: flex;
     justify-content: space-between;
@@ -1492,7 +1480,7 @@ const batchDelete = async () => {
         color: #64748b;
         border-radius: 16px;
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 600;
       }
       
       .primary-button,
@@ -1503,24 +1491,24 @@ const batchDelete = async () => {
         gap: 6px;
         padding: 6px 12px;
         border: none;
-        border-radius: 6px;
+        border-radius: 11px;
         font-size: 0.75rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
         
         &:hover {
-          transform: translateY(-1px);
+          /* translateY removed */
         }
       }
       
       .primary-button {
-        background: #1e40af;
+        background: #0066cc;
         color: white;
         
         &:hover {
-          background: #1e3a8a;
-          box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+          background: #0055aa;
+          /* box-shadow removed */
         }
       }
       
@@ -1529,8 +1517,8 @@ const batchDelete = async () => {
         color: white;
         
         &:hover {
-          background: #059669;
-          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+          background: #34c759;
+          /* box-shadow removed */
         }
       }
       
@@ -1540,7 +1528,7 @@ const batchDelete = async () => {
         
         &:hover {
           background: #dc2626;
-          box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+          /* box-shadow removed */
         }
       }
       
@@ -1578,7 +1566,7 @@ const batchDelete = async () => {
     
     .paper-item {
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      border-radius: 11px;
       margin-bottom: 16px;
       transition: all 0.2s ease;
       display: flex;
@@ -1586,14 +1574,14 @@ const batchDelete = async () => {
       background: white;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        /* translateY removed */
+        /* box-shadow removed */
         border-color: #cbd5e1;
       }
       
       &.paper-selected {
         border-color: #0ea5e9;
-        background: rgba(14, 165, 233, 0.05);
+        background: rgba(0, 102, 204, 0.05);
       }
       
       .paper-select {
@@ -1644,28 +1632,28 @@ const batchDelete = async () => {
             gap: 4px;
             padding: 4px 8px;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
+            border-radius: 11px;
             background: white;
             color: #64748b;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             
             &:hover {
               border-color: #cbd5e1;
               color: #0f172a;
-              transform: translateY(-1px);
+              /* translateY removed */
             }
             
             &.primary {
-              background: #1e40af;
+              background: #0066cc;
               color: white;
-              border-color: #1e40af;
+              border-color: #0066cc;
               
               &:hover {
-                background: #1e3a8a;
-                box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+                background: #0055aa;
+                /* box-shadow removed */
               }
             }
             
@@ -1675,8 +1663,8 @@ const batchDelete = async () => {
               border-color: #f59e0b;
               
               &:hover {
-                background: #d97706;
-                box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);
+                background: #ff9500;
+                /* box-shadow removed */
               }
             }
             
@@ -1687,7 +1675,7 @@ const batchDelete = async () => {
               
               &:hover {
                 background: #0284c7;
-                box-shadow: 0 4px 8px rgba(14, 165, 233, 0.2);
+                /* box-shadow removed */
               }
             }
             
@@ -1698,7 +1686,7 @@ const batchDelete = async () => {
               
               &:hover {
                 background: #dc2626;
-                box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+                /* box-shadow removed */
               }
               
               &:disabled {
@@ -1745,23 +1733,23 @@ const batchDelete = async () => {
           padding: 4px 12px;
           border-radius: 16px;
           font-size: 0.75rem;
-          font-weight: 500;
+          font-weight: 600;
           
           &.info {
             background: #e0f2fe;
             color: #0284c7;
           }
           &.warning {
-            background: #fef3c7;
-            color: #d97706;
+            background: #f5f5f7;
+            color: #ff9500;
           }
           &.primary {
-            background: #dbeafe;
-            color: #1e40af;
+            background: #f5f5f7;
+            color: #0066cc;
           }
           &.success {
-            background: #d1fae5;
-            color: #059669;
+            background: #f5f5f7;
+            color: #34c759;
           }
           &.danger {
             background: #fee2e2;
@@ -1779,7 +1767,7 @@ const batchDelete = async () => {
       .paper-versions {
         border-top: 1px solid #e2e8f0;
         padding: 20px;
-        background: #f8fafc;
+        background: #f5f5f7;
         
         .versions-header {
           margin-bottom: 16px;
@@ -1823,7 +1811,7 @@ const batchDelete = async () => {
               border-radius: 50%;
               background: #cbd5e1;
               border: 2px solid white;
-              box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+              /* box-shadow removed */
               
               &.current {
                 background: #0ea5e9;
@@ -1854,9 +1842,9 @@ const batchDelete = async () => {
                     padding: 2px 8px;
                     background: #0ea5e9;
                     color: white;
-                    border-radius: 12px;
+                    border-radius: 18px;
                     font-size: 0.75rem;
-                    font-weight: 500;
+                    font-weight: 600;
                   }
                 }
                 
@@ -1887,7 +1875,7 @@ const batchDelete = async () => {
                     gap: 4px;
                     padding: 4px 8px;
                     border: 1px solid #e2e8f0;
-                    border-radius: 6px;
+                    border-radius: 11px;
                     background: white;
                     color: #64748b;
                     font-size: 0.75rem;
@@ -1910,7 +1898,7 @@ const batchDelete = async () => {
         border-top: 1px solid #e2e8f0;
         padding: 16px 20px;
         text-align: center;
-        background: #f8fafc;
+        background: #f5f5f7;
         
         .toggle-button {
           display: flex;
@@ -1921,14 +1909,14 @@ const batchDelete = async () => {
           border: none;
           color: #64748b;
           font-size: 0.875rem;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
           
           &:hover {
             color: #0f172a;
             background: #f1f5f9;
-            border-radius: 6px;
+            border-radius: 11px;
           }
         }
       }
@@ -1968,19 +1956,19 @@ const batchDelete = async () => {
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background: #1e40af;
+        background: #0066cc;
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 11px;
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
         
         &:hover {
-          background: #1e3a8a;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+          background: #0055aa;
+          /* translateY removed */
+          /* box-shadow removed */
         }
       }
     }
@@ -2011,7 +1999,7 @@ const batchDelete = async () => {
         .page-button {
           padding: 4px 12px;
           border: 1px solid #e2e8f0;
-          border-radius: 6px;
+          border-radius: 11px;
           background: white;
           color: #64748b;
           font-size: 0.875rem;
@@ -2021,7 +2009,7 @@ const batchDelete = async () => {
           &:hover:not(:disabled) {
             border-color: #cbd5e1;
             color: #0f172a;
-            transform: translateY(-1px);
+            /* translateY removed */
           }
           
           &:disabled {
@@ -2038,7 +2026,7 @@ const batchDelete = async () => {
         .page-size-select {
           padding: 4px 8px;
           border: 1px solid #e2e8f0;
-          border-radius: 6px;
+          border-radius: 11px;
           font-size: 0.875rem;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -2068,7 +2056,7 @@ const batchDelete = async () => {
       .detail-item {
         .detail-label {
           font-size: 0.75rem;
-          font-weight: 500;
+          font-weight: 600;
           color: #64748b;
           margin-bottom: 6px;
           text-transform: uppercase;
@@ -2083,23 +2071,23 @@ const batchDelete = async () => {
             padding: 4px 12px;
             border-radius: 16px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             
             &.info {
               background: #e0f2fe;
               color: #0284c7;
             }
             &.warning {
-              background: #fef3c7;
-              color: #d97706;
+              background: #f5f5f7;
+              color: #ff9500;
             }
             &.primary {
-              background: #dbeafe;
-              color: #1e40af;
+              background: #f5f5f7;
+              color: #0066cc;
             }
             &.success {
-              background: #d1fae5;
-              color: #059669;
+              background: #f5f5f7;
+              color: #34c759;
             }
             &.danger {
               background: #fee2e2;
@@ -2118,9 +2106,9 @@ const batchDelete = async () => {
   }
   
   .feedback-content {
-    background: #f8fafc;
+    background: #f5f5f7;
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 11px;
     border-left: 4px solid #0ea5e9;
     line-height: 1.5;
   }
@@ -2142,14 +2130,14 @@ const batchDelete = async () => {
         gap: 12px;
         padding: 12px;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 11px;
         margin-bottom: 8px;
         background: white;
         transition: all 0.2s ease;
         
         &:hover {
           border-color: #cbd5e1;
-          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+          /* box-shadow removed */
         }
         
         .el-icon {
@@ -2173,7 +2161,7 @@ const batchDelete = async () => {
           gap: 4px;
           padding: 4px 8px;
           border: 1px solid #e2e8f0;
-          border-radius: 6px;
+          border-radius: 11px;
           background: white;
           color: #64748b;
           font-size: 0.75rem;
@@ -2202,7 +2190,7 @@ const batchDelete = async () => {
       padding: 12px 16px;
       background: #e0f2fe;
       color: #0284c7;
-      border-radius: 8px;
+      border-radius: 11px;
       
       .el-icon {
         font-size: 16px;
@@ -2220,7 +2208,7 @@ const batchDelete = async () => {
       .version-column {
         background: white;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 11px;
         padding: 20px;
         
         h4 {
@@ -2250,7 +2238,7 @@ const batchDelete = async () => {
             .info-value {
               font-size: 0.875rem;
               color: #0f172a;
-              font-weight: 500;
+              font-weight: 600;
             }
           }
         }
@@ -2268,13 +2256,13 @@ const batchDelete = async () => {
       .diff-table {
         background: white;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 11px;
         overflow: hidden;
         
         .table-header {
           display: grid;
           grid-template-columns: 120px 1fr 1fr 100px;
-          background: #f8fafc;
+          background: #f5f5f7;
           padding: 12px 16px;
           border-bottom: 1px solid #e2e8f0;
           
@@ -2302,7 +2290,7 @@ const batchDelete = async () => {
             color: #0f172a;
             
             &.field {
-              font-weight: 500;
+              font-weight: 600;
             }
             
             &.change {
@@ -2311,17 +2299,17 @@ const batchDelete = async () => {
               
               .change-badge {
                 padding: 2px 8px;
-                border-radius: 12px;
+                border-radius: 18px;
                 font-size: 0.75rem;
-                font-weight: 500;
+                font-weight: 600;
                 
                 &.increase {
                   background: #fee2e2;
                   color: #dc2626;
                 }
                 &.decrease {
-                  background: #d1fae5;
-                  color: #059669;
+                  background: #f5f5f7;
+                  color: #34c759;
                 }
               }
             }

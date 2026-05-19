@@ -35,15 +35,6 @@ export const getLoginLogs = (params) => {
   })
 }
 
-// 获取系统日志列表
-export const getSystemLogs = (params) => {
-  return request({
-    url: '/api/admin/logs/system',
-    method: 'get',
-    params
-  })
-}
-
 // 导出操作日志
 export const exportOperationLogs = (params) => {
   return request({
@@ -79,21 +70,29 @@ export const getActiveAlerts = () => {
   })
 }
 
+// 删除告警规则
+export const deleteAlertRule = (id) => {
+  return request({
+    url: `/api/admin/alerts/config/${id}`,
+    method: 'delete'
+  })
+}
+
+// 启用/禁用告警规则
+export const toggleAlertRule = (id, enabled) => {
+  return request({
+    url: `/api/admin/alerts/config/${id}/toggle`,
+    method: 'put',
+    data: { enabled }
+  })
+}
+
 // 处理预警
 export const handleAlert = (data) => {
   return request({
     url: '/api/admin/alerts/handle',
     method: 'post',
     data
-  })
-}
-
-// 获取性能监控数据
-export const getPerformanceData = (params) => {
-  return request({
-    url: '/api/admin/monitoring/performance',
-    method: 'get',
-    params
   })
 }
 
@@ -111,13 +110,5 @@ export const getApiResponseTimes = (params) => {
     url: '/api/admin/monitoring/response-times',
     method: 'get',
     params
-  })
-}
-
-// 获取系统监控概览数据
-export const getSystemOverview = () => {
-  return request({
-    url: '/api/admin/monitor/overview',
-    method: 'get'
   })
 }

@@ -373,7 +373,7 @@
                     </div>
                     <div class="change-description">{{ record.description }}</div>
                     <div class="history-actions">
-                      <el-button type="text" @click="viewHistoryReport(record)">
+                      <el-button link @click="viewHistoryReport(record)">
                         查看报告
                       </el-button>
                     </div>
@@ -574,8 +574,18 @@ const printReport = () => {
 }
 
 const viewSourceDetail = (source) => {
-  ElMessage.info(`查看来源详情: ${source.title}`)
-  // 实现查看详情逻辑
+  const detailLines = [
+    `<strong>标题：</strong>${source.title || '未知'}`,
+    `<strong>作者：</strong>${source.author || '未知'}`,
+    `<strong>年份：</strong>${source.year || '未知'}`,
+    `<strong>类型：</strong>${source.type || '未知'}`,
+    `<strong>相似度：</strong>${source.similarity || 0}%`,
+    `<strong>匹配内容：</strong>${source.matchedWords || '无'}`
+  ]
+  ElMessageBox.alert(detailLines.join('<br/>'), '来源详情', {
+    dangerouslyUseHTMLString: true,
+    confirmButtonText: '关闭'
+  })
 }
 
 const compareWithSource = async () => {
@@ -791,29 +801,29 @@ const loadReportData = async () => {
           submitTime: baseInfo.generateTime || '',
           similarity: parseFloat(similarity) || 0,
           checkTime: baseInfo.generateTime || '',
-          checkScope: '校内论文库',
-          citations: 0, // 后端数据中可能没有此信息
-          totalWords: totalWords,
-          similarWords: similarWords,
-          uniqueSentences: data.paragraphs ? data.paragraphs.length : 0,
+          checkScope: baseInfo.checkRuleName || '',
+          citations: baseInfo.citations || 0,
+          totalWords: baseInfo.totalWords || totalWords,
+          similarWords: baseInfo.similarWords || similarWords,
+          uniqueSentences: baseInfo.uniqueSentences || (data.paragraphs ? data.paragraphs.length : 0),
           similarSources: data.similarSources ? data.similarSources.filter(source => source.sourceName !== null && source.sourceName !== '').length : 0
         }
-        
-        // 构建相似来源列表
+
+        // 构建相似来源列表（后端不提供author/year/matchedWords字段）
         if (data.similarSources && data.similarSources.length > 0) {
           similarSources.value = data.similarSources.filter(source => source.sourceName !== null && source.sourceName !== '')
             .map((source, index) => ({
               id: source.sourceId || index + 1,
               title: source.sourceName || '未知来源',
-              author: '', // 后端数据中可能没有此信息
-              year: '2023', // 后端数据中可能没有年份信息
+              author: source.author || '',
+              year: source.year || '',
               type: source.sourceType || 'academic',
               similarity: source.maxSimilarity || 0,
-              matchedWords: 0 // 后端数据中可能没有此信息
+              matchedWords: source.matchedParagraphs || ''
             }));
         }
-        
-        // 构建修改建议（从后端数据获取或基于相似度生成）
+
+        // 基于报告数据的修改建议（后端暂无建议接口，基于相似度自动评级）
         suggestions.value = generateSuggestions(reportData.value.similarity);
         
         // 加载历史记录
@@ -886,28 +896,28 @@ const viewHistoryReport = (record) => {
         submitTime: baseInfo.generateTime || '',
         similarity: parseFloat(similarity) || 0,
         checkTime: baseInfo.generateTime || '',
-        checkScope: '校内论文库',
-        citations: 0, // 后端数据中可能没有此信息
-        totalWords: 0, // 后端数据中可能没有此信息
-        similarWords: 0, // 后端数据中可能没有此信息
-        uniqueSentences: 0, // 后端数据中可能没有此信息
-        similarSources: data.similarSources ? data.similarSources.length : 0
+        checkScope: baseInfo.checkRuleName || '',
+        citations: baseInfo.citations || 0,
+        totalWords: baseInfo.totalWords || 0,
+        similarWords: baseInfo.similarWords || 0,
+        uniqueSentences: baseInfo.uniqueSentences || 0,
+        similarSources: data.similarSources ? data.similarSources.filter(s => s.sourceName).length : 0
       };
-      
+
       // 构建相似来源列表
         if (data.similarSources && data.similarSources.length > 0) {
-          similarSources.value = data.similarSources.map((source, index) => ({
-            id: source.sourceId,
+          similarSources.value = data.similarSources.filter(s => s.sourceName).map((source, index) => ({
+            id: source.sourceId || index + 1,
             title: source.sourceName,
-            author: '', // 后端数据中可能没有此信息
-            year: '2023', // 后端数据中可能没有年份信息
+            author: source.author || '',
+            year: source.year || '',
             type: source.sourceType || 'academic',
             similarity: source.maxSimilarity || 0,
-            matchedWords: 0 // 后端数据中可能没有此信息
+            matchedWords: source.matchedParagraphs || ''
           }));
         }
-        
-        // 生成修改建议
+
+        // 基于报告数据的修改建议
         suggestions.value = generateSuggestions(reportData.value.similarity);
         
         ElMessage.success('历史报告加载成功');
@@ -930,15 +940,15 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #f5f7fa;
+  background-color: #f5f5f7;
 }
 
 /* 报告头部 */
 .report-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0066cc;
   color: white;
   padding: 24px;
-  border-radius: 8px 8px 0 0;
+  border-radius: 11px 11px 0 0;
 }
 
 .header-main {
@@ -961,7 +971,6 @@ onMounted(() => {
 }
 
 .header-actions .el-button-group {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* 相似度概览 */
@@ -992,7 +1001,7 @@ onMounted(() => {
 }
 
 .similarity-label {
-  font-size: 14px;
+  font-size: 17px;
   opacity: 0.9;
 }
 
@@ -1006,7 +1015,7 @@ onMounted(() => {
 .detail-item {
   background: rgba(255, 255, 255, 0.1);
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 11px;
   backdrop-filter: blur(10px);
 }
 
@@ -1068,20 +1077,20 @@ onMounted(() => {
 
 .bar-label {
   width: 80px;
-  font-size: 14px;
+  font-size: 17px;
 }
 
 .bar-track {
   flex: 1;
   height: 24px;
   background: #e6e8eb;
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
-  border-radius: 12px;
+  border-radius: 18px;
   transition: width 0.5s ease;
 }
 
@@ -1101,19 +1110,19 @@ onMounted(() => {
 .stat-item {
   text-align: center;
   padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: #f5f5f7;
+  border-radius: 11px;
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 700;
-  color: #409eff;
+  color: #0066cc;
   margin-bottom: 8px;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 17px;
   color: #606266;
 }
 
@@ -1180,12 +1189,12 @@ onMounted(() => {
 .comparison-panel {
   flex: 1;
   border: 1px solid #e6e8eb;
-  border-radius: 8px;
+  border-radius: 11px;
   overflow: hidden;
 }
 
 .panel-header {
-  background: #f5f7fa;
+  background: #f5f5f7;
   padding: 16px;
   border-bottom: 1px solid #e6e8eb;
 }
@@ -1204,7 +1213,7 @@ onMounted(() => {
 .text-segment {
   margin-bottom: 12px;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: 8px;
   line-height: 1.6;
 }
 
@@ -1222,7 +1231,7 @@ onMounted(() => {
 
 .suggestion-item {
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 11px;
   border-left: 4px solid;
 }
 
@@ -1263,9 +1272,9 @@ onMounted(() => {
 }
 
 .suggestion-action {
-  font-size: 14px;
-  color: #409eff;
-  font-weight: 500;
+  font-size: 17px;
+  color: #0066cc;
+  font-weight: 400;
 }
 
 /* 总结卡片 */
@@ -1282,7 +1291,7 @@ onMounted(() => {
 }
 
 .summary-label {
-  font-size: 14px;
+  font-size: 17px;
   color: #606266;
 }
 
@@ -1296,9 +1305,8 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.quick-actions .el-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.quick-actions .el-button:active {
+  transform: scale(0.97);
 }
 
 /* 加载状态 */

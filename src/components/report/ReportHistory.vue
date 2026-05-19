@@ -17,10 +17,10 @@
           </div>
           <div class="change-description">{{ record.description }}</div>
           <div class="history-actions">
-            <el-button type="text" @click="viewHistoryReport(record)">
+            <el-button link @click="viewHistoryReport(record)">
               查看报告
             </el-button>
-            <el-button v-if="showExportButton" type="text" @click="exportHistoryReport(record)">
+            <el-button v-if="showExportButton" link @click="exportHistoryReport(record)">
               导出报告
             </el-button>
           </div>
@@ -68,15 +68,12 @@ const exportHistoryReport = (record) => {
   background: #f8fafc;
   border-radius: 12px;
   margin-bottom: 20px;
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s ease;
+  border: 1px solid #e0e0e0;
 }
 
 .history-item:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-  border-color: #3b82f6;
+  border-color: #0066cc;
 }
 
 .version-info {

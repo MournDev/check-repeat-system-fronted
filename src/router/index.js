@@ -152,12 +152,6 @@ const asyncRoutes = [
         component: () => import("@/views/student/AcademicIntegrity.vue"),
         meta: { title: "学术诚信" },
       },
-      {
-        path: "test-paper-list",
-        name: "TestPaperList",
-        component: () => import("@/views/student/TestPaperList.vue"),
-        meta: { title: "论文列表测试" },
-      },
     ],
   },
   // 教师核心路由
@@ -241,12 +235,6 @@ const asyncRoutes = [
         meta: { title: "相似度阈值设置" },
       },
       {
-        path: "review-workflow",
-        name: "ReviewWorkflow",
-        component: () => import("@/views/teacher/ReviewWorkflow.vue"),
-        meta: { title: "审核工作流配置" },
-      },
-      {
         path: "chat-center",
         name: "ChatCenter",
         component: () => import("@/views/teacher/ChatCenter.vue"),
@@ -325,6 +313,12 @@ const asyncRoutes = [
         name: "ReportManagement",
         component: () => import("@/views/admin/ReportManagement.vue"),
         meta: { title: "报告管理" },
+      },
+      {
+        path: "knowledge-management",
+        name: "KnowledgeManagement",
+        component: () => import("@/views/admin/KnowledgeManagement.vue"),
+        meta: { title: "知识库管理" },
       },
     ],
   },

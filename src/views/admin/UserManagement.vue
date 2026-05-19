@@ -143,14 +143,11 @@
       <!-- 分页 -->
       <div class="pagination-container" v-if="!fetchAllUsers">
         <el-pagination
-          v-model="pagination.currentPage"
-          :page-size="pagination.pageSize"
-          @update:page-size="pagination.pageSize = $event"
+          v-model:current-page="pagination.currentPage"
+          v-model:page-size="pagination.pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="pagination.total"
           layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
@@ -294,7 +291,8 @@ import {
   updateUser, 
   deleteUser as deleteApiUser, 
   batchDeleteUsers, 
-  updateUserStatus 
+  updateUserStatus,
+  exportUsers as exportUsersApi
 } from '@/api/admin/users'
 
 // 图标导入
@@ -312,7 +310,7 @@ const userDialogVisible = ref(false)
 const isEdit = ref(false)
 const currentUser = ref({})
 // 是否一次性获取全部用户（true=获取全部，false=分页获取）
-const fetchAllUsers = ref(true)
+const fetchAllUsers = ref(false)
 
 // 筛选表单
 const filterForm = reactive({
@@ -487,9 +485,9 @@ const loadUserList = async () => {
       )
     }
     // 更新分页信息
-    pagination.currentPage = fetchAllUsers.value ? 1 : (current || pagination.currentPage)
-    pagination.pageSize = fetchAllUsers.value ? (list.length || pagination.pageSize) : (size || pagination.pageSize)
-    pagination.total = total || (list.length || 0)
+    pagination.currentPage = fetchAllUsers.value ? 1 : (Number(current) || pagination.currentPage)
+    pagination.pageSize = fetchAllUsers.value ? (list.length || pagination.pageSize) : (Number(size) || pagination.pageSize)
+    pagination.total = Number(total) || Number(list.length) || 0
     loading.value = false
   } catch (error) {
     console.error('加载用户列表失败:', error)
@@ -662,8 +660,30 @@ const batchDelete = async () => {
   }
 }
 
-const exportUsers = () => {
-  ElMessage.info('导出功能开发中...')
+const exportUsers = async () => {
+  try {
+    const params = {
+      userType: filterForm.userType || null,
+      status: filterForm.status ? toStatusNumber(filterForm.status) : null,
+      keyword: filterForm.keyword || null
+    }
+    
+    const res = await exportUsersApi(params)
+    // request 在 responseType=blob 时返回 axios response
+    const blob = res.data || res
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `users_export_${new Date().toISOString().slice(0,10)}.xlsx`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出已开始')
+  } catch (error) {
+    console.error('导出失败', error)
+    ElMessage.error(error.message || '导出失败')
+  }
 }
 
 const handleStatusChange = async (user, newStatus) => {
@@ -776,8 +796,8 @@ const rowKey = (row) => {
 <style lang="scss" scoped>
 .user-management {
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
-  color: #0f172a; // Slate-900
+  background: #f5f5f7; // Slate-50
+  color: #1d1d1f; // Slate-900
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 24px;
 }
@@ -788,14 +808,13 @@ const rowKey = (row) => {
   align-items: flex-start;
   margin-bottom: 24px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   padding: 24px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   .header-content {
@@ -803,12 +822,12 @@ const rowKey = (row) => {
       margin: 0 0 8px 0;
       font-size: 1.75rem;
       font-weight: 700;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
     }
     
     .page-desc {
       margin: 0;
-      color: #64748b; // Slate-500
+      color: #86868b; // Slate-500
       font-size: 0.95rem;
     }
   }
@@ -821,18 +840,16 @@ const rowKey = (row) => {
     .el-button {
       border-radius: 8px;
       transition: all 0.2s ease;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #d2d2d7;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-        border-color: #cbd5e1;
+        border-color: #d2d2d7;
       }
     }
     
     .el-switch {
-      --el-switch-on-color: #3b82f6; // Blue-500
-      --el-switch-off-color: #94a3b8; // Slate-400
+      --el-switch-on-color: #0066cc; // Blue-500
+      --el-switch-off-color: #86868b; // Slate-400
     }
   }
 }
@@ -840,13 +857,12 @@ const rowKey = (row) => {
 .filter-card {
   margin-bottom: 24px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   :deep(.el-card__body) {
@@ -863,23 +879,23 @@ const rowKey = (row) => {
         
         :deep(.el-input__wrapper) {
           border-radius: 8px;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #d2d2d7;
           transition: all 0.2s ease;
           
           &:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            border-color: #d2d2d7;
+            /* box-shadow removed for Apple HIG */
           }
         }
         
         :deep(.el-select__wrapper) {
           border-radius: 8px;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #d2d2d7;
           transition: all 0.2s ease;
           
           &:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            border-color: #d2d2d7;
+            /* box-shadow removed for Apple HIG */
           }
         }
       }
@@ -888,12 +904,10 @@ const rowKey = (row) => {
     .el-button {
       border-radius: 8px;
       transition: all 0.2s ease;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #d2d2d7;
       
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-        border-color: #cbd5e1;
+        border-color: #d2d2d7;
       }
     }
   }
@@ -901,19 +915,18 @@ const rowKey = (row) => {
 
 .table-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 18px;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: #cbd5e1;
+    border-color: #d2d2d7;
   }
   
   :deep(.el-card__header) {
     padding: 16px 20px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border-bottom: 1px solid #d2d2d7;
+    background: #f5f5f7;
     
     .card-header {
       display: flex;
@@ -924,7 +937,7 @@ const rowKey = (row) => {
         display: flex;
         align-items: center;
         font-weight: 600;
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
         
         .el-icon {
           margin-right: 8px;
@@ -939,12 +952,14 @@ const rowKey = (row) => {
         .el-button {
           border-radius: 8px;
           transition: all 0.2s ease;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #d2d2d7;
           
           &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-            border-color: #cbd5e1;
+            border-color: #86868b;
+          }
+          &:active {
+            transform: scale(0.95);
+            transition: transform 0.15s ease;
           }
         }
       }
@@ -956,22 +971,22 @@ const rowKey = (row) => {
   }
   
   :deep(.el-table) {
-    border-radius: 12px;
+    border-radius: 18px;
     overflow: hidden;
     
     .el-table__header-wrapper {
-      background-color: #f8fafc;
+      background-color: #f5f5f7;
       
       th {
-        color: #0f172a; // Slate-900
+        color: #1d1d1f; // Slate-900
         font-weight: 600;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #d2d2d7;
         padding: 12px 16px;
       }
     }
     
     .el-table__row:hover {
-      background-color: #f8fafc;
+      background-color: #f5f5f7;
       transition: background-color 0.2s ease;
     }
     
@@ -986,7 +1001,7 @@ const rowKey = (row) => {
     
     .el-table__cell {
       padding: 16px;
-      color: #0f172a; // Slate-900
+      color: #1d1d1f; // Slate-900
     }
   }
 }
@@ -995,22 +1010,22 @@ const rowKey = (row) => {
   padding: 16px;
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-top: 1px solid #d2d2d7;
+  background: #f5f5f7;
   
   :deep(.el-pagination) {
     .el-pagination__item {
       border-radius: 8px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #d2d2d7;
       
       &:hover {
-        color: #3b82f6; // Blue-500
+        color: #0066cc; // Blue-500
         border-color: #93c5fd;
       }
       
       &.is-active {
-        background-color: #3b82f6;
-        border-color: #3b82f6;
+        background-color: #0066cc;
+        border-color: #0066cc;
       }
     }
   }

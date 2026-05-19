@@ -161,7 +161,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getAllColleges, getMajorsByCollegeId } from '@/api/user'
-import { uploadPaper, resubmitAfterWithdraw } from '@/api/student'
+import { uploadPaper, resubmitAfterWithdraw, getMajorList } from '@/api/student'
 import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
 import { Check, Upload } from '@element-plus/icons-vue'
 import SparkMD5 from 'spark-md5'
@@ -288,7 +288,6 @@ onMounted(async () => {
     }
     if (userStore.userInfo?.userId) {
       loginUserId.value = userStore.userInfo.userId
-      console.log('用户 ID 已设置:', loginUserId.value)
     }
     
     // 检查是否是撤回后重新提交模式
@@ -309,7 +308,6 @@ onMounted(async () => {
         }
         if (userStore.userInfo?.userId) {
           loginUserId.value = userStore.userInfo.userId
-          console.log('用户 ID 已设置:', loginUserId.value)
         }
         
         // 检查是否是撤回后重新提交模式
@@ -396,22 +394,17 @@ const beforeUpload = async (file) => {
   // 计算MD5
   const md5 = await calculateFileMd5(file)
   fileMd5.value = md5
-  console.log('文件MD5:', md5)
-  console.log('上传参数:', uploadData.value)
   return true
 }
 
 // 上传成功回调
 const onUploadSuccess = (response, file, fileList) => {
-  console.log('上传成功回调 - 完整 response:', response);
-  console.log('上传成功回调 - response.data:', response.data);
   if (response.code === 200) {
     const fileId = response.data.fileId
     if (!fileId) {
       ElMessage.error('文件上传异常：未返回 fileId');
       return;
     }
-    console.log('解析到的 fileId:', fileId); // 现在会显示正确值
     paperId.value = fileId
     paperForm.value.file = fileId
     // 关键：手动触发 file 字段的校验，更新表单状态
@@ -419,7 +412,6 @@ const onUploadSuccess = (response, file, fileList) => {
       uploadFormRef.value.validateField('file');
     }
     ElMessage.success('文件上传成功')
-    console.log('文件上传成功，fileId:', paperId.value); // 查看控制台是否有值
   } else {
     ElMessage.error('文件上传失败：' + response.message)
     paperForm.value.file = ''; // 上传失败清空文件列表
@@ -466,7 +458,6 @@ const handleDrop = (event) => {
     beforeUpload(file).then(valid => {
       if (valid) {
         // 这里可以手动触发上传
-        console.log('文件已拖拽到上传区域:', file.name)
       }
     })
   }
@@ -491,13 +482,11 @@ const checkResubmitMode = () => {
       }
     );
     
-    console.log('进入撤回后重新提交模式，论文 ID:', resubmitPaperId.value);
   }
 }
 
 const assignTeacherAutomatically = async (submittedPaperId) => {
   try {
-    console.log('开始分配导师，paperId:', submittedPaperId)
     const loading = ElLoading.service({
       lock: true,
       text: '正在自动分配指导老师...',
@@ -624,14 +613,12 @@ const submitPaper = async () => {
       fileId: paperId.value,
       fileMd5: fileMd5.value
     }
-    console.log('提交参数:', submitParams)
         
     let res;
     // 判断是否是撤回后重新提交模式
     if (isResubmitMode.value && resubmitPaperId.value) {
       // 撤回后重新提交
       res = await resubmitAfterWithdraw(resubmitPaperId.value, submitParams);
-      console.log('撤回后重新提交响应数据:', res.data)
           
       if (res.code === 200) {
         ElMessage.success('重新提交成功！论文已进入审核流程');
@@ -645,8 +632,6 @@ const submitPaper = async () => {
     } else {
       // 正常提交
       res = await uploadPaper(submitParams)
-      console.log('论文提交完整响应:', res)
-      console.log('论文提交响应数据:', res.data)
       if (res.code === 200) {
         const submittedPaperId = res.data.id
         ElMessage.success('附件上传成功')
@@ -692,7 +677,7 @@ const resetForm = () => {
 // 论文提交页面样式
 .paper-submit-container {
   min-height: 100vh;
-  background: #f8fafc; // Slate-50
+  background: #f5f5f7; // Slate-50
   padding: 24px 0;
   display: flex;
   justify-content: center;
@@ -705,17 +690,17 @@ const resetForm = () => {
   margin: 0 auto;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   transition: all 0.2s ease;
   
   &:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    /* box-shadow removed */
     border-color: #cbd5e1;
   }
 
   .card-header {
-    background: #1e40af;
+    background: #0066cc;
     color: white;
     padding: 24px 32px;
     text-align: center;
@@ -775,8 +760,8 @@ const resetForm = () => {
     
     .step-content {
       .step-title {
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 17px;
+        font-weight: 600;
         color: #64748b;
         transition: all 0.2s ease;
       }
@@ -797,7 +782,7 @@ const resetForm = () => {
       .step-number {
         background: #0ea5e9;
         color: white;
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        /* box-shadow removed */
       }
       .step-title {
         color: #0f172a;
@@ -831,7 +816,7 @@ const resetForm = () => {
     .form-label {
       display: block;
       font-size: 0.875rem;
-      font-weight: 500;
+      font-weight: 600;
       color: #0f172a;
       margin-bottom: 8px;
     }
@@ -846,7 +831,7 @@ const resetForm = () => {
       
       &:focus {
         border-color: #0ea5e9;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
       }
     }
   }
@@ -855,14 +840,14 @@ const resetForm = () => {
 // 上传区域
 .upload-area {
   border: 2px dashed #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 40px;
   text-align: center;
   transition: all 0.2s ease;
   
   &:hover {
     border-color: #0ea5e9;
-    background: #f0f9ff;
+    background: #f5f5f7;
   }
 }
 
@@ -882,7 +867,7 @@ const resetForm = () => {
       margin: 0;
       color: #0f172a;
       font-size: 1rem;
-      font-weight: 500;
+      font-weight: 600;
     }
     .upload-tip {
       margin-top: 8px;
@@ -920,8 +905,8 @@ const resetForm = () => {
 
 // 确认内容
 .confirm-content {
-  background: #f8fafc;
-  border-radius: 12px;
+  background: #f5f5f7;
+  border-radius: 18px;
   padding: 24px;
   
   h4 {
@@ -939,7 +924,7 @@ const resetForm = () => {
       align-items: flex-start;
       padding: 16px;
       background: #ffffff;
-      border-radius: 8px;
+      border-radius: 11px;
       margin-bottom: 12px;
       transition: all 0.2s ease;
       
@@ -948,12 +933,12 @@ const resetForm = () => {
       }
       
       &:hover {
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+        /* box-shadow removed */
       }
       
       .detail-label {
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         color: #64748b;
         min-width: 120px;
       }
@@ -971,7 +956,7 @@ const resetForm = () => {
 // 操作按钮
 .step-actions {
   padding: 24px 32px;
-  background: #f8fafc;
+  background: #f5f5f7;
   border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: flex-end;
@@ -1004,7 +989,7 @@ const resetForm = () => {
       .step-number {
         width: 40px;
         height: 40px;
-        font-size: 14px;
+        font-size: 17px;
       }
       
       .step-title {
