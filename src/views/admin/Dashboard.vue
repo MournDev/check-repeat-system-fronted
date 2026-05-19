@@ -208,7 +208,7 @@
             >
               <el-icon><Document /></el-icon>
               日志中心
-            </button>
+            </el-button>
           </div>
         </div>
       </div>
