@@ -7,6 +7,7 @@
 ## 功能特点
 
 ### 学生端功能
+
 - 📄 论文提交与管理
 - 🔍 查重结果查看
 - 📊 个人能力评估
@@ -15,6 +16,7 @@
 - 📈 论文进度跟踪
 
 ### 教师端功能
+
 - 📋 论文审核工作台
 - 📊 审核统计分析
 - 👥 学生管理
@@ -23,6 +25,7 @@
 - 📈 审核效率统计
 
 ### 管理员端功能
+
 - 🏫 学校概览
 - 👥 用户管理
 - 📄 论文库管理
@@ -45,6 +48,7 @@
 ## 快速开始
 
 ### 环境要求
+
 - Node.js 14.0+
 - npm 6.0+
 
@@ -101,26 +105,31 @@ check-repeat-frontend/
 ## 核心功能模块
 
 ### 1. 认证系统
+
 - 登录/注册/密码重置
 - 角色权限管理
 - 状态持久化
 
 ### 2. 论文管理
+
 - 论文提交与版本管理
 - 查重结果分析
 - 论文状态跟踪
 
 ### 3. 审核流程
+
 - 教师审核工作台
 - 审核状态管理
 - 反馈与修改建议
 
 ### 4. 数据统计
+
 - 个人能力评估
 - 相似度趋势分析
 - 专业对比分析
 
 ### 5. 消息通知
+
 - 实时消息提醒
 - 通知中心
 - 消息历史记录
@@ -128,6 +137,7 @@ check-repeat-frontend/
 ## 响应式设计
 
 系统采用响应式设计，适配以下设备：
+
 - 桌面端 (1200px+)
 - 平板端 (768px-1199px)
 - 移动端 (320px-767px)
@@ -135,12 +145,14 @@ check-repeat-frontend/
 ## 开发指南
 
 ### 代码规范
+
 - 使用 ESLint 进行代码检查
 - 遵循 Vue 3 组合式 API 最佳实践
 - 组件命名使用 PascalCase
 - 变量命名使用 camelCase
 
 ### 提交规范
+
 - 提交信息使用英文
 - 提交信息格式：`type(scope): subject`
 - 类型包括：feat, fix, docs, style, refactor, test, chore
@@ -148,6 +160,7 @@ check-repeat-frontend/
 ## 部署说明
 
 ### 生产环境部署
+
 1. 构建生产版本：`npm run build`
 2. 将 `dist` 目录部署到 web 服务器
 3. 配置 Nginx 或其他 web 服务器
@@ -175,9 +188,9 @@ VITE_APP_TITLE=论文查重管理系统
 
 ## 联系方式
 
-- 项目维护者：[Your Name]
-- 邮箱：[your.email@example.com]
-- 问题反馈：[GitHub Issues](https://github.com/yourusername/check-repeat-frontend/issues)
+- 项目维护者：MournDev
+- 邮箱：3070500838@qq.com
+- 问题反馈：[GitHub Issues](https://github.com/MournDev/check-repeat-frontend/issues)
 
 ---
 
