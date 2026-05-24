@@ -72,7 +72,7 @@ service.interceptors.response.use(
       return Promise.reject(res);
     }
   },
-  (error) => {
+  async (error) => {
     loadingInstance?.close();
     
     if (!error.response) {
