@@ -412,7 +412,7 @@ import {
   verifyEmail as verifyEmailAPI,
   sendEmailCode as sendEmailCodeAPI,
   updateUserEmail,
-} from "../../api/user";
+} from "../../api/v1/user";
 
 const router = useRouter();
 const route = useRoute();

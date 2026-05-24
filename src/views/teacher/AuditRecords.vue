@@ -240,7 +240,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PaperDetail from '@/views/student/PaperDetail.vue'
-import { getReviewedList, downloadPaper, contactStudent } from '@/api/teacher.js'
+import { getReviewedList, downloadPaper, contactStudent } from '@/api/v1/teacher.js'
 import { getStatusText, getStatusType } from '@/utils/reviewStatus.js'
 import { formatDateTime } from '@/utils/dataType.js'
 import {

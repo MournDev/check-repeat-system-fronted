@@ -2,7 +2,7 @@ import request from './request'
 
 export const login = (data) => {
   return request({
-    url: '/api/auth/login',
+    url: '/api/v1/auth/login',
     method: 'post',
     data: data
   })
@@ -10,7 +10,7 @@ export const login = (data) => {
 
 export const register = (registerForm) => {
   return request({
-    url: '/api/auth/register',
+    url: '/api/v1/auth/register',
     method: 'post',
     data: {
       username: registerForm.username,
@@ -25,7 +25,7 @@ export const register = (registerForm) => {
 
 export const forgetPassword = (data) => {
   return request({
-    url: '/api/auth/forgot-password',
+    url: '/api/v1/auth/forgot-password',
     method: 'post',
     data: data
   })

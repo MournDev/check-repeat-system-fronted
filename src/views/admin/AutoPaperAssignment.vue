@@ -416,7 +416,7 @@ import {
   getAssignmentDetail,
   applyAssignmentResult,
   refreshAssignmentData
-} from '@/api/admin/autoAssignment'
+} from '@/api/v1/admin/autoAssignment'
 
 // 图标导入
 import {

@@ -37,7 +37,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { verifyEmail as verifyEmailAPI } from '@/api/user';
+import { verifyEmail as verifyEmailAPI } from '@/api/v1/user';
 
 const route = useRoute();
 const router = useRouter();

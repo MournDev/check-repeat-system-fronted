@@ -207,7 +207,7 @@ import {
   getRealtimeStats,
   getNotices,
   exportSchoolReport
-} from '@/api/admin/school'
+} from '@/api/v1/admin/school'
 import * as echarts from 'echarts'
 
 // 图标导入

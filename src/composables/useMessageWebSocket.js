@@ -46,9 +46,11 @@ export function useMessageWebSocket() {
         isConnecting.value = false;
         return;
       }
-      // 构建 WebSocket URL
-      // 前端开发服务器运行在 localhost:3000，Vite 会代理 /ws 请求到后端
-      const wsUrl = `ws://localhost:3000/ws/messages/${userId}`;
+      // 构建 WebSocket URL（开发环境用 localhost，生产从 env 读取）
+      const wsBase = import.meta.env.VITE_WS_BASE_URL || (
+        import.meta.env.DEV ? 'ws://localhost:3000' : `ws://${window.location.host}`
+      );
+      const wsUrl = `${wsBase}/ws/messages/${userId}`;
 
       ws = new WebSocket(wsUrl);
 

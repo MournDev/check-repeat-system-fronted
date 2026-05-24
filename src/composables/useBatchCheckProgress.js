@@ -18,7 +18,7 @@
 
 import { ref, reactive, computed, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { createBatchCheckTasks } from '@/api/student';
+import { createBatchCheckTasks } from '@/api/v1/student';
 import { useCheckProgress } from './useCheckProgress';
 
 export function useBatchCheckProgress() {

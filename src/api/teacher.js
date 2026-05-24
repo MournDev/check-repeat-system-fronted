@@ -3,7 +3,7 @@ import request from "./request";
 // 获取消息会话列表
 export const getMessageSessions = () => {
   return request({
-    url: '/api/teacher/message/sessions',
+    url: '/api/v1/teacher/message/sessions',
     method: 'get',
     _skipLoginRedirect: true
   })
@@ -12,7 +12,7 @@ export const getMessageSessions = () => {
 // 发送消息
 export const sendMessage = (data) => {
   return request({
-    url: '/api/teacher/message/send',
+    url: '/api/v1/teacher/message/send',
     method: 'post',
     data,
     _skipLoginRedirect: true
@@ -22,7 +22,7 @@ export const sendMessage = (data) => {
 // 获取消息列表
 export const getMessageList = (params) => {
   return request({
-    url: '/api/teacher/message/list',
+    url: '/api/v1/teacher/message/list',
     method: 'get',
     params,
     _skipLoginRedirect: true
@@ -38,7 +38,7 @@ export const markMessagesRead = (data) => {
     sessionId = data;
   }
   return request({
-    url: '/api/teacher/message/mark-read',
+    url: '/api/v1/teacher/message/mark-read',
     method: 'post',
     params: {
       sessionId
@@ -50,7 +50,7 @@ export const markMessagesRead = (data) => {
 // 上传文件上传消息文件
 export const uploadMessageFile = (formData) => {
   return request({
-    url: '/api/teacher/message/upload',
+    url: '/api/v1/teacher/message/upload',
     method: 'post',
     data: formData,
     headers: {
@@ -65,7 +65,7 @@ export const uploadFile = uploadMessageFile
 // 清空消息
 export const clearMessages = (sessionId) => {
   return request({
-    url: '/api/teacher/message/clear',
+    url: '/api/v1/teacher/message/clear',
     method: 'post',
     params: {
       sessionId
@@ -76,7 +76,7 @@ export const clearMessages = (sessionId) => {
 // 获取学生信息
 export const getStudentInfo = (studentId) => {
   return request({
-    url: `/api/teacher/message/student-info`,
+    url: `/api/v1/teacher/message/student-info`,
     method: 'get',
     params: {
       studentId
@@ -87,7 +87,7 @@ export const getStudentInfo = (studentId) => {
 // 下载论文
 export const downloadPaper = (paperId) => {
   return request({
-    url: `/api/teacher/papers/${paperId}/download`,
+    url: `/api/v1/teacher/papers/${paperId}/download`,
     method: 'get',
     responseType: 'blob'
   })
@@ -96,7 +96,7 @@ export const downloadPaper = (paperId) => {
 // 获取教师仪表板统计信息
 export const getTeacherDashboardStats = (teacherId) => {
   return request({
-    url: teacherId ? `/api/teacher/dashboard/stats/${teacherId}` : '/api/teacher/dashboard/stats',
+    url: teacherId ? `/api/v1/teacher/dashboard/stats/${teacherId}` : '/api/v1/teacher/dashboard/stats',
     method: 'get'
   })
 }
@@ -104,7 +104,7 @@ export const getTeacherDashboardStats = (teacherId) => {
 // 获取待审核论文列表
 export const getPendingReviewList = (pageNum, pageSize) => {
   return request({
-    url: '/api/teacher/dashboard/pending-papers',
+    url: '/api/v1/teacher/dashboard/pending-papers',
     method: 'get',
     params: {
       pageNum,
@@ -116,7 +116,7 @@ export const getPendingReviewList = (pageNum, pageSize) => {
 // 获取学生统计信息
 export const getStudentStats = (teacherId) => {
   return request({
-    url: teacherId ? `/api/teacher/students/stats/${teacherId}` : '/api/teacher/students/stats',
+    url: teacherId ? `/api/v1/teacher/students/stats/${teacherId}` : '/api/v1/teacher/students/stats',
     method: 'get'
   })
 }
@@ -124,7 +124,7 @@ export const getStudentStats = (teacherId) => {
 // 导出教师数据
 export const exportTeacherData = (data) => {
   return request({
-    url: '/api/teacher/export/data',
+    url: '/api/v1/teacher/export/data',
     method: 'post',
     data,
     responseType: 'blob'
@@ -134,7 +134,7 @@ export const exportTeacherData = (data) => {
 // 获取审核统计信息
 export const getReviewStats = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/review-stats',
+    url: '/api/v1/teacher/data-analysis/review-stats',
     method: 'get',
     params
   })
@@ -143,7 +143,7 @@ export const getReviewStats = (params) => {
 // 获取学院分布
 export const getCollegeDistribution = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/college-distribution',
+    url: '/api/v1/teacher/data-analysis/college-distribution',
     method: 'get',
     params
   })
@@ -152,7 +152,7 @@ export const getCollegeDistribution = (params) => {
 // 添加学生
 export const addStudent = (data) => {
   return request({
-    url: '/api/teacher/students',
+    url: '/api/v1/teacher/students',
     method: 'post',
     data
   })
@@ -161,7 +161,7 @@ export const addStudent = (data) => {
 // 获取学生列表
 export const getStudentListFull = (params) => {
   return request({
-    url: '/api/teacher/students',
+    url: '/api/v1/teacher/students',
     method: 'get',
     params
   })
@@ -170,7 +170,7 @@ export const getStudentListFull = (params) => {
 // 导入学生数据
 export const importStudentData = (formData) => {
   return request({
-    url: '/api/teacher/students/import',
+    url: '/api/v1/teacher/students/import',
     method: 'post',
     data: formData,
     headers: {
@@ -182,7 +182,7 @@ export const importStudentData = (formData) => {
 // 获取学院列表
 export const getColleges = () => {
   return request({
-    url: '/api/common/dict/colleges',
+    url: '/api/v1/common/dict/colleges',
     method: 'get'
   })
 }
@@ -190,7 +190,7 @@ export const getColleges = () => {
 // 获取专业列表
 export const getMajors = (collegeId) => {
   return request({
-    url: '/api/common/dict/majors',
+    url: '/api/v1/common/dict/majors',
     method: 'get',
     params: {
       collegeId
@@ -201,7 +201,7 @@ export const getMajors = (collegeId) => {
 // 删除学生
 export const deleteStudent = (studentId) => {
   return request({
-    url: `/api/teacher/students/${studentId}`,
+    url: `/api/v1/teacher/students/${studentId}`,
     method: 'delete'
   })
 }
@@ -209,7 +209,7 @@ export const deleteStudent = (studentId) => {
 // 分配导师
 export const assignAdvisor = (studentId, data) => {
   return request({
-    url: `/api/teacher/students/${studentId}/advisor`,
+    url: `/api/v1/teacher/students/${studentId}/advisor`,
     method: 'put',
     data
   })
@@ -218,7 +218,7 @@ export const assignAdvisor = (studentId, data) => {
 // 批量分配导师
 export const batchAssignAdvisor = (data) => {
   return request({
-    url: '/api/teacher/students/batch-assign-advisor',
+    url: '/api/v1/teacher/students/batch-assign-advisor',
     method: 'post',
     data
   })
@@ -227,7 +227,7 @@ export const batchAssignAdvisor = (data) => {
 // 批量发送消息
 export const batchSendMessage = (data) => {
   return request({
-    url: '/api/teacher/students/batch-send-message',
+    url: '/api/v1/teacher/students/batch-send-message',
     method: 'post',
     data
   })
@@ -236,7 +236,7 @@ export const batchSendMessage = (data) => {
 // 批量删除学生
 export const batchDeleteStudents = (studentIds) => {
   return request({
-    url: '/api/teacher/students/batch',
+    url: '/api/v1/teacher/students/batch',
     method: 'delete',
     data: studentIds
   })
@@ -245,7 +245,7 @@ export const batchDeleteStudents = (studentIds) => {
 // 导出学生数据
 export const exportStudentData = (params) => {
   return request({
-    url: '/api/teacher/students/export',
+    url: '/api/v1/teacher/students/export',
     method: 'get',
     params,
     responseType: 'blob'
@@ -255,7 +255,7 @@ export const exportStudentData = (params) => {
 // 获取学生论文信息
 export const getStudentPaper = (studentId) => {
   return request({
-    url: `/api/teacher/students/${studentId}/paper`,
+    url: `/api/v1/teacher/students/${studentId}/paper`,
     method: 'get'
   })
 }
@@ -263,7 +263,7 @@ export const getStudentPaper = (studentId) => {
 // 获取学生所有论文
 export const getStudentPapers = (studentId) => {
   return request({
-    url: `/api/teacher/students/${studentId}/papers`,
+    url: `/api/v1/teacher/students/${studentId}/papers`,
     method: 'get'
   })
 }
@@ -271,7 +271,7 @@ export const getStudentPapers = (studentId) => {
 // 获取详细数据
 export const getDetailData = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/detail-data',
+    url: '/api/v1/teacher/data-analysis/detail-data',
     method: 'get',
     params
   })
@@ -280,7 +280,7 @@ export const getDetailData = (params) => {
 // 获取审核趋势
 export const getReviewTrend = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/review-trend',
+    url: '/api/v1/teacher/data-analysis/review-trend',
     method: 'get',
     params
   })
@@ -289,7 +289,7 @@ export const getReviewTrend = (params) => {
 // 获取审核状态分布
 export const getReviewStatusDistribution = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/review-status-distribution',
+    url: '/api/v1/teacher/data-analysis/review-status-distribution',
     method: 'get',
     params
   })
@@ -298,7 +298,7 @@ export const getReviewStatusDistribution = (params) => {
 // 获取相似度分布
 export const getSimilarityDistribution = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/similarity-distribution',
+    url: '/api/v1/teacher/data-analysis/similarity-distribution',
     method: 'get',
     params
   })
@@ -307,7 +307,7 @@ export const getSimilarityDistribution = (params) => {
 // 导出数据
 export const exportData = (params) => {
   return request({
-    url: '/api/teacher/data-analysis/export',
+    url: '/api/v1/teacher/data-analysis/export',
     method: 'post',
     params,
     responseType: 'blob'
@@ -337,7 +337,7 @@ export const doReview = (data) => {
   }
 
   return request({
-    url: '/api/teacher/reviews/do-review',
+    url: '/api/v1/teacher/reviews/do-review',
     method: 'post',
     data: formData,
     headers: {
@@ -349,7 +349,7 @@ export const doReview = (data) => {
 // 获取待审核统计
 export const getPendingStats = () => {
   return request({
-    url: '/api/teacher/pending-reviews/stats',
+    url: '/api/v1/teacher/pending-reviews/stats',
     method: 'get'
   })
 }
@@ -357,7 +357,7 @@ export const getPendingStats = () => {
 // 重新查重
 export const recheckPlagiarism = (paperId) => {
   return request({
-    url: '/api/teacher/pending-reviews/recheck',
+    url: '/api/v1/teacher/pending-reviews/recheck',
     method: 'post',
     data: { paperId: String(paperId) }
   })
@@ -366,7 +366,7 @@ export const recheckPlagiarism = (paperId) => {
 // 发送提醒
 export const sendReminder = (paperId) => {
   return request({
-    url: '/api/teacher/pending-reviews/reminder',
+    url: '/api/v1/teacher/pending-reviews/reminder',
     method: 'post',
     data: { paperId: String(paperId) }
   })
@@ -375,7 +375,7 @@ export const sendReminder = (paperId) => {
 // 联系学生
 export const contactStudent = (data) => {
   return request({
-    url: '/api/teacher/pending-reviews/contact',
+    url: '/api/v1/teacher/pending-reviews/contact',
     method: 'post',
     data
   })
@@ -384,7 +384,7 @@ export const contactStudent = (data) => {
 // 获取查重报告
 export const getPlagiarismReport = (paperId) => {
   return request({
-    url: `/api/teacher/pending-reviews/report/${paperId}`,
+    url: `/api/v1/teacher/pending-reviews/report/${paperId}`,
     method: 'get'
   })
 }
@@ -392,7 +392,7 @@ export const getPlagiarismReport = (paperId) => {
 // 获取今日审核数量
 export const getTodayReviewedCount = () => {
   return request({
-    url: '/api/teacher/pending-reviews/today',
+    url: '/api/v1/teacher/pending-reviews/today',
     method: 'get'
   })
 }
@@ -400,7 +400,7 @@ export const getTodayReviewedCount = () => {
 // 委托审核
 export const delegateReview = (data) => {
   return request({
-    url: '/api/teacher/pending-reviews/delegate',
+    url: '/api/v1/teacher/pending-reviews/delegate',
     method: 'post',
     data
   })
@@ -409,7 +409,7 @@ export const delegateReview = (data) => {
 // 获取论文内容
 export const getPaperContent = (paperId) => {
   return request({
-    url: `/api/teacher/reviews/paper-content/${paperId}`,
+    url: `/api/v1/teacher/reviews/paper-content/${paperId}`,
     method: 'get'
   })
 }
@@ -417,7 +417,7 @@ export const getPaperContent = (paperId) => {
 // 获取论文预览URL
 export const getPaperPreviewUrl = (paperId) => {
   return request({
-    url: `/api/teacher/reviews/paper-preview/${paperId}`,
+    url: `/api/v1/teacher/reviews/paper-preview/${paperId}`,
     method: 'get'
   })
 }
@@ -425,7 +425,7 @@ export const getPaperPreviewUrl = (paperId) => {
 // 获取审核历史
 export const getReviewHistory = (paperId) => {
   return request({
-    url: `/api/teacher/pending-reviews/history/${paperId}`,
+    url: `/api/v1/teacher/pending-reviews/history/${paperId}`,
     method: 'get'
   })
 }
@@ -433,7 +433,7 @@ export const getReviewHistory = (paperId) => {
 // 获取教师审核历史
 export const getTeacherReviewHistory = (params) => {
   return request({
-    url: '/api/teacher/reviews/history',
+    url: '/api/v1/teacher/reviews/history',
     method: 'get',
     params
   })
@@ -442,7 +442,7 @@ export const getTeacherReviewHistory = (params) => {
 // 获取详细查重报告
 export const getDetailedPlagiarismReport = (paperId) => {
   return request({
-    url: '/api/teacher/reports/list',
+    url: '/api/v1/teacher/reports/list',
     method: 'get',
     params: { paperId }
   })
@@ -451,7 +451,7 @@ export const getDetailedPlagiarismReport = (paperId) => {
 // 获取论文报告
 export const getPaperReport = (reportId) => {
   return request({
-    url: `/api/teacher/reports/preview`,
+    url: `/api/v1/teacher/reports/preview`,
     method: 'get',
     params: {
       reportId
@@ -462,7 +462,7 @@ export const getPaperReport = (reportId) => {
 // 获取简单查重报告列表
 export const getSimpleCheckReport = (paperId) => {
   return request({
-    url: `/api/teacher/reports/list`,
+    url: `/api/v1/teacher/reports/list`,
     method: 'get',
     params: {
       paperId
@@ -473,7 +473,7 @@ export const getSimpleCheckReport = (paperId) => {
 // 导出查重报告
 export const exportCheckReport = (reportId, format) => {
   return request({
-    url: `/api/teacher/reports/download`,
+    url: `/api/v1/teacher/reports/download`,
     method: 'post',
     data: {
       reportId,
@@ -486,7 +486,7 @@ export const exportCheckReport = (reportId, format) => {
 // 获取已审核列表
 export const getReviewedList = (params) => {
   return request({
-    url: '/api/teacher/reviews/reviewed-list',
+    url: '/api/v1/teacher/reviews/reviewed-list',
     method: 'get',
     params
   })
@@ -495,7 +495,7 @@ export const getReviewedList = (params) => {
 // 获取教师信息
 export const getInfo = (userId) => {
   return request({
-    url: '/api/teacher/info/get',
+    url: '/api/v1/teacher/info/get',
     method: 'get',
     params: {
       userId
@@ -506,7 +506,7 @@ export const getInfo = (userId) => {
 // 更新教师信息
 export const updateInfo = (data) => {
   return request({
-    url: '/api/teacher/info/update',
+    url: '/api/v1/teacher/info/update',
     method: 'post',
     data
   })
@@ -515,7 +515,7 @@ export const updateInfo = (data) => {
 // 修改密码
 export const changePassword = (data) => {
   return request({
-    url: '/api/teacher/info/changePassword',
+    url: '/api/v1/teacher/info/changePassword',
     method: 'post',
     params: {
       userId: data.userId,
@@ -527,7 +527,7 @@ export const changePassword = (data) => {
 // 创建审核模板
 export const createReviewTemplate = (data) => {
   return request({
-    url: '/api/teacher/review-templates/createTemplate',
+    url: '/api/v1/teacher/review-templates/createTemplate',
     method: 'post',
     data
   })
@@ -536,7 +536,7 @@ export const createReviewTemplate = (data) => {
 // 获取审核模板列表
 export const getReviewTemplates = (params) => {
   return request({
-    url: '/api/teacher/review-templates/getTemplatesList',
+    url: '/api/v1/teacher/review-templates/getTemplatesList',
     method: 'get',
     params
   })
@@ -545,7 +545,7 @@ export const getReviewTemplates = (params) => {
 // 更新审核模板
 export const updateReviewTemplate = (templateId, data) => {
   return request({
-    url: `/api/teacher/review-templates/${templateId}`,
+    url: `/api/v1/teacher/review-templates/${templateId}`,
     method: 'put',
     data
   })
@@ -554,7 +554,7 @@ export const updateReviewTemplate = (templateId, data) => {
 // 删除审核模板
 export const deleteReviewTemplate = (templateId) => {
   return request({
-    url: `/api/teacher/review-templates/${templateId}`,
+    url: `/api/v1/teacher/review-templates/${templateId}`,
     method: 'delete'
   })
 }
@@ -562,7 +562,7 @@ export const deleteReviewTemplate = (templateId) => {
 // 使用审核模板
 export const useReviewTemplate = (templateId) => {
   return request({
-    url: `/api/teacher/review-templates/${templateId}/use`,
+    url: `/api/v1/teacher/review-templates/${templateId}/use`,
     method: 'post'
   })
 }
@@ -570,7 +570,7 @@ export const useReviewTemplate = (templateId) => {
 // 添加学生到分组
 export const addStudentsToGroup = (groupId, studentIds) => {
   return request({
-    url: `/api/teacher/student-groups/${groupId}/students`,
+    url: `/api/v1/teacher/student-groups/${groupId}/students`,
     method: 'post',
     data: studentIds
   })
@@ -579,7 +579,7 @@ export const addStudentsToGroup = (groupId, studentIds) => {
 // 获取学生分组列表
 export const getStudentGroups = (params) => {
   return request({
-    url: '/api/teacher/student-groups',
+    url: '/api/v1/teacher/student-groups',
     method: 'get',
     params
   })
@@ -588,7 +588,7 @@ export const getStudentGroups = (params) => {
 // 创建学生分组
 export const createStudentGroup = (data) => {
   return request({
-    url: '/api/teacher/student-groups',
+    url: '/api/v1/teacher/student-groups',
     method: 'post',
     data
   })
@@ -597,7 +597,7 @@ export const createStudentGroup = (data) => {
 // 更新学生分组
 export const updateStudentGroup = (groupId, data) => {
   return request({
-    url: `/api/teacher/student-groups/${groupId}`,
+    url: `/api/v1/teacher/student-groups/${groupId}`,
     method: 'put',
     data
   })
@@ -606,7 +606,7 @@ export const updateStudentGroup = (groupId, data) => {
 // 删除学生分组
 export const deleteStudentGroup = (groupId) => {
   return request({
-    url: `/api/teacher/student-groups/${groupId}`,
+    url: `/api/v1/teacher/student-groups/${groupId}`,
     method: 'delete'
   })
 }
@@ -614,7 +614,7 @@ export const deleteStudentGroup = (groupId) => {
 // 从分组中移除单个学生
 export const removeStudentFromGroup = (groupId, studentId) => {
   return request({
-    url: `/api/teacher/student-groups/${groupId}/students/${studentId}`,
+    url: `/api/v1/teacher/student-groups/${groupId}/students/${studentId}`,
     method: 'delete'
   })
 }
@@ -622,7 +622,7 @@ export const removeStudentFromGroup = (groupId, studentId) => {
 // 获取未分组的学生列表
 export const getStudentsNotInGroup = (params) => {
   return request({
-    url: `/api/teacher/student-groups/${params.groupId}/students/not-in-group`,
+    url: `/api/v1/teacher/student-groups/${params.groupId}/students/not-in-group`,
     method: 'get'
   })
 }
@@ -630,7 +630,7 @@ export const getStudentsNotInGroup = (params) => {
 // 获取相似度阈值设置
 export const getSimilarityThresholds = () => {
   return request({
-    url: '/api/teacher/similarity-thresholds',
+    url: '/api/v1/teacher/similarity-thresholds',
     method: 'get'
   })
 }
@@ -638,7 +638,7 @@ export const getSimilarityThresholds = () => {
 // 更新相似度阈值设置
 export const updateSimilarityThresholds = (data) => {
   return request({
-    url: '/api/teacher/similarity-thresholds',
+    url: '/api/v1/teacher/similarity-thresholds',
     method: 'put',
     data
   })
@@ -647,7 +647,7 @@ export const updateSimilarityThresholds = (data) => {
 // 获取审核流程配置
 export const getReviewWorkflow = () => {
   return request({
-    url: '/api/teacher/review-workflow',
+    url: '/api/v1/teacher/review-workflow',
     method: 'get'
   })
 }
@@ -655,7 +655,7 @@ export const getReviewWorkflow = () => {
 // 更新审核流程配置
 export const updateReviewWorkflow = (data) => {
   return request({
-    url: '/api/teacher/review-workflow',
+    url: '/api/v1/teacher/review-workflow',
     method: 'put',
     data
   })
@@ -664,7 +664,7 @@ export const updateReviewWorkflow = (data) => {
 // 获取教师列表
 export const getTeachers = (params) => {
   return request({
-    url: '/api/teacher/review-workflow/teachers',
+    url: '/api/v1/teacher/review-workflow/teachers',
     method: 'get',
     params
   })
@@ -673,7 +673,7 @@ export const getTeachers = (params) => {
 // 导出聊天记录
 export const exportChatRecords = (params) => {
   return request({
-    url: '/api/teacher/message/export',
+    url: '/api/v1/teacher/message/export',
     method: 'post',
     params,
     responseType: 'blob'
@@ -683,7 +683,7 @@ export const exportChatRecords = (params) => {
 // 详细对比接口
 export const compareReport = (reportId, sourceId) => {
   return request({
-    url: '/api/teacher/reports/compare',
+    url: '/api/v1/teacher/reports/compare',
     method: 'get',
     params: {
       reportId,
@@ -695,7 +695,7 @@ export const compareReport = (reportId, sourceId) => {
 // 审核通过
 export const approveReport = (reportId, comment) => {
   return request({
-    url: '/api/teacher/reports/approve',
+    url: '/api/v1/teacher/reports/approve',
     method: 'post',
     params: {
       reportId,
@@ -707,7 +707,7 @@ export const approveReport = (reportId, comment) => {
 // 要求修改
 export const requestRevision = (reportId, comment) => {
   return request({
-    url: '/api/teacher/reports/revision',
+    url: '/api/v1/teacher/reports/revision',
     method: 'post',
     params: {
       reportId,
@@ -719,7 +719,7 @@ export const requestRevision = (reportId, comment) => {
 // 联系学生
 export const contactStudentReport = (reportId, content) => {
   return request({
-    url: '/api/teacher/reports/contact',
+    url: '/api/v1/teacher/reports/contact',
     method: 'post',
     params: {
       reportId,
@@ -731,7 +731,7 @@ export const contactStudentReport = (reportId, content) => {
 // 相似来源详情
 export const getSourceDetail = (sourceId) => {
   return request({
-    url: '/api/teacher/reports/source/detail',
+    url: '/api/v1/teacher/reports/source/detail',
     method: 'get',
     params: {
       sourceId
@@ -742,7 +742,7 @@ export const getSourceDetail = (sourceId) => {
 // 历史报告列表
 export const getHistoryReportList = (paperId) => {
   return request({
-    url: '/api/teacher/reports/history',
+    url: '/api/v1/teacher/reports/history',
     method: 'get',
     params: {
       paperId

@@ -478,7 +478,7 @@ import {
   exportTeacherData,
   getReviewStatusDistribution,
   getCollegeDistribution
-} from '@/api/teacher.js'
+} from '@/api/v1/teacher.js'
 import * as echarts from 'echarts'
 
 // 图标引入

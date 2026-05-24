@@ -4,6 +4,18 @@ import router from '@/router'
 import { cache, generateCacheKey } from '@/utils/cache'
 import Cookies from 'js-cookie'
 
+let isRefreshing = false
+let refreshSubscribers = []
+
+function onTokenRefreshed(newToken) {
+  refreshSubscribers.forEach(cb => cb(newToken))
+  refreshSubscribers = []
+}
+
+function addRefreshSubscriber(cb) {
+  refreshSubscribers.push(cb)
+}
+
 // 通用请求方法
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -90,10 +102,56 @@ service.interceptors.response.use(
         console.warn('接口返回401但已配置跳过重定向:', error.config.url);
         return Promise.reject(error);
       }
-      Cookies.remove('token');
-      Cookies.remove('role');
-      router.push('/login');
-      ElMessage.error(errorData?.message || '登录已过期，请重新登录');
+      if (error.config?._retry) {
+        Cookies.remove('token');
+        Cookies.remove('role');
+        router.push('/login');
+        ElMessage.error(errorData?.message || '登录已过期，请重新登录');
+        return Promise.reject(error);
+      }
+      const token = Cookies.get('token');
+      if (!token) {
+        router.push('/login');
+        ElMessage.error('登录已过期，请重新登录');
+        return Promise.reject(error);
+      }
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const res = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh-token`,
+            null,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (res.data?.code === 200 && res.data?.data?.token) {
+            const newToken = res.data.data.token;
+            Cookies.set('token', newToken, { expires: 1, secure: import.meta.env.PROD, sameSite: 'strict' });
+            onTokenRefreshed(newToken);
+            isRefreshing = false;
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            error.config._retry = true;
+            return service(error.config);
+          }
+        } catch (refreshError) {
+          onTokenRefreshed(null);
+        }
+        isRefreshing = false;
+      }
+      return new Promise((resolve) => {
+        addRefreshSubscriber((newToken) => {
+          if (newToken) {
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            error.config._retry = true;
+            resolve(service(error.config));
+          } else {
+            Cookies.remove('token');
+            Cookies.remove('role');
+            router.push('/login');
+            ElMessage.error('登录已过期，请重新登录');
+            resolve(Promise.reject(error));
+          }
+        });
+      });
     } 
     else if (status === 403) {
       ElMessage.error(errorData?.message || '权限不足，无法操作');

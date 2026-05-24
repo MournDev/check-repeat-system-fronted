@@ -122,57 +122,8 @@ import {
 } from '@element-plus/icons-vue'
 import {
   getCategories, getArticles, getPopular, getArticle, searchArticles
-} from '@/api/knowledge'
-
-const renderMarkdown = (src) => {
-  if (!src) return ''
-  let html = src
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  // Headers
-  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>')
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
-  // Bold / Italic / Code
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-  // Blockquote
-  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-  // Horizontal rule
-  html = html.replace(/^---$/gm, '<hr>')
-  // Code blocks
-  html = html.replace(/```[\s\S]*?```/g, (m) => {
-    const code = m.replace(/```\w*\n?/g, '').replace(/```/g, '')
-    return '<pre><code>' + code + '</code></pre>'
-  })
-  // Tables
-  html = html.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (_, header, rows) => {
-    const hCells = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('')
-    const rHtml = rows.trim().split('\n').map(r => {
-      const cells = r.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('')
-      return `<tr>${cells}</tr>`
-    }).join('')
-    return `<table><thead><tr>${hCells}</tr></thead><tbody>${rHtml}</tbody></table>`
-  })
-  // Unordered lists
-  html = html.replace(/((?:^- .+\n?)+)/gm, (m) => {
-    const items = m.trim().split('\n').map(line => '<li>' + line.replace(/^- /, '') + '</li>').join('')
-    return '<ul>' + items + '</ul>'
-  })
-  // Ordered lists
-  html = html.replace(/((?:^\d+\. .+\n?)+)/gm, (m) => {
-    const items = m.trim().split('\n').map(line => '<li>' + line.replace(/^\d+\. /, '') + '</li>').join('')
-    return '<ol>' + items + '</ol>'
-  })
-  // Paragraphs
-  html = '<p>' + html.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>') + '</p>'
-  // Clean empty paragraphs
-  html = html.replace(/<p><\/p>/g, '').replace(/<p>(<[a-z])/g, '$1').replace(/(<\/[a-z]+>)<\/p>/g, '$1')
-  return html
-}
+} from '@/api/v1/knowledge'
+import { renderMarkdown } from '@/utils/markdown'
 
 // 状态
 const keyword = ref('')

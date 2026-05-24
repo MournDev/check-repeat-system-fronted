@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getMessageList, getUnreadCount } from '@/api/user.js'
+import { getMessageList, getUnreadCount } from '@/api/v1/user.js'
 
 export const useMessageStore = defineStore('message', () => {
   const notifications = ref([])

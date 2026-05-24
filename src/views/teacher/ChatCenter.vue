@@ -133,7 +133,7 @@ import { Refresh, Document, Setting } from '@element-plus/icons-vue'
 import {
   getMessageSessions, getMessageList, sendMessage as sendMessageApi, markMessagesRead,
   clearMessages, exportChatRecords, getStudentInfo, uploadFile
-} from '@/api/teacher.js'
+} from '@/api/v1/teacher.js'
 import { useMessageWebSocket } from '@/composables/useMessageWebSocket'
 
 const userStore = useUserStore()
@@ -168,7 +168,7 @@ const filteredSessions = computed(() => {
 })
 
 const uploadUrl = computed(() => {
-  return '/check/api/teacher/message/upload'
+  return '/check/api/v1/teacher/message/upload'
 })
 
 // 方法

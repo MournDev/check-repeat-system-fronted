@@ -125,7 +125,7 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Message, View, Hide } from '@element-plus/icons-vue'
-import { forgetPassword } from '@/api/login'
+import { forgetPassword } from '@/api/v1/login'
 import AuthLayout from '@/components/layout/AuthLayout.vue'
 const router = useRouter()
 const resetFormRef = ref(null)

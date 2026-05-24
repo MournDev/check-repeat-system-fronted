@@ -330,8 +330,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import PlagiarismReportViewer from './PlagiarismReportViewer.vue'
-import { doReview, sendMessage, getReviewTemplates, useReviewTemplate, getPaperContent } from '@/api/teacher.js'
+import { doReview, sendMessage, getReviewTemplates, useReviewTemplate, getPaperContent } from '@/api/v1/teacher.js'
 import { convertToBackendStatus } from '@/utils/reviewStatus.js'
+import { sanitizeHtml } from '@/utils/markdown'
 import { useRouter } from 'vue-router'
 
 // 图标导入
@@ -393,7 +394,7 @@ const dialogTitle = computed(() => {
 })
 
 const uploadUrl = computed(() => {
-  return '/api/teacher/reviews/upload-attachment'
+  return '/api/v1/teacher/reviews/upload-attachment'
 })
 
 const uploadHeaders = computed(() => {
@@ -760,7 +761,7 @@ const loadPaperContent = async () => {
   try {
     const response = await getPaperContent(props.paperId)
     if (response.code === 200 && response.data) {
-      paperContent.value = response.data.content || response.data.abstract || '暂无论文内容'
+      paperContent.value = sanitizeHtml(response.data.content || response.data.abstract || '暂无论文内容')
     } else {
       paperContent.value = '暂无论文内容'
     }

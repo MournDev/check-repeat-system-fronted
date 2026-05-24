@@ -1384,7 +1384,7 @@ import {
   getReviewHistory,
   getTeacherReviewHistory,
   getDetailedPlagiarismReport
-} from '@/api/teacher.js'
+} from '@/api/v1/teacher.js'
 import { convertToBackendStatus } from '@/utils/reviewStatus.js'
 import {
   Bell,

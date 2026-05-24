@@ -522,7 +522,7 @@ import {
   getSecurityLogs, getRealtimeStats, getActiveAlerts, handleAlert,
   getAlertConfig, updateAlertConfig, deleteAlertRule, toggleAlertRule,
   getResourceUsage, getApiResponseTimes
-} from '@/api/admin/logs'
+} from '@/api/v1/admin/logs'
 import * as echarts from 'echarts'
 import {
   Refresh, Setting, Download, Search, User, Warning, CircleClose,

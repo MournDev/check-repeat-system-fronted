@@ -128,48 +128,10 @@ import { Search, Plus } from '@element-plus/icons-vue'
 import {
   adminListArticles, adminCreateArticle, adminUpdateArticle,
   adminDeleteArticle, adminUpdateArticleStatus
-} from '@/api/knowledge'
-import { getCategories } from '@/api/knowledge'
+} from '@/api/v1/knowledge'
+import { getCategories } from '@/api/v1/knowledge'
 import { ElMessage } from 'element-plus'
-
-const renderMarkdown = (src) => {
-  if (!src) return ''
-  let html = src
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>')
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-  html = html.replace(/^---$/gm, '<hr>')
-  html = html.replace(/```[\s\S]*?```/g, (m) => {
-    const code = m.replace(/```\w*\n?/g, '').replace(/```/g, '')
-    return '<pre><code>' + code + '</code></pre>'
-  })
-  html = html.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (_, header, rows) => {
-    const hCells = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('')
-    const rHtml = rows.trim().split('\n').map(r => {
-      const cells = r.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('')
-      return `<tr>${cells}</tr>`
-    }).join('')
-    return `<table><thead><tr>${hCells}</tr></thead><tbody>${rHtml}</tbody></table>`
-  })
-  html = html.replace(/((?:^- .+\n?)+)/gm, (m) => {
-    const items = m.trim().split('\n').map(line => '<li>' + line.replace(/^- /, '') + '</li>').join('')
-    return '<ul>' + items + '</ul>'
-  })
-  html = html.replace(/((?:^\d+\. .+\n?)+)/gm, (m) => {
-    const items = m.trim().split('\n').map(line => '<li>' + line.replace(/^\d+\. /, '') + '</li>').join('')
-    return '<ol>' + items + '</ol>'
-  })
-  html = '<p>' + html.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>') + '</p>'
-  html = html.replace(/<p><\/p>/g, '').replace(/<p>(<[a-z])/g, '$1').replace(/(<\/[a-z]+>)<\/p>/g, '$1')
-  return html
-}
+import { renderMarkdown } from '@/utils/markdown'
 
 const articles = ref([])
 const total = ref(0)

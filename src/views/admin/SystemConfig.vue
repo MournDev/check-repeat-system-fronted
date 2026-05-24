@@ -450,7 +450,7 @@ import {
   resetDefaultConfig,
   getDeadlinesConfig,
   updateDeadlinesConfig
-} from '@/api/admin/config'
+} from '@/api/v1/admin/config'
 
 
 // 图标导入

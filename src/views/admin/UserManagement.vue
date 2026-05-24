@@ -293,7 +293,7 @@ import {
   batchDeleteUsers, 
   updateUserStatus,
   exportUsers as exportUsersApi
-} from '@/api/admin/users'
+} from '@/api/v1/admin/users'
 
 // 图标导入
 import {

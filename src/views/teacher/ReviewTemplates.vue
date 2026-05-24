@@ -247,7 +247,7 @@ import {
   updateReviewTemplate,
   deleteReviewTemplate,
   useReviewTemplate
-} from '@/api/teacher'
+} from '@/api/v1/teacher'
 
 // 响应式数据
 const activeCategory = ref('all')

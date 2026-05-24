@@ -213,7 +213,7 @@ import {
   getSimilarityDistribution,
   getCollegeDistribution,
   exportData as exportTeacherData
-} from '@/api/teacher'
+} from '@/api/v1/teacher'
 import * as echarts from 'echarts'
 
 // 图标导入

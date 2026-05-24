@@ -152,7 +152,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Histogram, Document, Search, Refresh } from '@element-plus/icons-vue'
-import { getStudentPaperPage } from '@/api/student'
+import { getStudentPaperPage } from '@/api/v1/student'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()

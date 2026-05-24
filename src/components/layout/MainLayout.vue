@@ -258,7 +258,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUnreadCount, getMessageList } from '@/api/user.js'
+import { getUnreadCount, getMessageList } from '@/api/v1/user.js'
 import { useMessageStore } from '@/stores/message'
 
 import {

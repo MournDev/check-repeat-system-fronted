@@ -223,10 +223,10 @@ import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
 // 导入管理员API
-import { getDashboardStats } from '@/api/admin/dashboard'
-import { getUserList } from '@/api/admin/users'
-import { getPaperList } from '@/api/admin/papers'
-import { getAssignmentStats } from '@/api/admin/assignment'
+import { getDashboardStats } from '@/api/v1/admin/dashboard'
+import { getUserList } from '@/api/v1/admin/users'
+import { getPaperList } from '@/api/v1/admin/papers'
+import { getAssignmentStats } from '@/api/v1/admin/assignment'
 
 // 图标引入
 import {

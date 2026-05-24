@@ -3,7 +3,7 @@ import request from '../request'
 // 获取实时监控统计数据
 export const getRealtimeStats = () => {
   return request({
-    url: '/api/admin/dashboard/realtime-stats',
+    url: '/api/v1/admin/dashboard/realtime-stats',
     method: 'get'
   })
 }
@@ -11,7 +11,7 @@ export const getRealtimeStats = () => {
 // 获取操作日志列表
 export const getOperationLogs = (params) => {
   return request({
-    url: '/api/admin/logs/operations',
+    url: '/api/v1/admin/logs/operations',
     method: 'get',
     params
   })
@@ -20,7 +20,7 @@ export const getOperationLogs = (params) => {
 // 获取安全日志列表
 export const getSecurityLogs = (params) => {
   return request({
-    url: '/api/admin/logs/security',
+    url: '/api/v1/admin/logs/security',
     method: 'get',
     params
   })
@@ -29,7 +29,7 @@ export const getSecurityLogs = (params) => {
 // 获取登录日志列表
 export const getLoginLogs = (params) => {
   return request({
-    url: '/api/admin/logs/login',
+    url: '/api/v1/admin/logs/login',
     method: 'get',
     params
   })
@@ -38,7 +38,7 @@ export const getLoginLogs = (params) => {
 // 导出操作日志
 export const exportOperationLogs = (params) => {
   return request({
-    url: '/api/admin/logs/operations/export',
+    url: '/api/v1/admin/logs/operations/export',
     method: 'get',
     params,
     responseType: 'blob'
@@ -48,7 +48,7 @@ export const exportOperationLogs = (params) => {
 // 获取智能预警配置
 export const getAlertConfig = () => {
   return request({
-    url: '/api/admin/alerts/config',
+    url: '/api/v1/admin/alerts/config',
     method: 'get'
   })
 }
@@ -56,7 +56,7 @@ export const getAlertConfig = () => {
 // 更新智能预警配置
 export const updateAlertConfig = (data) => {
   return request({
-    url: '/api/admin/alerts/config',
+    url: '/api/v1/admin/alerts/config',
     method: 'put',
     data
   })
@@ -65,7 +65,7 @@ export const updateAlertConfig = (data) => {
 // 获取活跃预警列表
 export const getActiveAlerts = () => {
   return request({
-    url: '/api/admin/alerts/active',
+    url: '/api/v1/admin/alerts/active',
     method: 'get'
   })
 }
@@ -73,7 +73,7 @@ export const getActiveAlerts = () => {
 // 删除告警规则
 export const deleteAlertRule = (id) => {
   return request({
-    url: `/api/admin/alerts/config/${id}`,
+    url: `/api/v1/admin/alerts/config/${id}`,
     method: 'delete'
   })
 }
@@ -81,7 +81,7 @@ export const deleteAlertRule = (id) => {
 // 启用/禁用告警规则
 export const toggleAlertRule = (id, enabled) => {
   return request({
-    url: `/api/admin/alerts/config/${id}/toggle`,
+    url: `/api/v1/admin/alerts/config/${id}/toggle`,
     method: 'put',
     data: { enabled }
   })
@@ -90,7 +90,7 @@ export const toggleAlertRule = (id, enabled) => {
 // 处理预警
 export const handleAlert = (data) => {
   return request({
-    url: '/api/admin/alerts/handle',
+    url: '/api/v1/admin/alerts/handle',
     method: 'post',
     data
   })
@@ -99,7 +99,7 @@ export const handleAlert = (data) => {
 // 获取资源使用率
 export const getResourceUsage = () => {
   return request({
-    url: '/api/admin/monitoring/resources',
+    url: '/api/v1/admin/monitoring/resources',
     method: 'get'
   })
 }
@@ -107,7 +107,7 @@ export const getResourceUsage = () => {
 // 获取API响应时间统计
 export const getApiResponseTimes = (params) => {
   return request({
-    url: '/api/admin/monitoring/response-times',
+    url: '/api/v1/admin/monitoring/response-times',
     method: 'get',
     params
   })

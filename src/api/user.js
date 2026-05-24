@@ -2,7 +2,7 @@ import request from './request'
 
 export const updateUserInfo = (data) => {
   return request({
-    url: '/api/user/info/update-info',
+    url: '/api/v1/user/info/update-info',
     method: 'post',
     data: data
   })
@@ -10,7 +10,7 @@ export const updateUserInfo = (data) => {
 
 export const uploadAvatar = (formData) => {
   return request({
-    url: '/api/user/info/upload-avatar',
+    url: '/api/v1/user/info/upload-avatar',
     method: 'post',
     data: formData,
   })
@@ -18,7 +18,7 @@ export const uploadAvatar = (formData) => {
 
 export const updatePassword = (data) => {
   return request({
-    url: '/api/user/info/update-password',
+    url: '/api/v1/user/info/update-password',
     method: 'put',
     data: data
   })
@@ -27,7 +27,7 @@ export const updatePassword = (data) => {
 // 验证邮箱
 export const verifyEmail = (token) => {
   return request({
-    url: '/api/user/info/verify-email',
+    url: '/api/v1/user/info/verify-email',
     method: 'get',
     params: { token }
   });
@@ -36,7 +36,7 @@ export const verifyEmail = (token) => {
 // 获取所有学院
 export const getAllColleges = () => {
   return request({
-    url: '/api/common/dict/colleges',
+    url: '/api/v1/common/dict/colleges',
     method: 'get'
   });
 }
@@ -44,7 +44,7 @@ export const getAllColleges = () => {
 // 获取对应学院下的专业
 export const getMajorsByCollegeId = (params) => {
   return request({
-    url: '/api/common/dict/majors',
+    url: '/api/v1/common/dict/majors',
     method: 'get',
     params: params
   });
@@ -53,14 +53,14 @@ export const getMajorsByCollegeId = (params) => {
 // 根据字典类型获取字典数据
 export const getDictDataByType = (dictType) => {
   return request({
-    url: `/api/dict/data/type/${dictType}`,
+    url: `/api/v1/dict/data/type/${dictType}`,
     method: 'get',
   });
 };
 
 export const getSubjectFieldTree = (subjectField) => {
   return request({
-    url: `/api/dict/subject/tree`,
+    url: `/api/v1/dict/subject/tree`,
     method: 'get'
   })
 };
@@ -68,7 +68,7 @@ export const getSubjectFieldTree = (subjectField) => {
 // 发送邮箱验证邮件
 export const sendVerifyEmail = (params) => {
   return request({
-    url: '/api/user/info/send-verify-email',
+    url: '/api/v1/user/info/send-verify-email',
     method: 'post',
     params: params
   });
@@ -77,7 +77,7 @@ export const sendVerifyEmail = (params) => {
 // 发送邮箱验证码
 export const sendEmailCode = (data) => {
   return request({
-    url: '/api/user/info/send-email-code',
+    url: '/api/v1/user/info/send-email-code',
     method: 'post',
     data
   });
@@ -86,7 +86,7 @@ export const sendEmailCode = (data) => {
 // 更新邮箱
 export const updateUserEmail = (data) => {
   return request({
-    url: '/api/user/info/update-email',
+    url: '/api/v1/user/info/update-email',
     method: 'post',
     data
   });
@@ -94,7 +94,7 @@ export const updateUserEmail = (data) => {
 
 export const getLoginHistory = (params) => {
   return request({
-    url: '/api/user/info/login-history',
+    url: '/api/v1/user/info/login-history',
     method: 'post',
     data: params
   })
@@ -103,7 +103,7 @@ export const getLoginHistory = (params) => {
 // 获取未读消息数量
 export const getUnreadCount = (userId) => {
   return request({
-    url: '/api/message/unread-count',
+    url: '/api/v1/message/unread-count',
     method: 'get',
     params: {
       userId: userId
@@ -114,7 +114,7 @@ export const getUnreadCount = (userId) => {
 // 获取消息列表
 export const getMessageList = (params) => {
   return request({
-    url: '/api/message/list',
+    url: '/api/v1/message/list',
     method: 'get',
     params: params
   });
@@ -123,7 +123,7 @@ export const getMessageList = (params) => {
 // 标记已读
 export const markAsRead = (messageId) => {
   return request({
-    url: `/api/message/mark-read`,
+    url: `/api/v1/message/mark-read`,
     method: 'post',
     params: {
       messageId
@@ -134,7 +134,7 @@ export const markAsRead = (messageId) => {
 // 批量标记已读
 export const batchMarkAsRead = (messageIds, userId) => {
   return request({
-    url: '/api/message/batch-read',
+    url: '/api/v1/message/batch-read',
     method: 'post',
     data: messageIds,
     params: {
@@ -146,7 +146,7 @@ export const batchMarkAsRead = (messageIds, userId) => {
 // 删除信息
 export const deleteMessage = (messageId) => {
   return request({
-    url: `/api/message/delete/${messageId}`,
+    url: `/api/v1/message/delete/${messageId}`,
     method: 'delete'
   })
 }
@@ -154,7 +154,7 @@ export const deleteMessage = (messageId) => {
 // 批量删除信息
 export const deleteAllMessages = (messageIds) => {
   return request({
-    url: '/api/message/batch-delete',
+    url: '/api/v1/message/batch-delete',
     method: 'delete',
     data: messageIds
   })
@@ -163,7 +163,7 @@ export const deleteAllMessages = (messageIds) => {
 // 确认接收分配申请
 export const confirmPaper = (paperId, teacherId) => {
   return request({
-    url: '/api/assignment/confirm',
+    url: '/api/v1/assignment/confirm',
     method: 'post',
     params: {
       paperId,
@@ -175,7 +175,7 @@ export const confirmPaper = (paperId, teacherId) => {
 // 拒绝分配申请
 export const rejectPaper = (paperId, teacherId) => {
   return request({
-    url: '/api/assignment/reject',
+    url: '/api/v1/assignment/reject',
     method: 'post',
     params: {
       paperId,
@@ -187,7 +187,7 @@ export const rejectPaper = (paperId, teacherId) => {
 // 获取分配列表
 export const getPendingPapers = (teacherId, pageNum = 1, pageSize = 10) => {
   return request({
-    url: '/api/assignment/pending-papers',
+    url: '/api/v1/assignment/pending-papers',
     method: 'get',
     params: {
       teacherId,
@@ -200,7 +200,7 @@ export const getPendingPapers = (teacherId, pageNum = 1, pageSize = 10) => {
 // 查询论文详情接口
 export const getPaperDetail = (paperId) => {
   return request({
-    url: '/api/papers/detail',
+    url: '/api/v1/papers/detail',
     method: 'get',
     params: {
       paperId,

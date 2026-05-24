@@ -504,7 +504,7 @@ import { ref, onMounted, computed, defineProps } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
-import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/student.js"
+import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/v1/student.js"
 import { getAvatarUrl } from '@/utils/avatar'
 
 // 图标引入
@@ -514,8 +514,8 @@ import {
     ChatLineRound, Paperclip, Plus, View, Refresh,
     DocumentChecked, DocumentAdd, Picture, VideoPlay, EditPen, FullScreen
 } from '@element-plus/icons-vue'
-import { getFileInfo } from "@/api/student.js"
-import { getSubjectFieldTree } from '@/api/user.js'
+import { getFileInfo } from "@/api/v1/student.js"
+import { getSubjectFieldTree } from '@/api/v1/user.js'
 import { tr } from 'element-plus/es/locales.mjs'
 const props = defineProps({
   paperId: {
@@ -604,7 +604,7 @@ const previewFile = async (file) => {
     currentFileType.value = getFileExtension(file.originalFilename)
 
     // 2. 构建后端智能预览接口路径（和Controller完全匹配，无额外前缀）
-    const previewApiUrl = `/check/api/file/smartPreview?fileId=${file.id}`
+    const previewApiUrl = `/check/api/v1/file/smartPreview?fileId=${file.id}`
 
     // 3. 显示预览弹框，开始加载
     previewVisible.value = true
@@ -614,7 +614,7 @@ const previewFile = async (file) => {
     previewMode.value = ''
 
     try {
-        const previewApiUrl = `/check/api/file/smartPreview?fileId=${file.id}`
+        const previewApiUrl = `/check/api/v1/file/smartPreview?fileId=${file.id}`
         previewUrl.value = previewApiUrl
     } catch (error) {
         handlePreviewError(error)
@@ -656,7 +656,7 @@ const retryPreview = () => {
         previewLoading.value = true
         previewError.value = false
         // 直接调用 /smartPreview
-        const previewApiUrl = `/check/api/file/smartPreview?fileId=${currentFileId.value}`
+        const previewApiUrl = `/check/api/v1/file/smartPreview?fileId=${currentFileId.value}`
         previewUrl.value = previewApiUrl // 重新赋值触发iframe刷新
     }
 }
@@ -664,7 +664,7 @@ const retryPreview = () => {
 // 新窗口打开
 const openInNewWindow = () => {
     if (currentFileId.value) {
-        const previewApiUrl = `/check/api/file/smartPreview?fileId=${currentFileId.value}`
+        const previewApiUrl = `/check/api/v1/file/smartPreview?fileId=${currentFileId.value}`
         window.open(previewApiUrl, '_blank', 'width=1200,height=800');
         closePreview()
     }
@@ -688,7 +688,7 @@ const downloadFile = async (file) => {
     try {
         // 根据后端代码构建下载URL
         const encodedFileName = encodeURIComponent(file.originalFilename || 'document');
-        const downloadUrl = `/check/api/file/download/${file.id}/${encodedFileName}`;
+        const downloadUrl = `/check/api/v1/file/download/${file.id}/${encodedFileName}`;
         window.open(downloadUrl, '_blank');
         ElMessage.success('开始下载文件');
     } catch (error) {
@@ -756,7 +756,7 @@ const openSimilarityReport = async () => {
 const getSimilarityReportPreview = async (paperIdParam) => {
     try {
         // 这个接口返回的是PDF文件，不是JSON
-        const url = `/check/api/file/smartPreviewReport?paperId=${paperIdParam}`;
+        const url = `/check/api/v1/file/smartPreviewReport?paperId=${paperIdParam}`;
 
         // 直接返回URL，让iframe加载
         return {
@@ -817,7 +817,7 @@ const downloadSimilarityReport = async () => {
 
         // 4. 构建下载URL（根据后端接口）
         // 使用reportId
-        const downloadUrl = `/check/api/file/downloadReport/${reportId}`
+        const downloadUrl = `/check/api/v1/file/downloadReport/${reportId}`
 
         // 5. 显示加载提示
         loadingInstance = ElLoading.service({
@@ -972,7 +972,7 @@ const replaceFile = async (file) => {
 // 上传文件的API调用
 const uploadFile = async (formData) => {
     try {
-        const response = await fetch('/check/api/file/upload', {
+        const response = await fetch('/check/api/v1/file/upload', {
             method: 'POST',
             body: formData
         });
@@ -987,7 +987,7 @@ const updatePaperFile = async (paperId, fileId, fileMd5) => {
     try {
         // 使用现有的updatePaper接口来更新论文文件
         // 需要提供完整的论文信息
-        const response = await fetch(`/check/api/papers/${paperId}/update`, {
+        const response = await fetch(`/check/api/v1/papers/${paperId}/update`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -1187,7 +1187,7 @@ const viewSimilarityReport = async () => {
             reportError.value = false
             reportErrorMessage.value = ''
             try {
-                similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
+                similarityPreviewUrl.value = `/check/api/v1/file/smartPreviewReport?paperId=${idToUse}`;
                 ElMessage.success('报告加载成功');
             } catch (error) {
                 console.error('打开相似度报告失败:', error)
@@ -1220,7 +1220,7 @@ const viewSimilarityReport = async () => {
         reportErrorMessage.value = ''
         try {
             // 调用API获取预览URL
-            similarityPreviewUrl.value = `/check/api/file/smartPreviewReport?paperId=${idToUse}`;
+            similarityPreviewUrl.value = `/check/api/v1/file/smartPreviewReport?paperId=${idToUse}`;
             ElMessage.success('报告加载成功');
         } catch (error) {
             console.error('打开相似度报告失败:', error)

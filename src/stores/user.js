@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import Cookies from "js-cookie";
-import { login as userLogin, register } from "@/api/login";
+import { login as userLogin, register } from "@/api/v1/login";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
@@ -12,7 +12,6 @@ export const useUserStore = defineStore("user", {
   actions: {
     // 登录：存储令牌和角色
     async login(loginForm) {
-      console.log("loginForm", loginForm);
       const { username, password } = loginForm;
       const res = await userLogin({
         username: username,

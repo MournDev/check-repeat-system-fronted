@@ -405,7 +405,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking } from "@/api/student.js"
+import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking } from "@/api/v1/student.js"
 import * as echarts from 'echarts'
 
 // 图标导入

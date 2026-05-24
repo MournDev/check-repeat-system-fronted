@@ -304,7 +304,7 @@ import {
   DataAnalysis, Lightning, ArrowRight, ArrowLeft, Download
 } from '@element-plus/icons-vue'
 
-import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/student'
+import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/v1/student'
 import * as echarts from 'echarts'
 
 const route = useRoute()
@@ -558,7 +558,7 @@ const viewReport = (reportId) => {
 const downloadPdfReport = (reportId) => {
   try {
     // 构建PDF下载URL
-    const downloadUrl = `/api/detection/report/pdf/${reportId}`
+    const downloadUrl = `/api/v1/detection/report/pdf/${reportId}`
     
     // 创建下载链接
     const link = document.createElement('a')

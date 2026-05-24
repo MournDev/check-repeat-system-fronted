@@ -504,10 +504,10 @@ import {
   exportPapers,
   uploadPaper,
   downloadPaper
-} from '@/api/admin/papers'
+} from '@/api/v1/admin/papers'
 
 // 导入通用接口
-import { getMajors, getColleges } from '@/api/admin/common'
+import { getMajors, getColleges } from '@/api/v1/admin/common'
 
 // 图标导入
 import {

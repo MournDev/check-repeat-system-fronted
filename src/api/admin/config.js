@@ -3,7 +3,7 @@ import request from '../request'
 // 获取系统配置
 export const getSystemConfig = () => {
   return request({
-    url: '/api/admin/config/system',
+    url: '/api/v1/admin/config/system',
     method: 'get'
   })
 }
@@ -11,7 +11,7 @@ export const getSystemConfig = () => {
 // 更新基础配置
 export const updateBasicConfig = (data) => {
   return request({
-    url: '/api/admin/config/basic',
+    url: '/api/v1/admin/config/basic',
     method: 'put',
     data: data
   })
@@ -20,7 +20,7 @@ export const updateBasicConfig = (data) => {
 // 更新查重配置
 export const updatePlagiarismConfig = (data) => {
   return request({
-    url: '/api/admin/config/plagiarism',
+    url: '/api/v1/admin/config/plagiarism',
     method: 'put',
     data: data
   })
@@ -29,7 +29,7 @@ export const updatePlagiarismConfig = (data) => {
 // 更新安全配置
 export const updateSecurityConfig = (data) => {
   return request({
-    url: '/api/admin/config/security',
+    url: '/api/v1/admin/config/security',
     method: 'put',
     data: data
   })
@@ -38,7 +38,7 @@ export const updateSecurityConfig = (data) => {
 // 更新邮件配置
 export const updateEmailConfig = (data) => {
   return request({
-    url: '/api/admin/config/email',
+    url: '/api/v1/admin/config/email',
     method: 'put',
     data: data
   })
@@ -47,7 +47,7 @@ export const updateEmailConfig = (data) => {
 // 更新性能配置
 export const updatePerformanceConfig = (data) => {
   return request({
-    url: '/api/admin/config/performance',
+    url: '/api/v1/admin/config/performance',
     method: 'put',
     data: data
   })
@@ -56,7 +56,7 @@ export const updatePerformanceConfig = (data) => {
 // 保存所有配置
 export const saveAllConfig = (configData) => {
   return request({
-    url: '/api/admin/config/save-all',
+    url: '/api/v1/admin/config/save-all',
     method: 'post',
     data: configData
   })
@@ -65,7 +65,7 @@ export const saveAllConfig = (configData) => {
 // 测试邮件配置
 export const testEmailConfig = (testEmail) => {
   return request({
-    url: '/api/admin/config/test-email',
+    url: '/api/v1/admin/config/test-email',
     method: 'post',
     data: { testEmail: testEmail }
   })
@@ -74,7 +74,7 @@ export const testEmailConfig = (testEmail) => {
 // 导出配置
 export const exportConfig = () => {
   return request({
-    url: '/api/admin/system/config/export',
+    url: '/api/v1/admin/system/config/export',
     method: 'get',
     responseType: 'blob'
   })
@@ -83,7 +83,7 @@ export const exportConfig = () => {
 // 恢复默认配置
 export const resetDefaultConfig = () => {
   return request({
-    url: '/api/admin/config/reset-default',
+    url: '/api/v1/admin/config/reset-default',
     method: 'post'
   })
 }
@@ -91,7 +91,7 @@ export const resetDefaultConfig = () => {
 // 获取时间节点配置
 export const getDeadlinesConfig = () => {
   return request({
-    url: '/api/admin/config/deadlines',
+    url: '/api/v1/admin/config/deadlines',
     method: 'get'
   })
 }
@@ -99,7 +99,7 @@ export const getDeadlinesConfig = () => {
 // 更新时间节点配置
 export const updateDeadlinesConfig = (data) => {
   return request({
-    url: '/api/admin/config/deadlines',
+    url: '/api/v1/admin/config/deadlines',
     method: 'put',
     data: data
   })
