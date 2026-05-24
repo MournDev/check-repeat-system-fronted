@@ -37,8 +37,8 @@ service.interceptors.request.use(
       config.method = 'get'
     }
     
-    // 处理令牌：从本地存储获取，适配不同环境
-    const token = Cookies.get('token') || ''
+    // 优先从 Cookies 获取，其次从 localStorage 获取
+    const token = Cookies.get('token') || localStorage.getItem('token') || ''
     if (token) {
       const cleanToken = String(token).trim().replace(/\s+/g, '')
       config.headers[import.meta.env.VITE_JWT_HEADER || 'Authorization'] = `Bearer ${cleanToken}`

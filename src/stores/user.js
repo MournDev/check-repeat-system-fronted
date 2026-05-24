@@ -38,6 +38,10 @@ export const useUserStore = defineStore("user", {
         lastLoginTime: res.data.lastLoginTime,
         expireDate: res.data.expireDate,
         expireTime: res.data.expireTime,
+        // 管理员专用字段
+        position: res.data.position,
+        department: res.data.department,
+        officeAddress: res.data.officeAddress,
       };
       // 持久化存储（防止页面刷新丢失）
       const isDevelopment = import.meta.env.DEV;
