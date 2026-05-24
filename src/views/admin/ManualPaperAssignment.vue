@@ -455,7 +455,7 @@ import {
   getAssignmentRules,
   saveAssignmentRules,
   refreshAssignmentData
-} from '@/api/v1/admin/assignment'
+} from '@/api/admin/assignment'
 
 // 图标导入
 import {

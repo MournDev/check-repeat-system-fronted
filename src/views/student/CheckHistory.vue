@@ -304,7 +304,7 @@ import {
   DataAnalysis, Lightning, ArrowRight, ArrowLeft, Download
 } from '@element-plus/icons-vue'
 
-import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/v1/student'
+import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/student'
 import * as echarts from 'echarts'
 
 const route = useRoute()

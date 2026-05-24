@@ -265,15 +265,15 @@
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../../stores/user'
-import { getAllColleges } from '@/api/v1/user'
+import { getAllColleges } from '@/api/user'
 
 // 图标引入
 import {
   User, Phone, Lock, Bell, Setting,
   Check, Edit, View
 } from '@element-plus/icons-vue'
-import { uploadAvatar } from '../../api/v1/user'
-import { updateInfo, getInfo, changePassword } from '@/api/v1/teacher'
+import { uploadAvatar } from '../../api/user'
+import { updateInfo, getInfo, changePassword } from '@/api/teacher'
 
 
 

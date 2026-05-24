@@ -212,7 +212,7 @@ import {
   updateSimilarityThresholds,
   getColleges,
   getMajors
-} from '@/api/v1/teacher'
+} from '@/api/teacher'
 
 // 响应式数据
 const isLoading = ref(false)

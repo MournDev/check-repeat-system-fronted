@@ -429,7 +429,7 @@ import {
   getAcademicResources,
   getAcademicChecklist,
   updateChecklistItem
-} from '@/api/v1/student'
+} from '@/api/student'
 import { 
   Warning, DataLine, Document, SuccessFilled, CircleClose,
   Lightning, User, Check, Star, InfoFilled, Collection,

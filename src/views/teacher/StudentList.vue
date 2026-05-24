@@ -500,7 +500,7 @@ import {
   getMajors,
   getStudentPaper,
   getStudentPapers
-} from '@/api/v1/teacher'
+} from '@/api/teacher'
 import { useUserStore } from '@/stores/user'
 
 // 图标引入

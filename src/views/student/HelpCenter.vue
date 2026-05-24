@@ -122,7 +122,7 @@ import {
 } from '@element-plus/icons-vue'
 import {
   getCategories, getArticles, getPopular, getArticle, searchArticles
-} from '@/api/v1/knowledge'
+} from '@/api/knowledge'
 import { renderMarkdown } from '@/utils/markdown'
 
 // 状态

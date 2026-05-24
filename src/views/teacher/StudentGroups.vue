@@ -186,7 +186,7 @@ import {
   addStudentsToGroup,
   removeStudentFromGroup,
   getStudentsNotInGroup
-} from '@/api/v1/teacher'
+} from '@/api/teacher'
 
 // 响应式数据
 const groups = ref([])

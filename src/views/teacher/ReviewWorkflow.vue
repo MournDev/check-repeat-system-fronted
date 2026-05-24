@@ -176,7 +176,7 @@ import {
   getReviewWorkflow,
   updateReviewWorkflow,
   getTeachers
-} from '@/api/v1/teacher'
+} from '@/api/teacher'
 
 // 响应式数据
 const isLoading = ref(false)

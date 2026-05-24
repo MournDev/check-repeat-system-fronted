@@ -402,7 +402,7 @@ import {
   Share, Download, ArrowDown, Document, User, Calendar, 
   Timer, DataAnalysis, Search, Check, Lightning
 } from '@element-plus/icons-vue'
-import { getPaperReport, exportCheckReport, getSimpleCheckReport } from '@/api/v1/student'
+import { getPaperReport, exportCheckReport, getSimpleCheckReport } from '@/api/student'
 import '@/styles/report-styles.scss'
 
 const route = useRoute()

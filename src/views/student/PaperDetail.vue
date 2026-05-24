@@ -504,7 +504,7 @@ import { ref, onMounted, computed, defineProps } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
-import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/v1/student.js"
+import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/student.js"
 import { getAvatarUrl } from '@/utils/avatar'
 
 // 图标引入
@@ -514,8 +514,8 @@ import {
     ChatLineRound, Paperclip, Plus, View, Refresh,
     DocumentChecked, DocumentAdd, Picture, VideoPlay, EditPen, FullScreen
 } from '@element-plus/icons-vue'
-import { getFileInfo } from "@/api/v1/student.js"
-import { getSubjectFieldTree } from '@/api/v1/user.js'
+import { getFileInfo } from "@/api/student.js"
+import { getSubjectFieldTree } from '@/api/user.js'
 import { tr } from 'element-plus/es/locales.mjs'
 const props = defineProps({
   paperId: {

@@ -407,7 +407,7 @@ import {
   Download, Share, Printer, PieChart, DataAnalysis, 
   Lightning, Document, Tools, Clock
 } from '@element-plus/icons-vue'
-import { getPaperReport, getSimpleCheckReport, exportCheckReport, compareReport, approveReport, requestRevision as requestRevisionAPI, contactStudentReport, getSourceDetail, getHistoryReportList } from '@/api/v1/teacher'
+import { getPaperReport, getSimpleCheckReport, exportCheckReport, compareReport, approveReport, requestRevision as requestRevisionAPI, contactStudentReport, getSourceDetail, getHistoryReportList } from '@/api/teacher'
 import '@/styles/report-styles.scss'
 
 const props = defineProps({

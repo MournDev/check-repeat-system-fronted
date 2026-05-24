@@ -297,7 +297,7 @@ import {
   Download, Refresh, Search, Document, DataAnalysis,
   Check
 } from '@element-plus/icons-vue'
-import { getReportList, getReportStats, getReportDetail, batchExportReports } from '@/api/v1/admin/reports'
+import { getReportList, getReportStats, getReportDetail, batchExportReports } from '@/api/admin/reports'
 
 const router = useRouter()
 

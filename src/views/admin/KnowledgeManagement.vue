@@ -128,8 +128,8 @@ import { Search, Plus } from '@element-plus/icons-vue'
 import {
   adminListArticles, adminCreateArticle, adminUpdateArticle,
   adminDeleteArticle, adminUpdateArticleStatus
-} from '@/api/v1/knowledge'
-import { getCategories } from '@/api/v1/knowledge'
+} from '@/api/knowledge'
+import { getCategories } from '@/api/knowledge'
 import { ElMessage } from 'element-plus'
 import { renderMarkdown } from '@/utils/markdown'
 

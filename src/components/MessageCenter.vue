@@ -239,7 +239,7 @@ import {
 import {
   getMessageList, markAsRead as markAsReadApi, batchMarkAsRead as batchMarkAsReadApi, deleteMessage as deleteMessageApi, deleteAllMessages,
   confirmPaper, rejectPaper as rejectAssignment, getPendingPapers, getPaperDetail
-} from '@/api/v1/user.js'
+} from '@/api/user.js'
 import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const props = defineProps({

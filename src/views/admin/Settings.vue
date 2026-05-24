@@ -232,8 +232,8 @@ import {
 } from '@element-plus/icons-vue'
 
 // API导入
-import { updateUserInfo, uploadAvatar, updatePassword } from '@/api/v1/user'
-import { updateUser } from '@/api/v1/admin/users'
+import { updateUserInfo, uploadAvatar, updatePassword } from '@/api/user'
+import { updateUser } from '@/api/admin/users'
 
 const userStore = useUserStore()
 const avatarInput = ref(null)

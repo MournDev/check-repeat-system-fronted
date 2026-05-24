@@ -254,7 +254,7 @@ import { ElMessage, ElButton, ElTable, ElTag, ElProgress, ElTooltip, ElBadge, El
 import { Refresh, Upload } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import { useCheckProgress } from '@/composables/useCheckProgress';
-import * as studentApi from '@/api/v1/student';
+import * as studentApi from '@/api/student';
 import dayjs from 'dayjs';
 
 const router = useRouter();

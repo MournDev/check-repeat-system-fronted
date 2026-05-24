@@ -498,7 +498,7 @@
 import { ref, reactive, onMounted, watch, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox, ElSelect, ElOption, ElInput } from "element-plus";
-import { getDictDataByType } from "@/api/v1/user.js";
+import { getDictDataByType } from "@/api/user.js";
 import { 
   getStudentPaperPage, 
   withdrawPaper as withdrawPaperApi, 
@@ -516,7 +516,7 @@ import {
   getSimpleCheckReport,
   createBatchCheckTasks,
   getCheckTaskDetail
-} from "@/api/v1/student.js";
+} from "@/api/student.js";
 import { useUserStore } from "@/stores/user";
 
 // 图标引入

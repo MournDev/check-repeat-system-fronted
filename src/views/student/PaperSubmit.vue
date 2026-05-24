@@ -160,13 +160,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { getAllColleges, getMajorsByCollegeId } from '@/api/v1/user'
-import { uploadPaper, resubmitAfterWithdraw, getMajorList } from '@/api/v1/student'
+import { getAllColleges, getMajorsByCollegeId } from '@/api/user'
+import { uploadPaper, resubmitAfterWithdraw, getMajorList } from '@/api/student'
 import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
 import { Check, Upload } from '@element-plus/icons-vue'
 import SparkMD5 from 'spark-md5'
-import { getDictDataByType, getSubjectFieldTree } from '@/api/v1/user.js'
-import { autoAssign } from '@/api/v1/student.js'
+import { getDictDataByType, getSubjectFieldTree } from '@/api/user.js'
+import { autoAssign } from '@/api/student.js'
 
 const route = useRoute()
 const router = useRouter()

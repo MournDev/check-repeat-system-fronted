@@ -167,7 +167,7 @@ import {
   Refresh, DataLine, Tickets, Delete, InfoFilled, SuccessFilled,
   Check, Loading, Clock, Document, Files, Connection, DocumentChecked
 } from '@element-plus/icons-vue'
-import { getCheckStatus } from '@/api/v1/student'
+import { getCheckStatus } from '@/api/student'
 import { useCheckProgress } from '@/composables/useCheckProgress'
 
 const route = useRoute()

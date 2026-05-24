@@ -418,7 +418,7 @@ import {
   downloadSharedFile,
   markMessagesAsRead,
   recallMessage
-} from "@/api/v1/student.js";
+} from "@/api/student.js";
 
 // 图标引入
 import {

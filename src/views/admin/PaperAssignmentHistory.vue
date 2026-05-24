@@ -374,7 +374,7 @@ import {
   getAvailableTeachers,
   exportHistory,
   refreshHistoryData
-} from '@/api/v1/admin/assignmentHistory'
+} from '@/api/admin/assignmentHistory'
 
 // 图标导入
 import {

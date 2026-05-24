@@ -330,7 +330,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import PlagiarismReportViewer from './PlagiarismReportViewer.vue'
-import { doReview, sendMessage, getReviewTemplates, useReviewTemplate, getPaperContent } from '@/api/v1/teacher.js'
+import { doReview, sendMessage, getReviewTemplates, useReviewTemplate, getPaperContent } from '@/api/teacher.js'
 import { convertToBackendStatus } from '@/utils/reviewStatus.js'
 import { sanitizeHtml } from '@/utils/markdown'
 import { useRouter } from 'vue-router'

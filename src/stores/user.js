@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import Cookies from "js-cookie";
-import { login as userLogin, register } from "@/api/v1/login";
+import { login as userLogin, register } from "@/api/login";
 
 export const useUserStore = defineStore("user", {
   state: () => ({

@@ -121,10 +121,10 @@ import {
   getAvailableTeachers,
   assignSingleStudent,
   assignBatchStudents
-} from '@/api/v1/admin/assignment'
+} from '@/api/admin/assignment'
 
 // 导入其他必要API
-import { getStudentDetail } from '@/api/v1/admin/users'
+import { getStudentDetail } from '@/api/admin/users'
 
 // 图标导入
 import {
