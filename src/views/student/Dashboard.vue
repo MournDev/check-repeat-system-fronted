@@ -419,6 +419,7 @@ import {
 } from '@element-plus/icons-vue'
 import { getAvatarUrl } from '@/utils/avatar'
 import { handleSimilarity, getSimilarityColor, getSimilarityStatus, getPaperStatusText, getPaperStatusType, formatDateTime } from '@/utils/dataType'
+import { getSimilarityTagType as baseGetSimilarityTagType } from '@/utils/reviewStatus.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -852,10 +853,7 @@ const getSimilarityClass = (similarity) => {
 // 相似度标签类型获取函数
 const getSimilarityTagType = (similarity) => {
   if (!similarity) return 'info'
-  const sim = handleSimilarity(similarity)
-  if (sim < 15) return 'success'
-  if (sim < 30) return 'warning'
-  return 'danger'
+  return baseGetSimilarityTagType(handleSimilarity(similarity))
 }
 
 const getTimeTrendClass = (time) => {

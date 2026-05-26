@@ -134,8 +134,8 @@
         </el-card>
       </el-col>
       
-      <!-- 人员分布图表 -->
-      <el-col :xs="24" :lg="12">
+      <!-- 右侧信息面板 -->
+      <el-col :xs="24" :lg="8">
         <el-card class="chart-card" shadow="never">
           <template #header>
             <div class="card-header">
@@ -143,15 +143,11 @@
                 <el-icon><User /></el-icon>
                 人员分布
               </span>
-              
             </div>
           </template>
           <div ref="roleChartRef" class="chart-container"></div>
         </el-card>
-      </el-col>
-      
-      <!-- 右侧信息面板 -->
-      <el-col :xs="24" :lg="8">  
+
         <el-card class="info-card" shadow="never">
           <template #header>
             <div class="card-header">
@@ -161,7 +157,7 @@
               </span>
             </div>
           </template>
-          
+
           <div class="realtime-stats">
             <div class="stat-item">
               <div class="stat-label">今日新增用户</div>

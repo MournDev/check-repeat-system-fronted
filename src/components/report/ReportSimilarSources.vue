@@ -46,6 +46,8 @@
 <script setup>
 import { User, Document } from '@element-plus/icons-vue'
 
+import { getSimilarityTagType } from '@/utils/reviewStatus.js'
+
 const props = defineProps({
   sources: {
     type: Array,
@@ -58,12 +60,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['compare'])
-
-const getSimilarityTagType = (similarity) => {
-  if (similarity <= 15) return 'success'
-  if (similarity <= 30) return 'warning'
-  return 'danger'
-}
 
 const viewComparison = (source) => {
   emit('compare', source)

@@ -92,8 +92,8 @@
                 </div>
               </div>
               <div class="metric-item">
-                <div class="metric-value">{{ formatMemory(systemMonitorData.memoryUsage) }}</div>
-                <div class="metric-label">内存使用</div>
+                <div class="metric-value">{{ systemMonitorData.memoryUsage }}%</div>
+                <div class="metric-label">内存使用率</div>
                 <div class="progress-bar">
                   <div class="progress-fill" :style="{ width: systemMonitorData.memoryUsage + '%' }"></div>
                 </div>
@@ -213,17 +213,80 @@
         </div>
       </div>
     </div>
+
+    <!-- 业务指标 -->
+    <div class="card business-metrics-card">
+      <div class="card-header">
+        <div class="card-title">
+          <el-icon><TrendCharts /></el-icon>
+          业务指标
+        </div>
+        <el-button text size="small" @click="loadBusinessMetrics">
+          <el-icon><Refresh /></el-icon>
+          刷新
+        </el-button>
+      </div>
+      <div class="business-metrics">
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.loginSuccess || 0 }}</div>
+          <div class="metric-label">登录成功</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.loginFailure || 0 }}</div>
+          <div class="metric-label">登录失败</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.registerSuccess || 0 }}</div>
+          <div class="metric-label">注册成功</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.paperSubmit || 0 }}</div>
+          <div class="metric-label">论文提交</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.paperReviewPass || 0 }}</div>
+          <div class="metric-label">审核通过</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.paperReviewReject || 0 }}</div>
+          <div class="metric-label">审核驳回</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value">{{ bizMetrics.queueDepth ?? '--' }}</div>
+          <div class="metric-label">待处理查重任务</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 响应时间趋势图 -->
+    <div class="card response-time-card">
+      <div class="card-header">
+        <div class="card-title">
+          <el-icon><Timer /></el-icon>
+          响应时间趋势
+        </div>
+        <div class="header-right">
+          <el-button-group size="small">
+            <el-button :type="rtTrendPeriod === 5 ? 'primary' : ''" @click="loadResponseTimeTrend(5)">5分钟</el-button>
+            <el-button :type="rtTrendPeriod === 15 ? 'primary' : ''" @click="loadResponseTimeTrend(15)">15分钟</el-button>
+            <el-button :type="rtTrendPeriod === 30 ? 'primary' : ''" @click="loadResponseTimeTrend(30)">30分钟</el-button>
+          </el-button-group>
+        </div>
+      </div>
+      <div ref="responseTimeChartRef" class="chart-container"></div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
 // 导入管理员API
-import { getDashboardStats } from '@/api/admin/dashboard'
+import { getDashboardStats, getBusinessMetrics, getResponseTimeTrend } from '@/api/admin/dashboard'
+import * as echarts from 'echarts'
 import { getUserList } from '@/api/admin/users'
 import { getPaperList } from '@/api/admin/papers'
 import { getAssignmentStats } from '@/api/admin/assignment'
@@ -232,11 +295,16 @@ import { getAssignmentStats } from '@/api/admin/assignment'
 import {
   UserFilled, Refresh, User, Document, Connection, TrendCharts,
   List, More, CollectionTag, Clock, Check, Monitor, SuccessFilled,
-  PieChart, Operation, Setting, Histogram, DataAnalysis
+  PieChart, Operation, Setting, Histogram, DataAnalysis, Timer
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// 响应时间趋势
+const responseTimeChartRef = ref(null)
+let responseTimeChart = null
+const rtTrendPeriod = ref(15)
 
 // 响应式数据
 const stats = ref({})
@@ -249,6 +317,15 @@ const systemMonitorData = ref({
   uptime: '',
   database: '',
   lastBackup: ''
+})
+const bizMetrics = ref({
+  loginSuccess: 0,
+  loginFailure: 0,
+  registerSuccess: 0,
+  paperSubmit: 0,
+  paperReviewPass: 0,
+  paperReviewReject: 0,
+  queueDepth: null
 })
 
 // 安全计算百分比，避免除以 0 或产生 NaN
@@ -307,13 +384,13 @@ const loadDashboardData = async () => {
     // 从stats接口获取系统监控数据
     const monitorData = statsResponse.data.systemMonitor || {}
     systemMonitorData.value = {
-      cpuUsage: monitorData.cpuUsage !== undefined ? Math.round(monitorData.cpuUsage * 100) : 0,
+      cpuUsage: monitorData.cpuUsage !== undefined ? Math.round(monitorData.cpuUsage) : 0,
       memoryUsage: monitorData.memoryUsage !== undefined ? monitorData.memoryUsage : 0,
       todayVisits: statsResponse.data.todayVisits || 0,
-      systemVersion: 'v2.1.0',
+      systemVersion: monitorData.javaVersion ? `Java ${monitorData.javaVersion}` : '未知',
       uptime: monitorData.uptime || '未知',
-      database: 'MySQL 8.0',
-      lastBackup: '2小时前'
+      database: monitorData.databaseType || '未知',
+      lastBackup: '--'
     }
   } catch (error) {
     console.error('加载统计数据失败:', error)
@@ -341,6 +418,82 @@ const goToSchoolOverview = () => {
   router.push('/admin/school-overview')
 }
 
+const loadBusinessMetrics = async () => {
+  try {
+    const res = await getBusinessMetrics()
+    if (res.code === 200 && res.data) {
+      const counters = res.data.counters || {}
+      const gauges = res.data.gauges || {}
+      bizMetrics.value = {
+        loginSuccess: Math.round(counters['business.event.count[event=user_login,result=success]'] || 0),
+        loginFailure: Math.round(counters['business.event.count[event=user_login,result=failure]'] || 0),
+        registerSuccess: Math.round(counters['business.event.count[event=user_register,result=success]'] || 0),
+        paperSubmit: Math.round(counters['business.event.count[event=paper_submit,result=success]'] || 0),
+        paperReviewPass: Math.round(counters['business.event.count[event=paper_review,result=pass]'] || 0),
+        paperReviewReject: Math.round(counters['business.event.count[event=paper_review,result=reject]'] || 0),
+        queueDepth: gauges['check.task.queue.depth'] !== undefined ? Math.round(gauges['check.task.queue.depth']) : null
+      }
+    }
+  } catch (error) {
+    console.error('加载业务指标失败:', error)
+  }
+}
+
+const loadResponseTimeTrend = async (minutes) => {
+  rtTrendPeriod.value = minutes
+  try {
+    const res = await getResponseTimeTrend(minutes)
+    if (res.code === 200 && res.data) {
+      const d = res.data
+      if (responseTimeChart) {
+        responseTimeChart.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { data: ['平均响应(ms)', 'P95响应(ms)', '请求数'] },
+          grid: { left: 60, right: 60, top: 20, bottom: 30 },
+          xAxis: { type: 'category', data: d.timestamps || [], boundaryGap: false },
+          yAxis: [
+            { type: 'value', name: 'ms', min: 0 },
+            { type: 'value', name: '次', min: 0 }
+          ],
+          series: [
+            {
+              name: '平均响应(ms)', type: 'line', smooth: true,
+              data: d.avgResponseTime || [],
+              itemStyle: { color: '#0ea5e9' },
+              areaStyle: { color: 'rgba(14,165,233,0.1)' }
+            },
+            {
+              name: 'P95响应(ms)', type: 'line', smooth: true,
+              data: d.p95ResponseTime || [],
+              itemStyle: { color: '#f59e0b' },
+              lineStyle: { type: 'dashed' }
+            },
+            {
+              name: '请求数', type: 'bar',
+              data: d.requestCount || [],
+              yAxisIndex: 1,
+              itemStyle: { color: 'rgba(0,102,204,0.2)', borderColor: '#0066cc', borderRadius: [4, 4, 0, 0] },
+              barMaxWidth: 20
+            }
+          ]
+        }, true)
+      }
+    }
+  } catch (error) {
+    console.error('加载响应时间趋势失败:', error)
+  }
+}
+
+const initResponseTimeChart = () => {
+  nextTick(() => {
+    if (responseTimeChartRef.value) {
+      responseTimeChart = echarts.init(responseTimeChartRef.value)
+      window.addEventListener('resize', () => responseTimeChart?.resize())
+      loadResponseTimeTrend(15)
+    }
+  })
+}
+
 // 待办相关功能已移除
 
 const formatTime = (date) => {
@@ -355,17 +508,17 @@ const formatTime = (date) => {
   }
 }
 
-const formatMemory = (usage) => {
-  if (usage === 0 || usage === undefined) {
-    return '0.0GB'
-  } else {
-    // 直接显示GB数值
-    return `${usage.toFixed(1)}GB`
-  }
-}
-
 onMounted(() => {
   loadDashboardData()
+  loadBusinessMetrics()
+  initResponseTimeChart()
+})
+
+onUnmounted(() => {
+  if (responseTimeChart) {
+    responseTimeChart.dispose()
+    responseTimeChart = null
+  }
 })
 </script>
 
@@ -636,52 +789,11 @@ onMounted(() => {
 // 快速操作
 .action-buttons {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
-  
-  .action-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 400;
-    transition: all 0.2s ease;
-    border: none;
-    cursor: pointer;
-    
-    &:hover {
-      filter: brightness(0.95);
-    }
 
-    &:active {
-      transform: scale(0.95);
-      transition: transform 0.15s ease;
-    }
-
-    &.primary {
-      background: #0066cc;
-      color: white;
-      
-      &:hover {
-        background: #1e3a8a;
-      }
-    }
-    
-    &:not(.primary) {
-      background: #f5f5f7;
-      color: #1d1d1f;
-      border: 1px solid #e2e8f0;
-      
-      &:hover {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
-      }
-    }
-    
-    .el-icon {
-      font-size: 16px;
-    }
+  .el-button {
+    justify-content: center;
   }
 }
 
@@ -735,61 +847,48 @@ onMounted(() => {
   }
 }
 
-// 按钮样式
-.primary-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  background: #0066cc;
-  color: white;
-  font-size: 0.875rem;
-  font-weight: 400;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #0055aa;
+// 业务指标
+.business-metrics-card {
+  margin-top: 24px;
+}
+
+// 响应时间趋势图
+.response-time-card {
+  margin-top: 24px;
+
+  .header-right {
+    display: flex;
+    align-items: center;
   }
 
-  &:active {
-    transform: scale(0.95);
-    transition: transform 0.15s ease;
-  }
-  
-  .el-icon {
-    font-size: 16px;
+  .chart-container {
+    width: 100%;
+    height: 320px;
   }
 }
 
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  background: #f5f5f7;
-  color: #1d1d1f;
-  font-size: 0.875rem;
-  font-weight: 400;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-  }
+.business-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
 
-  &:active {
-    transform: scale(0.95);
-    transition: transform 0.15s ease;
-  }
-  
-  .el-icon {
-    font-size: 16px;
+  .metric-item {
+    padding: 16px;
+    background: #f5f5f7;
+    border-radius: 8px;
+    text-align: center;
+
+    .metric-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+    }
+
+    .metric-label {
+      color: #86868b;
+      font-size: 0.875rem;
+    }
   }
 }
 

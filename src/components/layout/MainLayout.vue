@@ -382,13 +382,18 @@ const navigateTo = (path) => {
 
 const toggleSidebar = () => { sidebarVisible.value = !sidebarVisible.value }
 
+const settingsPath = computed(() => {
+  const r = userStore.role.toLowerCase()
+  return r === 'teacher' ? '/teacher/profile' : `/${r}/settings`
+})
+
 const goToProfile = () => {
-  router.push(`/${userStore.role.toLowerCase()}/settings`)
+  router.push(settingsPath.value)
   if (isMobile.value) sidebarVisible.value = false
 }
 
 const goToSettings = () => {
-  router.push(`/${userStore.role.toLowerCase()}/settings`)
+  router.push(settingsPath.value)
   if (isMobile.value) sidebarVisible.value = false
 }
 

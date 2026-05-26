@@ -31,7 +31,7 @@
           >
             <el-icon v-if="cat.icon"><component :is="cat.icon" /></el-icon>
             <span class="cat-name">{{ cat.name }}</span>
-            <el-badge :value="cat.article_count" :max="99" class="cat-badge" />
+            <el-badge :value="cat.articleCount" :max="99" class="cat-badge" />
           </div>
           <div v-if="activeCategory" class="clear-filter" @click="selectCategory('')">
             清除筛选
@@ -49,7 +49,7 @@
           >
             <el-icon><Notebook /></el-icon>
             <span class="pop-title">{{ item.title }}</span>
-            <span class="pop-views">{{ item.view_count }}次</span>
+            <span class="pop-views">{{ item.viewCount }}次</span>
           </div>
         </el-card>
       </aside>
@@ -72,8 +72,8 @@
               <h3 class="article-title">{{ item.title }}</h3>
               <p class="article-summary">{{ item.summary || item.content?.replace(/[#*>`\-\s]/g, '').slice(0, 120) }}</p>
               <div class="article-meta">
-                <span><el-icon><View /></el-icon> {{ item.view_count }}</span>
-                <span><el-icon><Clock /></el-icon> {{ formatDate(item.create_time) }}</span>
+                <span><el-icon><View /></el-icon> {{ item.viewCount }}</span>
+                <span><el-icon><Clock /></el-icon> {{ formatDate(item.createTime) }}</span>
               </div>
             </el-card>
           </div>
@@ -100,9 +100,9 @@
             <template v-if="detail">
               <h1 class="detail-title">{{ detail.title }}</h1>
               <div class="detail-meta">
-                <span><el-icon><Clock /></el-icon> {{ formatDate(detail.create_time) }}</span>
-                <span><el-icon><View /></el-icon> {{ detail.view_count }} 次浏览</span>
-                <span><el-icon><User /></el-icon> {{ detail.author_name }}</span>
+                <span><el-icon><Clock /></el-icon> {{ formatDate(detail.createTime) }}</span>
+                <span><el-icon><View /></el-icon> {{ detail.viewCount }} 次浏览</span>
+                <span><el-icon><User /></el-icon> {{ detail.authorName }}</span>
               </div>
               <el-divider />
               <div class="markdown-body" v-html="renderedContent"></div>
@@ -211,7 +211,7 @@ function formatDate(d) {
 </script>
 
 <style scoped>
-.knowledge-base { max-width: 1100px; margin: 0 auto; padding: 4px 0; }
+.knowledge-base { max-width: 1100px; margin: 0 auto; padding: 16px 24px; }
 .search-bar { margin-bottom: 20px; }
 .search-bar :deep(.el-input-group__append) { background: #2997ff; border-color: #2997ff; color: #fff; }
 
@@ -277,6 +277,7 @@ function formatDate(d) {
 .markdown-body :deep(hr) { border: none; border-top: 1px solid #eee; margin: 20px 0; }
 
 @media (max-width: 768px) {
+  .knowledge-base { padding: 12px 16px; }
   .kb-body { flex-direction: column; }
   .kb-sidebar { width: 100%; flex-direction: row; gap: 12px; overflow-x: auto; }
   .kb-sidebar > * { min-width: 200px; }

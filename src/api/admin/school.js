@@ -43,7 +43,7 @@ export const getRealtimeStats = () => {
 // 获取系统通知
 export const getNotices = () => {
   return request({
-    url: '/api/v1/admin/school/notices',
+    url: '/api/v1/notices/list',
     method: 'get'
   })
 }

@@ -403,6 +403,8 @@ import {
   Timer, DataAnalysis, Search, Check, Lightning
 } from '@element-plus/icons-vue'
 import { getPaperReport, exportCheckReport, getSimpleCheckReport } from '@/api/student'
+import { getSimilarityColor } from '@/utils/dataType.js'
+import { getSimilarityTagType } from '@/utils/reviewStatus.js'
 import '@/styles/report-styles.scss'
 
 const route = useRoute()
@@ -699,12 +701,6 @@ const deriveRecommendations = (totalSimilarity, sections, sourceList) => {
   recommendations.value = recs;
 };
 
-const getSimilarityColor = (similarity) => {
-  if (similarity < 15) return '#67c23a'
-  if (similarity < 30) return '#e6a23c'
-  return '#f56c6c'
-}
-
 const getSimilarityRating = (similarity) => {
   if (similarity < 15) return '优秀'
   if (similarity < 30) return '良好'
@@ -726,12 +722,6 @@ const getSectionName = (key) => {
     conclusion: '结论'
   }
   return nameMap[key] || key
-}
-
-const getSimilarityTagType = (similarity) => {
-  if (similarity < 20) return 'success'
-  if (similarity < 40) return 'warning'
-  return 'danger'
 }
 
 const getOverallAssessment = (similarity) => {

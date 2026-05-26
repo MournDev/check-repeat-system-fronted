@@ -298,6 +298,8 @@ import {
   Check
 } from '@element-plus/icons-vue'
 import { getReportList, getReportStats, getReportDetail, batchExportReports } from '@/api/admin/reports'
+import { getSimilarityColor } from '@/utils/dataType.js'
+import { getSimilarityTagType } from '@/utils/reviewStatus.js'
 
 const router = useRouter()
 
@@ -436,21 +438,9 @@ const batchExport = () => {
   })
 }
 
-const getSimilarityTagType = (similarity) => {
-  if (similarity <= 15) return 'success'
-  if (similarity <= 30) return 'warning'
-  return 'danger'
-}
-
-const getSimilarityColor = (similarity) => {
-  if (similarity <= 15) return '#34c759'
-  if (similarity <= 30) return '#ff9500'
-  return '#ff3b30'
-}
-
 const getSimilarityRating = (similarity) => {
-  if (similarity <= 15) return '优秀'
-  if (similarity <= 30) return '良好'
+  if (similarity < 15) return '优秀'
+  if (similarity < 30) return '良好'
   return '需要修改'
 }
 

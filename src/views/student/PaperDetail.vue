@@ -506,6 +506,7 @@ import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/student.js"
 import { getAvatarUrl } from '@/utils/avatar'
+import { getSimilarityColor, getSimilarityTagType as baseGetSimilarityTagType } from '@/utils/reviewStatus.js'
 
 // 图标引入
 import {
@@ -1062,7 +1063,6 @@ const loadFileInfo = async (fileId) => {
 }
 
 const goBack = () => {
-    const userStore = useUserStore()
     if (userStore.isStudent) {
         router.replace('/student/my-papers')
     } else if (userStore.isTeacher) {
@@ -1075,7 +1075,6 @@ const goBack = () => {
 }
 
 const getBackButtonText = computed(() => {
-    const userStore = useUserStore()
     if (userStore.isStudent) {
         return '返回我的论文'
     } else if (userStore.isTeacher) {
@@ -1358,19 +1357,9 @@ const getWordCountPercentage = (wordCount) => {
     return Math.min(Math.round((wordCount / target) * 100), 100)
 }
 
-const getSimilarityColor = (similarity) => {
-    if (!similarity) return '#86868b'
-    if (similarity === 0) return '#86868b'
-    if (similarity < 15) return '#52c41a'
-    if (similarity < 30) return '#faad14'
-    return '#ff4d4f'
-}
-
 const getSimilarityTagType = (similarity) => {
     if (!similarity) return 'info'
-    if (similarity < 15) return 'success'
-    if (similarity < 30) return 'warning'
-    return 'danger'
+    return baseGetSimilarityTagType(similarity)
 }
 
 const getSimilarityStatus = (similarity) => {

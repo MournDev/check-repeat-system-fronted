@@ -79,7 +79,9 @@ export const sendEmailCode = (data) => {
   return request({
     url: '/api/v1/user/info/send-email-code',
     method: 'post',
-    data
+    params: {
+      email: data.email
+    }
   });
 }
 
@@ -136,10 +138,7 @@ export const batchMarkAsRead = (messageIds, userId) => {
   return request({
     url: '/api/v1/message/batch-read',
     method: 'post',
-    data: messageIds,
-    params: {
-      userId: userId
-    }
+    data: messageIds
   })
 }
 

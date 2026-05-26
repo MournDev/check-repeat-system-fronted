@@ -673,9 +673,9 @@ const getStatusText = (status) => {
  * 获取相似度颜色
  */
 const getSimilarityColor = (similarity) => {
-  if (similarity <= 15) return 'success';
-  if (similarity <= 30) return 'warning';
-  if (similarity <= 50) return 'danger';
+  if (similarity < 15) return 'success';
+  if (similarity < 30) return 'warning';
+  if (similarity < 50) return 'danger';
   return 'danger';
 };
 
@@ -683,9 +683,9 @@ const getSimilarityColor = (similarity) => {
  * 获取风险等级
  */
 const getRiskLevel = (similarity) => {
-  if (similarity <= 15) return '低风险';
-  if (similarity <= 30) return '中等风险';
-  if (similarity <= 50) return '高风险';
+  if (similarity < 15) return '低风险';
+  if (similarity < 30) return '中等风险';
+  if (similarity < 50) return '高风险';
   return '极高风险';
 };
 

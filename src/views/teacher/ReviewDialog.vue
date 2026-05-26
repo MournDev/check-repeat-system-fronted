@@ -331,9 +331,10 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import PlagiarismReportViewer from './PlagiarismReportViewer.vue'
 import { doReview, sendMessage, getReviewTemplates, useReviewTemplate, getPaperContent } from '@/api/teacher.js'
-import { convertToBackendStatus } from '@/utils/reviewStatus.js'
+import { convertToBackendStatus, getSimilarityTagType } from '@/utils/reviewStatus.js'
 import { sanitizeHtml } from '@/utils/markdown'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 // 图标导入
 import {
@@ -341,6 +342,7 @@ import {
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // Props
 const props = defineProps({
@@ -397,11 +399,9 @@ const uploadUrl = computed(() => {
   return '/api/v1/teacher/reviews/upload-attachment'
 })
 
-const uploadHeaders = computed(() => {
-  return {
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
-  }
-})
+const uploadHeaders = computed(() => ({
+  'Authorization': `${userStore.token}`
+}))
 
 // 表单验证规则
 const reviewRules = {
@@ -700,12 +700,6 @@ const formatDate = (date) => {
 const formatDateTime = (date) => {
   if (!date) return ''
   return new Date(date).toLocaleString('zh-CN')
-}
-
-const getSimilarityTagType = (similarity) => {
-  if (similarity >= 30) return 'danger'
-  if (similarity >= 20) return 'warning'
-  return 'success'
 }
 
 const getStatusTagType = (status) => {

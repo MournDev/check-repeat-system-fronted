@@ -116,8 +116,9 @@ export const getPendingReviewList = (pageNum, pageSize) => {
 // 获取学生统计信息
 export const getStudentStats = (teacherId) => {
   return request({
-    url: teacherId ? `/api/v1/teacher/students/stats/${teacherId}` : '/api/v1/teacher/students/stats',
-    method: 'get'
+    url: '/api/v1/teacher/students/statistics',
+    method: 'get',
+    params: teacherId ? { teacherId } : {}
   })
 }
 
@@ -152,7 +153,7 @@ export const getCollegeDistribution = (params) => {
 // 添加学生
 export const addStudent = (data) => {
   return request({
-    url: '/api/v1/teacher/students',
+    url: '/api/v1/teacher/students/add',
     method: 'post',
     data
   })
@@ -209,8 +210,8 @@ export const deleteStudent = (studentId) => {
 // 分配导师
 export const assignAdvisor = (studentId, data) => {
   return request({
-    url: `/api/v1/teacher/students/${studentId}/advisor`,
-    method: 'put',
+    url: `/api/v1/teacher/students/${studentId}/assign-advisor`,
+    method: 'post',
     data
   })
 }
@@ -227,7 +228,7 @@ export const batchAssignAdvisor = (data) => {
 // 批量发送消息
 export const batchSendMessage = (data) => {
   return request({
-    url: '/api/v1/teacher/students/batch-send-message',
+    url: '/api/v1/teacher/students/messages/batch-send',
     method: 'post',
     data
   })
@@ -236,7 +237,7 @@ export const batchSendMessage = (data) => {
 // 批量删除学生
 export const batchDeleteStudents = (studentIds) => {
   return request({
-    url: '/api/v1/teacher/students/batch',
+    url: '/api/v1/teacher/students/batch-delete',
     method: 'delete',
     data: studentIds
   })
@@ -433,7 +434,7 @@ export const getReviewHistory = (paperId) => {
 // 获取教师审核历史
 export const getTeacherReviewHistory = (params) => {
   return request({
-    url: '/api/v1/teacher/reviews/history',
+    url: '/api/v1/teacher/reviews/reviewed-list',
     method: 'get',
     params
   })
@@ -518,7 +519,7 @@ export const changePassword = (data) => {
     url: '/api/v1/teacher/info/changePassword',
     method: 'post',
     params: {
-      userId: data.userId,
+      oldPassword: data.oldPassword,
       newPassword: data.newPassword
     }
   })

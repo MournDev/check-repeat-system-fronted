@@ -1370,6 +1370,8 @@ onMounted(async () => {
   }
 
   .table-card {
+    overflow-x: auto;
+
     :deep(.el-table) {
       .el-table__cell {
         padding: 8px 0;

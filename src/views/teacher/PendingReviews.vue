@@ -1381,11 +1381,9 @@ import {
   delegateReview,
   getPaperContent,
   getPaperPreviewUrl,
-  getReviewHistory,
-  getTeacherReviewHistory,
   getDetailedPlagiarismReport
 } from '@/api/teacher.js'
-import { convertToBackendStatus } from '@/utils/reviewStatus.js'
+import { convertToBackendStatus, getSimilarityColor, getSimilarityClass, getSimilarityTagType } from '@/utils/reviewStatus.js'
 import {
   Bell,
   Clock,
@@ -1769,20 +1767,6 @@ const filteredPapers = computed(() => {
   return result
 })
 
-// 工具函数
-const getSimilarityColor = (similarity) => {
-  if (!similarity) return '#909399'
-  if (similarity < 15) return '#52c41a'
-  if (similarity < 30) return '#faad14'
-  return '#ff4d4f'
-}
-
-const getSimilarityClass = (similarity) => {
-  if (similarity < 15) return 'similarity-low'
-  if (similarity < 30) return 'similarity-medium'
-  return 'similarity-high'
-}
-
 const getWaitingTimeClass = (days) => {
   if (days >= 3) return 'waiting-long'
   if (days >= 1) return 'waiting-medium'
@@ -1923,15 +1907,9 @@ const similarityLevels = [
   { value: 'high', label: '高风险', min: 30, max: 100, color: '#F56C6C' }
 ]
 
-const getSimilarityTagType = (similarity) => {
-  if (similarity <= 15) return 'success'
-  if (similarity <= 30) return 'warning'
-  return 'danger'
-}
-
 const getSimilarityLevel = (similarity) => {
-  if (similarity <= 15) return '低风险'
-  if (similarity <= 30) return '中风险'
+  if (similarity < 15) return '低风险'
+  if (similarity < 30) return '中风险'
   return '高风险'
 }
 

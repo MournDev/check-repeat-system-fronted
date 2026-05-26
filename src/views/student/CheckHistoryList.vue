@@ -294,9 +294,9 @@ const getStatusText = (status) => {
 }
 
 const getSimilarityClass = (rate) => {
-  if (rate < 20) return 'similarity-excellent'
-  if (rate < 40) return 'similarity-good'
-  if (rate < 60) return 'similarity-warning'
+  if (rate < 15) return 'similarity-excellent'
+  if (rate < 30) return 'similarity-good'
+  if (rate < 50) return 'similarity-warning'
   return 'similarity-danger'
 }
 

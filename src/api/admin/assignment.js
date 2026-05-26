@@ -47,7 +47,7 @@ export const assignBatchStudents = (data) => {
 // 获取专业名称映射
 export const getMajorMapping = () => {
   return request({
-    url: '/api/v1/admin/dict/majors/map',
+    url: '/api/v1/admin/assignment/majors/map',
     method: 'get'
   })
 }

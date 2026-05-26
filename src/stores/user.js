@@ -42,6 +42,7 @@ export const useUserStore = defineStore("user", {
         position: res.data.position,
         department: res.data.department,
         officeAddress: res.data.officeAddress,
+        collegeName: res.data.collegeName,
       };
       // 持久化存储（防止页面刷新丢失）
       const isDevelopment = import.meta.env.DEV;

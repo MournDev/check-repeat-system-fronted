@@ -33,6 +33,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { getSimilarityColor } from '@/utils/dataType.js'
 
 const props = defineProps({
   similarity: {
@@ -53,15 +54,9 @@ const props = defineProps({
   }
 })
 
-const getSimilarityColor = (similarity) => {
-  if (similarity <= 15) return '#67c23a'
-  if (similarity <= 30) return '#e6a23c'
-  return '#f56c6c'
-}
-
 const getSimilarityRating = (similarity) => {
-  if (similarity <= 15) return '优秀'
-  if (similarity <= 30) return '良好'
+  if (similarity < 15) return '优秀'
+  if (similarity < 30) return '良好'
   return '需要修改'
 }
 </script>

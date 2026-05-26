@@ -13,7 +13,7 @@ export const getPaperList = (params) => {
 export const uploadPaper = (formData, config = {}) => {
   // config 可包含 headers, onUploadProgress 等 axios 配置
   return request(Object.assign({
-    url: '/api/v1/admin/papers/upload',
+    url: '/api/v1/file/upload',
     method: 'post',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' }

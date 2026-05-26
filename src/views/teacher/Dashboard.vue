@@ -1010,9 +1010,16 @@ onMounted(() => {
 // 统计卡片
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 32px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-card {
@@ -1221,9 +1228,12 @@ onMounted(() => {
 // 主要内容区域
 .main-content {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr 300px;
   gap: 24px;
-  
+
+  @media (max-width: 1400px) {
+    grid-template-columns: 1fr 280px;
+  }
   @media (max-width: 1200px) {
     grid-template-columns: 1fr;
   }
@@ -1410,7 +1420,8 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      
+      flex-shrink: 0;
+
       @media (max-width: 768px) {
         flex-direction: row;
       }
@@ -1675,8 +1686,9 @@ onMounted(() => {
 // 快速操作
 .action-buttons {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
-  
+
   .action-button {
     display: flex;
     align-items: center;
@@ -1871,10 +1883,6 @@ onMounted(() => {
       flex: 1;
       justify-content: center;
     }
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
   
   .today-stats {

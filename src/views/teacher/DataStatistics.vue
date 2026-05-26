@@ -203,6 +203,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElLoading } from 'element-plus'
+import { getSimilarityTagType } from '@/utils/reviewStatus.js'
 
 // API 接口导入
 import {
@@ -626,12 +627,6 @@ const getTrendIcon = (type) => {
     flat: '→'
   }
   return icons[type] || '→'
-}
-
-const getSimilarityTagType = (similarity) => {
-  if (similarity >= 30) return 'danger'
-  if (similarity >= 20) return 'warning'
-  return 'success'
 }
 
 const exportData = async () => {

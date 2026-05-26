@@ -408,6 +408,8 @@ import {
   Lightning, Document, Tools, Clock
 } from '@element-plus/icons-vue'
 import { getPaperReport, getSimpleCheckReport, exportCheckReport, compareReport, approveReport, requestRevision as requestRevisionAPI, contactStudentReport, getSourceDetail, getHistoryReportList } from '@/api/teacher'
+import { getSimilarityColor } from '@/utils/dataType.js'
+import { getSimilarityClass, getSimilarityTagType } from '@/utils/reviewStatus.js'
 import '@/styles/report-styles.scss'
 
 const props = defineProps({
@@ -465,27 +467,9 @@ const calculateStrokeDash = (percent) => {
   return (percent / 100) * 339
 }
 
-const getSimilarityColor = (similarity) => {
-  if (similarity <= 15) return '#67c23a'
-  if (similarity <= 30) return '#e6a23c'
-  return '#f56c6c'
-}
-
-const getSimilarityClass = (similarity) => {
-  if (similarity <= 15) return 'similarity-low'
-  if (similarity <= 30) return 'similarity-medium'
-  return 'similarity-high'
-}
-
-const getSimilarityTagType = (similarity) => {
-  if (similarity <= 15) return 'success'
-  if (similarity <= 30) return 'warning'
-  return 'danger'
-}
-
 const getSimilarityLevel = (similarity) => {
-  if (similarity <= 15) return '低风险'
-  if (similarity <= 30) return '中风险'
+  if (similarity < 15) return '低风险'
+  if (similarity < 30) return '中风险'
   return '高风险'
 }
 
@@ -528,14 +512,14 @@ const getPriorityLabel = (priority) => {
 }
 
 const getRiskLevelTag = (similarity) => {
-  if (similarity <= 15) return 'success'
-  if (similarity <= 30) return 'warning'
+  if (similarity < 15) return 'success'
+  if (similarity < 30) return 'warning'
   return 'danger'
 }
 
 const getRiskLevel = (similarity) => {
-  if (similarity <= 15) return '低风险'
-  if (similarity <= 30) return '中等风险'
+  if (similarity < 15) return '低风险'
+  if (similarity < 30) return '中等风险'
   return '高风险'
 }
 

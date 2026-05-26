@@ -305,6 +305,7 @@ import {
 } from '@element-plus/icons-vue'
 
 import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/student'
+import { getSimilarityColor } from '@/utils/dataType.js'
 import * as echarts from 'echarts'
 
 const route = useRoute()
@@ -663,9 +664,9 @@ const getRatingText = (rating) => {
 }
 
 const getSimilarityClass = (similarity) => {
-  if (similarity < 20) return 'excellent'
-  if (similarity < 40) return 'good'
-  if (similarity < 60) return 'warning'
+  if (similarity < 15) return 'excellent'
+  if (similarity < 30) return 'good'
+  if (similarity < 50) return 'warning'
   return 'danger'
 }
 
@@ -707,12 +708,6 @@ const getTrendText = (direction) => {
     stable: '相对稳定'
   }
   return textMap[direction] || '波动'
-}
-
-const getSimilarityColor = (similarity) => {
-  if (similarity < 20) return '#67c23a'
-  if (similarity < 40) return '#e6a23c'
-  return '#f56c6c'
 }
 
 const computeTrendFromRecords = (records) => {

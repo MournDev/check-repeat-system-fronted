@@ -118,10 +118,10 @@
           <div class="message-actions">
             <!-- 教师端论文分配消息的操作按钮 -->
             <template v-if="userStore.role === 'TEACHER' && notification.relatedId && !notification.isRead">
-              <el-button size="small" type="success" @click.stop="showConfirmDialog(notification)">
+              <el-button size="small" type="success" @click.stop="showAssignmentDialog(notification, 'confirm')">
                 确认接收
               </el-button>
-              <el-button size="small" type="danger" @click.stop="showRejectDialog(notification)">
+              <el-button size="small" type="danger" @click.stop="showAssignmentDialog(notification, 'reject')">
                 拒绝接收
               </el-button>
             </template>
@@ -157,7 +157,7 @@
         @current-change="handleCurrentChange" />
     </div>
     <!-- 确认接收弹框 -->
-    <el-dialog v-model="confirmDialogVisible" title="确认接收论文" width="500px" :before-close="handleConfirmDialogClose">
+    <el-dialog v-model="confirmDialogVisible" title="确认接收论文" width="500px" :before-close="handleDialogClose">
       <div class="dialog-content">
         <el-alert type="info" title="确认接收后将开始审核此论文" :closable="false" style="margin-bottom: 16px;" />
         <div class="paper-info">
@@ -188,7 +188,7 @@
       </template>
     </el-dialog>
     <!-- 拒绝接收弹框 -->
-    <el-dialog v-model="rejectDialogVisible" title="拒绝接收论文" width="500px" :before-close="handleRejectDialogClose">
+    <el-dialog v-model="rejectDialogVisible" title="拒绝接收论文" width="500px" :before-close="handleDialogClose">
       <div class="dialog-content">
         <el-alert type="warning" title="拒绝接收后该论文将重新分配" :closable="false" style="margin-bottom: 16px;" />
         <div class="paper-info">
@@ -358,68 +358,33 @@ const hasSelected = computed(() =>
 const selectedCount = computed(() =>
   notifications.value.filter(item => item.selected).length
 )
-//获取当前用户Id
 const getCurrentUserId = () => {
   return userStore.userInfo?.userId
 }
-// 获取当前教师ID
-const getCurrentTeacherId = () => {
-  return userStore.userInfo?.userId
-}
-// 方法
-const showConfirmDialog = async (notification) => {
-  const paperId = notification.relatedId
-  if (!paperId) {
-    ElMessage.warning('无法获取论文')
-    return
-  }
-  console.log('显示确认弹窗，paperId:', paperId)
-  //获取论文详情
-  const paperDetail = await getPaperDetail(paperId)
-  currentAssignment.value = {
-    ...notification,
-    paperId: paperId,  // 使用relatedId作为paperId
-    paperTitle: paperDetail.data.paperTitle || `论文 {paperId}`,
-    studentName: paperDetail.data.author || '待确认学生'
-  }
-  confirmDialogVisible.value = true
-}
 
-const showRejectDialog = async (notification) => {
-  // relatedId就是paperId
+const showAssignmentDialog = async (notification, type) => {
   const paperId = notification.relatedId
-
   if (!paperId) {
     ElMessage.warning('无法获取论文ID')
     return
   }
-
-  console.log('显示拒绝弹窗，paperId:', paperId)
+  console.log(`显示${type === 'confirm' ? '确认' : '拒绝'}弹窗，paperId:`, paperId)
   const paperDetail = await getPaperDetail(paperId)
   currentAssignment.value = {
     ...notification,
-    paperId: paperId,  // 使用relatedId作为paperId
-    paperTitle: paperDetail.data.paperTitle || `论文 {paperId}`,
+    paperId: paperId,
+    paperTitle: paperDetail.data.paperTitle || `论文 ${paperId}`,
     studentName: paperDetail.data.author || '待确认学生'
   }
-
-  rejectForm.value.reason = ''
-  rejectDialogVisible.value = true
+  if (type === 'reject') {
+    rejectForm.value.reason = ''
+    rejectDialogVisible.value = true
+  } else {
+    confirmDialogVisible.value = true
+  }
 }
 
-const handleConfirmDialogClose = (done) => {
-  ElMessageBox.confirm('确定要关闭吗？未保存的更改将会丢失。', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    done()
-  }).catch(() => {
-    // 取消关闭
-  })
-}
-
-const handleRejectDialogClose = (done) => {
+const handleDialogClose = (done) => {
   ElMessageBox.confirm('确定要关闭吗？未保存的更改将会丢失。', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
@@ -435,7 +400,7 @@ const handleConfirmAssignment = async () => {
     confirmLoading.value = true
 
     const paperId = currentAssignment.value.relatedId
-    const teacherId = getCurrentTeacherId()
+    const teacherId = getCurrentUserId()
 
     if (!teacherId) {
       ElMessage.warning('教师信息不存在')
@@ -477,7 +442,7 @@ const handleRejectAssignment = async () => {
     rejectLoading.value = true
 
     const paperId = currentAssignment.value.relatedId
-    const teacherId = getCurrentTeacherId()
+    const teacherId = getCurrentUserId()
 
     if (!teacherId) {
       ElMessage.warning('教师信息不存在')

@@ -363,7 +363,7 @@ export const downloadVersion = (versionId) => {
 
 export const downloadAttachment = (attachmentId) => {
   return request({
-    url: `/api/v1/attachments/${attachmentId}/download`,
+    url: `/api/v1/papers/attachments/${attachmentId}/download`,
     method: "get",
     responseType: 'blob'
   });

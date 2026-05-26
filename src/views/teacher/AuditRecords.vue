@@ -42,8 +42,8 @@
               <el-form-item label="审核状态">
                 <el-select v-model="filterForm.status" placeholder="全部状态" clearable>
                   <el-option label="全部" value="" />
-                  <el-option label="审核通过" :value="3" />
-                  <el-option label="未通过" :value="4" />
+                  <el-option label="审核通过" value="completed" />
+                  <el-option label="未通过" value="rejected" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -241,7 +241,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PaperDetail from '@/views/student/PaperDetail.vue'
 import { getReviewedList, downloadPaper, contactStudent } from '@/api/teacher.js'
-import { getStatusText, getStatusType } from '@/utils/reviewStatus.js'
+import { getStatusText, getStatusType, getSimilarityColor, getSimilarityClass } from '@/utils/reviewStatus.js'
 import { formatDateTime } from '@/utils/dataType.js'
 import {
   Refresh,
@@ -274,20 +274,6 @@ const loading = ref(false)
 // 对话框
 const detailDialogVisible = ref(false)
 const currentPaperId = ref(null)
-
-// 工具函数
-const getSimilarityColor = (similarity) => {
-  if (!similarity) return '#909399'
-  if (similarity < 15) return '#52c41a'
-  if (similarity < 30) return '#faad14'
-  return '#ff4d4f'
-}
-
-const getSimilarityClass = (similarity) => {
-  if (similarity < 15) return 'similarity-low'
-  if (similarity < 30) return 'similarity-medium'
-  return 'similarity-high'
-}
 
 // 事件处理
 const handleSearch = () => {

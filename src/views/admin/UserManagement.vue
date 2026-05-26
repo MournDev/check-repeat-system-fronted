@@ -918,6 +918,7 @@ const rowKey = (row) => {
   border: 1px solid #d2d2d7;
   border-radius: 18px;
   transition: all 0.2s ease;
+  overflow-x: auto;
   
   &:hover {
     border-color: #d2d2d7;

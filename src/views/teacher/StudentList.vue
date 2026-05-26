@@ -502,6 +502,7 @@ import {
   getStudentPapers
 } from '@/api/teacher'
 import { useUserStore } from '@/stores/user'
+import { getSimilarityColor } from '@/utils/reviewStatus.js'
 
 // 图标引入
 import {
@@ -731,13 +732,6 @@ const getStatusText = (status) => {
     'completed': '已完成'
   }
   return textMap[status] || '未知状态'
-}
-
-const getSimilarityColor = (similarity) => {
-  if (!similarity) return '#909399'
-  if (similarity < 15) return '#52c41a'
-  if (similarity < 30) return '#faad14'
-  return '#ff4d4f'
 }
 
 const formatDate = (date) => {

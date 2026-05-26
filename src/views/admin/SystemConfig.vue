@@ -269,70 +269,68 @@
             </el-form>
           </div>
         </el-card>
+
+        <!-- 时间节点配置 -->
+        <div v-show="activeTab === 5" class="config-tab-container">
+          <el-card class="config-card" shadow="never">
+            <h3 class="tab-title">时间节点配置</h3>
+            <el-form :model="deadlinesConfig" label-width="140px" class="config-form">
+              <el-form-item label="论文提交截止">
+                <el-date-picker
+                  v-model="deadlinesConfig.submissionDeadline"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="YYYY-MM-DD"
+                  style="width: 100%"
+                ></el-date-picker>
+                <div class="form-tip">学生论文提交的最终截止时间</div>
+              </el-form-item>
+
+              <el-form-item label="审核截止">
+                <el-date-picker
+                  v-model="deadlinesConfig.reviewDeadline"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="YYYY-MM-DD"
+                  style="width: 100%"
+                ></el-date-picker>
+                <div class="form-tip">导师完成论文审核的截止时间</div>
+              </el-form-item>
+
+              <el-form-item label="答辩时间">
+                <el-date-picker
+                  v-model="deadlinesConfig.defenseDate"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="YYYY-MM-DD"
+                  style="width: 100%"
+                ></el-date-picker>
+                <div class="form-tip">论文答辩的开始时间</div>
+              </el-form-item>
+
+              <el-form-item label="预计毕业时间">
+                <el-date-picker
+                  v-model="deadlinesConfig.graduationDate"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="YYYY-MM-DD"
+                  style="width: 100%"
+                ></el-date-picker>
+                <div class="form-tip">学生预计毕业的时间</div>
+              </el-form-item>
+
+              <el-form-item>
+                <el-button type="primary" @click="saveDeadlinesConfig" :loading="savingDeadlines">
+                  保存时间节点配置
+                </el-button>
+                <el-button @click="resetDeadlinesConfig">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </el-card>
+        </div>
       </el-col>
-    </el-row>
 
-    <!-- 时间节点配置 -->
-    <div v-show="activeTab === 5" class="config-tab-container">
-      <el-card class="config-card" shadow="never">
-        <h3 class="tab-title">时间节点配置</h3>
-        <el-form :model="deadlinesConfig" label-width="140px" class="config-form">
-          <el-form-item label="论文提交截止">
-            <el-date-picker
-              v-model="deadlinesConfig.submissionDeadline"
-              type="date"
-              placeholder="选择日期"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            ></el-date-picker>
-            <div class="form-tip">学生论文提交的最终截止时间</div>
-          </el-form-item>
-          
-          <el-form-item label="审核截止">
-            <el-date-picker
-              v-model="deadlinesConfig.reviewDeadline"
-              type="date"
-              placeholder="选择日期"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            ></el-date-picker>
-            <div class="form-tip">导师完成论文审核的截止时间</div>
-          </el-form-item>
-          
-          <el-form-item label="答辩时间">
-            <el-date-picker
-              v-model="deadlinesConfig.defenseDate"
-              type="date"
-              placeholder="选择日期"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            ></el-date-picker>
-            <div class="form-tip">论文答辩的开始时间</div>
-          </el-form-item>
-          
-          <el-form-item label="预计毕业时间">
-            <el-date-picker
-              v-model="deadlinesConfig.graduationDate"
-              type="date"
-              placeholder="选择日期"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            ></el-date-picker>
-            <div class="form-tip">学生预计毕业的时间</div>
-          </el-form-item>
-          
-          <el-form-item>
-            <el-button type="primary" @click="saveDeadlinesConfig" :loading="savingDeadlines">
-              保存时间节点配置
-            </el-button>
-            <el-button @click="resetDeadlinesConfig">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
-    </div>
-
-    <!-- 右侧配置说明 -->
-    <el-row :gutter="16">
+      <!-- 右侧配置说明 -->
       <el-col :span="8">
         <el-card class="help-card" shadow="never">
           <template #header>

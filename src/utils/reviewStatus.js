@@ -73,11 +73,36 @@ export const isValidReviewStatus = (status) => {
   return validStatuses.includes(status)
 }
 
+// 相似度颜色映射
+export const getSimilarityColor = (similarity) => {
+  if (!similarity) return '#909399'
+  if (similarity < 15) return '#52c41a'
+  if (similarity < 30) return '#faad14'
+  return '#ff4d4f'
+}
+
+// 相似度CSS类名映射
+export const getSimilarityClass = (similarity) => {
+  if (similarity < 15) return 'similarity-low'
+  if (similarity < 30) return 'similarity-medium'
+  return 'similarity-high'
+}
+
+// 相似度Element标签类型映射
+export const getSimilarityTagType = (similarity) => {
+  if (similarity < 15) return 'success'
+  if (similarity < 30) return 'warning'
+  return 'danger'
+}
+
 export default {
   PAPER_STATUS,
   REVIEW_OPERATION,
   getStatusText,
   getStatusType,
   convertToBackendStatus,
-  isValidReviewStatus
+  isValidReviewStatus,
+  getSimilarityClass,
+  getSimilarityColor,
+  getSimilarityTagType
 }
