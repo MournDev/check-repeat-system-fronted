@@ -401,28 +401,49 @@
           </div>
         </el-card>
 
-        <!-- 配置备份 -->
+        <!-- 数据备份 -->
         <el-card class="backup-card" shadow="never" style="margin-top: 1rem">
           <template #header>
             <div class="card-header">
               <span class="card-title">
                 <el-icon><Upload /></el-icon>
-                配置备份
+                数据备份
               </span>
             </div>
           </template>
-          
+
+          <div class="backup-settings">
+            <el-form label-width="110px" size="default">
+              <el-form-item label="自动备份">
+                <el-switch v-model="backupSettingsForm.enabled" @change="saveBackupSettings" />
+                <span class="setting-hint" style="margin-left: 0.5rem">{{ backupSettingsForm.enabled ? '每天凌晨2:00执行' : '已禁用' }}</span>
+              </el-form-item>
+              <el-form-item label="保留天数">
+                <el-input-number
+                  v-model="backupSettingsForm.retentionDays"
+                  :min="7"
+                  :max="365"
+                  :step="7"
+                  @change="saveBackupSettings"
+                />
+                <span class="setting-hint" style="margin-left: 0.5rem">超过天数的备份文件自动清理</span>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <el-divider />
+
           <div class="backup-actions">
-            <el-button type="primary" @click="exportConfig" :loading="exporting">
-              导出配置
+            <el-button type="primary" @click="triggerDbBackup" :loading="backingUp">
+              立即备份
             </el-button>
-<el-button type="warning" @click="resetConfig">
-              恢复默认
+            <el-button @click="exportConfig">
+              导出配置
             </el-button>
           </div>
           <div class="backup-info">
             <p>上次备份：{{ lastBackupTime }}</p>
-            <p>配置版本：{{ configVersion }}</p>
+            <p>备份目录：{{ backupDir }}</p>
           </div>
         </el-card>
       </el-col>
@@ -435,7 +456,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 导入管理员 API
-import { 
+import {
   getSystemConfig,
   updateBasicConfig,
   updatePlagiarismConfig,
@@ -449,6 +470,7 @@ import {
   getDeadlinesConfig,
   updateDeadlinesConfig
 } from '@/api/admin/config'
+import { triggerBackup, getBackupStatus, getBackupSettings, updateBackupSettings as updateBackupSettingsApi } from '@/api/admin/backup'
 
 
 // 图标导入
@@ -460,6 +482,7 @@ import {
 const activeTab = ref(0)
 const saving = ref(false)
 const testingEmail = ref(false)
+const backingUp = ref(false)
 const exporting = ref(false)
 
 // 配置数据
@@ -525,8 +548,15 @@ const thresholdMarks = computed(() => ({
   100: '100%'
 }))
 
-const lastBackupTime = ref('2024-01-15 14:30:25')
-const configVersion = ref('2.1.0-20240115')
+const lastBackupTime = ref('暂无')
+const backupDir = ref('—')
+const backupSettingsForm = reactive({ enabled: true, retentionDays: 30 })
+let backupSettingsLoaded = false
+
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleString('zh-CN')
+}
 
 // 方法
 const refreshConfig = async () => {
@@ -696,6 +726,62 @@ const exportConfig = async () => {
   }
 }
 
+const triggerDbBackup = async () => {
+  backingUp.value = true
+  try {
+    const response = await triggerBackup()
+    if (response.code === 200) {
+      const result = response.data
+      if (result.status === 'SUCCESS') {
+        ElMessage.success(`备份成功: ${result.fileName}`)
+      } else {
+        ElMessage.warning(result.message || '备份未正常完成')
+      }
+    } else {
+      ElMessage.error(response.message || '备份失败')
+    }
+    await loadBackupStatus()
+  } catch {
+    ElMessage.error('备份请求失败')
+  } finally {
+    backingUp.value = false
+  }
+}
+
+const loadBackupStatus = async () => {
+  try {
+    const [statusRes, settingsRes] = await Promise.all([
+      getBackupStatus(),
+      getBackupSettings()
+    ])
+    if (statusRes.code === 200) {
+      const data = statusRes.data
+      if (data.lastBackup) {
+        lastBackupTime.value = formatDateTime(data.lastBackup.endTime || data.lastBackup.createTime)
+      }
+      backupDir.value = data.backupDir || '—'
+    }
+    if (settingsRes.code === 200 && !backupSettingsLoaded) {
+      backupSettingsForm.enabled = settingsRes.data.enabled != null ? settingsRes.data.enabled : true
+      backupSettingsForm.retentionDays = settingsRes.data.retentionDays || 30
+      backupSettingsLoaded = true
+    }
+  } catch {
+    // silently fail for backup status, not critical
+  }
+}
+
+const saveBackupSettings = async () => {
+  try {
+    await updateBackupSettingsApi({
+      enabled: backupSettingsForm.enabled,
+      retentionDays: backupSettingsForm.retentionDays
+    })
+  } catch {
+    // silently fail
+  }
+}
+
 const resetConfig = async () => {
   try {
     await ElMessageBox.confirm(
@@ -725,6 +811,8 @@ onMounted(() => {
   refreshConfig()
   // 加载时间节点配置
   loadDeadlinesConfig()
+  // 加载备份状态
+  loadBackupStatus()
 })
 </script>
 
@@ -898,89 +986,92 @@ onMounted(() => {
   }
 }
 
-.help-card,
+.help-card {
+  background: #f9f9fb;
+  border: 1px solid #e5e5ea;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+
+  :deep(.el-card__header) {
+    padding: 12px 18px;
+    border-bottom: 1px solid #e5e5ea;
+    background: transparent;
+
+    .card-header .card-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #6e6e73;
+      .el-icon { margin-right: 6px; color: #86868b; }
+    }
+  }
+
+  :deep(.el-card__body) {
+    padding: 14px 18px;
+  }
+}
+
 .backup-card {
   background: #ffffff;
   border: 1px solid #d2d2d7;
   border-radius: 18px;
+  border-top: 3px solid #0ea5e9;
   transition: all 0.2s ease;
-  
-  &:hover {
-    border-color: #d2d2d7;
-  }
-  
+
   :deep(.el-card__header) {
-    padding: 16px 20px;
-    border-bottom: 1px solid #d2d2d7;
-    background: #f5f5f7;
-    
-    .card-header {
+    padding: 16px 20px 12px;
+    border-bottom: none;
+    background: transparent;
+
+    .card-header .card-title {
       display: flex;
       align-items: center;
-      
-      .card-title {
-        display: flex;
-        align-items: center;
-        font-weight: 600;
-        color: #1d1d1f; // Slate-900
-        
-        .el-icon {
-          margin-right: 8px;
-          color: #475569; // Slate-600
-        }
-      }
+      font-weight: 600;
+      font-size: 1rem;
+      color: #1d1d1f;
+      .el-icon { margin-right: 8px; color: #0ea5e9; }
     }
   }
-  
+
   :deep(.el-card__body) {
-    padding: 20px;
+    padding: 0 20px 20px;
   }
 }
 
 .config-help {
   .help-content {
     h4 {
-      margin: 0 0 12px 0;
-      color: #1d1d1f; // Slate-900
-      font-size: 1rem;
+      margin: 0 0 10px 0;
+      color: #6e6e73;
+      font-size: 0.875rem;
     }
-    
     ul {
-      padding-left: 20px;
+      padding-left: 18px;
       margin: 0;
-      
       li {
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         line-height: 1.5;
-        color: #86868b; // Slate-500
-        
-        strong {
-          color: #1d1d1f; // Slate-900
-        }
+        font-size: 0.8rem;
+        color: #86868b;
+        strong { color: #515154; }
       }
     }
+  }
+}
+.backup-settings {
+  margin-bottom: 0.5rem;
+
+  .setting-hint {
+    font-size: 0.8rem;
+    color: #86868b;
   }
 }
 
 .backup-actions {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
-  
+  gap: 0.75rem;
+
   .el-button {
-    width: 100%;
     border-radius: 8px;
-    transition: all 0.2s ease;
-    border: 1px solid #d2d2d7;
-    
-    &:hover {
-      border-color: #86868b;
-    }
-    &:active {
-      transform: scale(0.95);
-      transition: transform 0.15s ease;
-    }
   }
 }
 

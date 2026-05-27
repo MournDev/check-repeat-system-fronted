@@ -2,96 +2,15 @@
   <div class="log-center">
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">智能运维中心</h1>
-        <p class="page-desc">系统监控、日志分析和智能预警</p>
+        <h1 class="page-title">日志中心</h1>
+        <p class="page-desc">操作审计、登录记录与备份历史</p>
       </div>
       <div class="header-actions">
         <el-button type="primary" :icon="Refresh" @click="refreshLogs">刷新数据</el-button>
-        <el-button :icon="Setting" @click="showAlertConfig">预警设置</el-button>
         <el-button :icon="Download" @click="exportLogs">导出日志</el-button>
       </div>
     </div>
 
-    <!-- 实时监控概览 -->
-    <el-row :gutter="16" class="monitor-cards">
-      <el-col :xs="12" :sm="6">
-        <el-card class="monitor-card" shadow="never">
-          <div class="monitor-content">
-            <div class="monitor-icon bg-success"><el-icon><User /></el-icon></div>
-            <div class="monitor-info">
-              <div class="monitor-value">{{ realtimeStats.onlineUsers }}</div>
-              <div class="monitor-label">在线用户</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="monitor-card" shadow="never">
-          <div class="monitor-content">
-            <div class="monitor-icon bg-warning"><el-icon><Warning /></el-icon></div>
-            <div class="monitor-info">
-              <div class="monitor-value">{{ realtimeStats.warningCount }}</div>
-              <div class="monitor-label">警告事件</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="monitor-card" shadow="never">
-          <div class="monitor-content">
-            <div class="monitor-icon bg-danger"><el-icon><CircleClose /></el-icon></div>
-            <div class="monitor-info">
-              <div class="monitor-value">{{ realtimeStats.errorCount }}</div>
-              <div class="monitor-label">错误事件</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card class="monitor-card" shadow="never">
-          <div class="monitor-content">
-            <div class="monitor-icon bg-info"><el-icon><DataLine /></el-icon></div>
-            <div class="monitor-info">
-              <div class="monitor-value">{{ realtimeStats.systemLoad }}</div>
-              <div class="monitor-label">系统负载</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- 智能预警 -->
-    <el-card class="alert-card" shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span class="card-title"><el-icon><Bell /></el-icon>智能预警</span>
-          <el-switch v-model="alertEnabled" active-text="启用预警" inactive-text="关闭预警" />
-        </div>
-      </template>
-      <div class="alerts-container">
-        <div v-for="alert in activeAlerts" :key="alert.id" class="alert-item" :class="`alert-${alert.severity}`">
-          <div class="alert-icon">
-            <el-icon v-if="alert.severity === 'high' || alert.severity === 'critical'"><CircleCloseFilled /></el-icon>
-            <el-icon v-else-if="alert.severity === 'medium'"><WarningFilled /></el-icon>
-            <el-icon v-else><InfoFilled /></el-icon>
-          </div>
-          <div class="alert-content">
-            <div class="alert-title">{{ alert.title }}</div>
-            <div class="alert-message">{{ alert.message }}</div>
-            <div class="alert-time">{{ formatDate(alert.triggerTime) }}</div>
-          </div>
-          <div class="alert-actions">
-            <el-button size="small" type="primary" link @click="handleProcessAlert(alert)">处理</el-button>
-            <el-button size="small" link @click="dismissAlert(alert.id)">忽略</el-button>
-          </div>
-        </div>
-        <div v-if="activeAlerts.length === 0" class="no-alerts">
-          <el-empty description="暂无预警信息" :image-size="80" />
-        </div>
-      </div>
-    </el-card>
-
-    <!-- 日志分类展示 -->
     <el-tabs v-model="activeTab" class="log-tabs" @tab-change="onTabChange">
       <!-- 操作日志 -->
       <el-tab-pane label="操作日志" name="operation">
@@ -234,258 +153,51 @@
         </el-card>
       </el-tab-pane>
 
-      <!-- 性能监控 -->
-      <el-tab-pane label="性能监控" name="performance">
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-card shadow="never">
-              <template #header><span>响应时间趋势</span></template>
-              <div class="chart-container">
-                <div id="response-time-chart" style="width: 100%; height: 300px;"></div>
-              </div>
-            </el-card>
-          </el-col>
-          <el-col :span="12">
-            <el-card shadow="never">
-              <template #header><span>资源使用率</span></template>
-              <div class="resource-stats">
-                <div class="resource-item">
-                  <div class="resource-label">
-                    <span>CPU使用率</span>
-                    <span class="resource-value">{{ resourceUsage.cpu }}%</span>
-                  </div>
-                  <el-progress :percentage="resourceUsage.cpu" :status="resourceUsage.cpu > 80 ? 'exception' : 'success'" />
-                </div>
-                <div class="resource-item">
-                  <div class="resource-label">
-                    <span>内存使用率</span>
-                    <span class="resource-value">{{ resourceUsage.memory }}%</span>
-                  </div>
-                  <el-progress :percentage="resourceUsage.memory" :status="resourceUsage.memory > 80 ? 'exception' : 'warning'" />
-                </div>
-                <div class="resource-item">
-                  <div class="resource-label">
-                    <span>磁盘使用率</span>
-                    <span class="resource-value">{{ resourceUsage.disk }}%</span>
-                  </div>
-                  <el-progress :percentage="resourceUsage.disk" :status="resourceUsage.disk > 80 ? 'exception' : ''" />
-                </div>
-                <div class="resource-item">
-                  <div class="resource-label">
-                    <span>数据库连接池</span>
-                    <span class="resource-value">{{ resourceUsage.dbConnections }}%</span>
-                  </div>
-                  <el-progress :percentage="resourceUsage.dbConnections" :status="resourceUsage.dbConnections > 80 ? 'exception' : 'info'" />
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-tab-pane>
-
-      <!-- 安全日志 -->
-      <el-tab-pane label="安全日志" name="security">
+      <!-- 备份记录 -->
+      <el-tab-pane label="备份记录" name="backup">
         <el-card shadow="never">
-          <template #header>
-            <div class="tab-header">
-              <div class="header-filters">
-                <el-date-picker
-                  v-model="securityFilters.dateRange"
-                  type="daterange"
-                  range-separator="至"
-                  start-placeholder="开始日期"
-                  end-placeholder="结束日期"
-                  value-format="YYYY-MM-DD"
-                  style="width: 240px"
-                />
-                <el-select v-model="securityFilters.eventType" placeholder="事件类型" clearable style="width: 150px">
-                  <el-option label="登录失败" value="login_failed" />
-                  <el-option label="登录成功" value="login_success" />
-                </el-select>
-                <el-button type="primary" :icon="Search" @click="loadSecurityLogs">查询</el-button>
-              </div>
-            </div>
-          </template>
-
-          <el-table :data="securityLogs" style="width: 100%" v-loading="securityLoading" stripe>
-            <el-table-column prop="timestamp" label="时间" min-width="170">
-              <template #default="{ row }">{{ formatDate(row.timestamp) }}</template>
+          <el-table :data="backupRecords" style="width: 100%" v-loading="backupLoading" stripe>
+            <el-table-column prop="createTime" label="备份时间" min-width="170">
+              <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
             </el-table-column>
-            <el-table-column prop="eventType" label="事件类型" min-width="120">
+            <el-table-column prop="fileName" label="文件名" min-width="220" show-overflow-tooltip />
+            <el-table-column prop="fileSize" label="文件大小" width="100">
+              <template #default="{ row }">{{ formatFileSize(row.fileSize) }}</template>
+            </el-table-column>
+            <el-table-column prop="backupType" label="类型" width="80" align="center">
               <template #default="{ row }">
-                <el-tag :type="getSecurityEventTag(row.eventType)" size="small">{{ getSecurityEventName(row.eventType) }}</el-tag>
+                <el-tag :type="row.backupType === 'AUTO' ? 'info' : 'warning'" size="small">
+                  {{ row.backupType === 'AUTO' ? '自动' : '手动' }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="username" label="用户名" min-width="120" />
-            <el-table-column prop="ipAddress" label="来源IP" min-width="140" />
-            <el-table-column prop="location" label="地理位置" min-width="140" />
-            <el-table-column prop="riskLevel" label="风险等级" min-width="100" align="center">
+            <el-table-column prop="durationMs" label="耗时" width="90">
+              <template #default="{ row }">{{ row.durationMs ? (row.durationMs / 1000).toFixed(1) + 's' : '—' }}</template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="80" align="center">
               <template #default="{ row }">
-                <el-tag :type="getRiskLevelTag(row.riskLevel)" size="small">{{ getRiskLevelName(row.riskLevel) }}</el-tag>
+                <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'" size="small">
+                  {{ row.status === 'SUCCESS' ? '成功' : '失败' }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="description" label="事件描述" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="errorMessage" label="错误信息" min-width="160" show-overflow-tooltip />
           </el-table>
 
           <div class="pagination-wrapper">
             <el-pagination
-              v-model:current-page="securityPagination.pageNum"
-              v-model:page-size="securityPagination.pageSize"
+              v-model:current-page="backupPagination.pageNum"
+              v-model:page-size="backupPagination.pageSize"
               :page-sizes="[10, 20, 50]"
-              :total="securityPagination.total"
+              :total="backupPagination.total"
               layout="total, sizes, prev, pager, next, jumper"
-              @size-change="loadSecurityLogs"
-              @current-change="loadSecurityLogs"
+              @size-change="loadBackupRecords"
+              @current-change="loadBackupRecords"
             />
           </div>
         </el-card>
       </el-tab-pane>
     </el-tabs>
-
-    <!-- 告警配置对话框 -->
-    <el-dialog
-      v-model="alertConfigVisible"
-      title="预警规则设置"
-      width="900px"
-      destroy-on-close
-    >
-      <div class="alert-config-header">
-        <el-button type="primary" :icon="Plus" @click="openAddRuleForm">
-          添加规则
-        </el-button>
-        <el-tag type="info" size="small" style="margin-left: 12px">
-          共 {{ alertRules.length }} 条规则
-        </el-tag>
-      </div>
-
-      <el-table
-        :data="alertRules"
-        v-loading="alertConfigLoading"
-        style="margin-top: 16px"
-        empty-text="暂无告警规则，请点击上方按钮添加"
-      >
-        <el-table-column prop="ruleName" label="规则名称" min-width="140" show-overflow-tooltip />
-        <el-table-column label="类型" width="100">
-          <template #default="{ row }">
-            {{ getRuleTypeName(row.ruleType) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="metricName" label="指标" width="100" />
-        <el-table-column label="阈值" width="90">
-          <template #default="{ row }">
-            {{ row.threshold }}{{ row.ruleType === 'CPU' || row.ruleType === 'MEMORY' || row.ruleType === 'DISK' ? '%' : '次' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="duration" label="持续(s)" width="80" />
-        <el-table-column label="级别" width="80">
-          <template #default="{ row }">
-            <el-tag :type="getSeverityTag(row.severity)" size="small">
-              {{ getSeverityName(row.severity) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="启用" width="70" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.enabled"
-              size="small"
-              @change="handleToggleRule(row)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column prop="notifyEmail" label="通知邮箱" min-width="160" show-overflow-tooltip />
-        <el-table-column label="操作" width="140" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="openEditRuleForm(row)">
-              编辑
-            </el-button>
-            <el-button type="danger" link size="small" @click="handleDeleteRule(row)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <template #footer>
-        <el-button @click="alertConfigVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 告警规则表单子对话框 -->
-    <el-dialog
-      v-model="ruleFormVisible"
-      :title="ruleFormTitle"
-      width="520px"
-      destroy-on-close
-      :close-on-click-modal="false"
-    >
-      <el-form :model="ruleForm" label-width="90px">
-        <el-form-item label="规则名称" required>
-          <el-input v-model="ruleForm.ruleName" placeholder="如：CPU过载预警" maxlength="64" />
-        </el-form-item>
-        <el-form-item label="规则类型" required>
-          <el-select v-model="ruleForm.ruleType" style="width: 100%">
-            <el-option
-              v-for="opt in ruleTypeOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="指标名称">
-          <el-input v-model="ruleForm.metricName" placeholder="如：CPU使用率" maxlength="64" />
-        </el-form-item>
-        <el-form-item label="阈值" required>
-          <el-input-number
-            v-model="ruleForm.threshold"
-            :min="1"
-            :max="99999"
-            :precision="1"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="持续时间(s)">
-          <el-input-number
-            v-model="ruleForm.duration"
-            :min="0"
-            :max="86400"
-            style="width: 100%"
-          />
-          <span class="form-tip">连续超过阈值多久后触发告警</span>
-        </el-form-item>
-        <el-form-item label="严重级别">
-          <el-select v-model="ruleForm.severity" style="width: 100%">
-            <el-option
-              v-for="opt in severityOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="启用">
-          <el-switch v-model="ruleForm.enabled" />
-        </el-form-item>
-        <el-form-item label="通知邮箱">
-          <el-input v-model="ruleForm.notifyEmail" placeholder="告警时发送通知的邮箱" maxlength="128" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input
-            v-model="ruleForm.description"
-            type="textarea"
-            :rows="2"
-            placeholder="规则说明"
-            maxlength="256"
-          />
-        </el-form-item>
-      </el-form>
-
-      <template #footer>
-        <el-button @click="ruleFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitRuleForm">保存</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 日志详情对话框 -->
     <el-dialog v-model="detailDialogVisible" title="操作日志详情" width="600px">
@@ -515,19 +227,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  getOperationLogs, exportOperationLogs, getLoginLogs,
-  getSecurityLogs, getRealtimeStats, getActiveAlerts, handleAlert,
-  getAlertConfig, updateAlertConfig, deleteAlertRule, toggleAlertRule,
-  getResourceUsage, getApiResponseTimes
-} from '@/api/admin/logs'
-import * as echarts from 'echarts'
-import {
-  Refresh, Setting, Download, Search, User, Warning, CircleClose,
-  DataLine, Bell, CircleCloseFilled, WarningFilled, InfoFilled, Plus
-} from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getOperationLogs, exportOperationLogs, getLoginLogs } from '@/api/admin/logs'
+import { getBackupHistory } from '@/api/admin/backup'
+import { Refresh, Download, Search } from '@element-plus/icons-vue'
 
 // ==================== 操作类型字典 ====================
 const OPERATION_MODULES = [
@@ -706,7 +410,6 @@ const operationTagMap = {}
 OPERATION_MODULES.forEach(m => {
   m.types.forEach(t => {
     operationTypeMap[t.value] = t.label
-    // 根据模块给tag着色
     const tagColors = { auth: '', student: 'primary', check: 'success', teacher: 'warning', admin: 'danger', config: 'info', rule: '', dict: 'info', role: 'warning', notification: 'success', template: '', auto: 'info' }
     operationTagMap[t.value] = tagColors[m.value] || ''
   })
@@ -715,33 +418,23 @@ OPERATION_MODULES.forEach(m => {
 // ==================== 响应式数据 ====================
 const activeTab = ref('operation')
 const operationLoading = ref(false)
-const securityLoading = ref(false)
 const loginLoading = ref(false)
 const detailDialogVisible = ref(false)
-const alertEnabled = ref(true)
 const currentLog = ref(null)
-
-const realtimeStats = ref({ onlineUsers: 0, warningCount: 0, errorCount: 0, systemLoad: '正常' })
-const activeAlerts = ref([])
-const resourceUsage = ref({ cpu: 0, memory: 0, disk: 0, dbConnections: 0 })
-const responseTimeData = ref({ timestamps: [], responseTimes: [] })
-
-const chartInstance = ref(null)
-let updateTimer = null
 
 // 操作日志筛选
 const operationFilters = reactive({ dateRange: [], userType: '', module: '', operationType: '', keyword: '' })
-const securityFilters = reactive({ dateRange: [], eventType: '' })
 const loginFilters = reactive({ dateRange: [], ip: '' })
 
 // 分页
 const operationPagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
-const securityPagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
 const loginPagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
 
 const operationLogs = ref([])
-const securityLogs = ref([])
 const loginLogs = ref([])
+const backupRecords = ref([])
+const backupLoading = ref(false)
+const backupPagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
 
 // 模块列表
 const operationModules = computed(() => OPERATION_MODULES.map(m => ({ value: m.value, label: m.label })))
@@ -749,7 +442,6 @@ const operationModules = computed(() => OPERATION_MODULES.map(m => ({ value: m.v
 // 根据选中的模块过滤操作类型
 const filteredOperationTypes = computed(() => {
   if (!operationFilters.module) {
-    // 未选择模块时显示所有操作类型
     return OPERATION_MODULES.flatMap(m => m.types)
   }
   const module = OPERATION_MODULES.find(m => m.value === operationFilters.module)
@@ -776,183 +468,87 @@ async function refreshLogs(showMessage = true) {
   try {
     await Promise.all([
       loadOperationLogs(),
-      loadSecurityLogs(),
-      updateRealtimeStats(),
-      loadActiveAlerts(),
-      loadApiResponseTimes(),
-      loadResourceUsage()
+      loadLoginLogs()
     ])
     if (showMessage) ElMessage.success('数据已刷新')
-  } catch (error) {
+  } catch {
     if (showMessage) ElMessage.error('刷新数据失败')
   }
 }
 
 function onTabChange(tab) {
   if (tab === 'login') loadLoginLogs()
-  else if (tab === 'security') loadSecurityLogs()
-  else if (tab === 'performance') {
-    setTimeout(() => { if (!chartInstance.value) initChart() }, 300)
+  else if (tab === 'backup') loadBackupRecords()
+}
+
+async function loadBackupRecords() {
+  backupLoading.value = true
+  try {
+    const response = await getBackupHistory({ page: backupPagination.pageNum, size: backupPagination.pageSize })
+    if (response.code === 200) {
+      const data = response.data
+      backupRecords.value = data.records || []
+      backupPagination.total = Number(data.total) || 0
+    }
+  } catch {
+    ElMessage.error('加载备份记录失败')
+  } finally {
+    backupLoading.value = false
   }
 }
 
-const alertConfigVisible = ref(false)
-const alertConfigLoading = ref(false)
-const alertRules = ref([])
-
-const ruleFormVisible = ref(false)
-const ruleFormTitle = ref('')
-const editingRuleId = ref(null)
-const ruleForm = reactive({
-  ruleName: '',
-  ruleType: 'CPU',
-  metricName: '',
-  threshold: 80,
-  duration: 60,
-  severity: 'medium',
-  enabled: true,
-  notifyEmail: '',
-  description: ''
-})
-const ruleTypeOptions = [
-  { label: 'CPU', value: 'CPU' },
-  { label: '内存', value: 'MEMORY' },
-  { label: '磁盘', value: 'DISK' },
-  { label: '存储', value: 'STORAGE' },
-  { label: '登录失败', value: 'LOGIN_FAIL' },
-  { label: '查重失败', value: 'CHECK_FAIL' }
-]
-const severityOptions = [
-  { label: '低', value: 'low' },
-  { label: '中', value: 'medium' },
-  { label: '高', value: 'high' },
-  { label: '严重', value: 'critical' }
-]
-
-async function showAlertConfig() {
-  alertConfigVisible.value = true
-  await loadAlertRules()
-}
-
-async function loadAlertRules() {
-  alertConfigLoading.value = true
+async function loadOperationLogs() {
+  operationLoading.value = true
   try {
-    const res = await getAlertConfig()
-    if (res.code === 200) {
-      alertRules.value = res.data?.rules || []
+    const params = {
+      page: operationPagination.pageNum,
+      size: operationPagination.pageSize,
+      startDate: operationFilters.dateRange?.[0] || undefined,
+      endDate: operationFilters.dateRange?.[1] || undefined,
+      userType: operationFilters.userType || undefined,
+      operationType: operationFilters.operationType || undefined,
+      keyword: operationFilters.keyword || undefined
     }
-  } catch { ElMessage.error('获取告警配置失败') }
-  finally { alertConfigLoading.value = false }
-}
-
-function openAddRuleForm() {
-  ruleFormTitle.value = '添加告警规则'
-  editingRuleId.value = null
-  Object.assign(ruleForm, {
-    ruleName: '',
-    ruleType: 'CPU',
-    metricName: '',
-    threshold: 80,
-    duration: 60,
-    severity: 'medium',
-    enabled: true,
-    notifyEmail: '',
-    description: ''
-  })
-  ruleFormVisible.value = true
-}
-
-function openEditRuleForm(rule) {
-  ruleFormTitle.value = '编辑告警规则'
-  editingRuleId.value = rule.id
-  Object.assign(ruleForm, {
-    ruleName: rule.ruleName || '',
-    ruleType: rule.ruleType || 'CPU',
-    metricName: rule.metricName || '',
-    threshold: rule.threshold ?? 80,
-    duration: rule.duration ?? 60,
-    severity: rule.severity || 'medium',
-    enabled: rule.enabled ?? true,
-    notifyEmail: rule.notifyEmail || '',
-    description: rule.description || ''
-  })
-  ruleFormVisible.value = true
-}
-
-async function submitRuleForm() {
-  try {
-    const payload = {
-      rules: [{
-        ...(editingRuleId.value ? { id: editingRuleId.value } : {}),
-        ruleName: ruleForm.ruleName,
-        ruleType: ruleForm.ruleType,
-        metricName: ruleForm.metricName,
-        threshold: ruleForm.threshold,
-        duration: ruleForm.duration,
-        severity: ruleForm.severity,
-        enabled: ruleForm.enabled,
-        notifyEmail: ruleForm.notifyEmail,
-        description: ruleForm.description
-      }]
-    }
-    const response = await updateAlertConfig(payload)
+    const response = await getOperationLogs(params)
     if (response.code === 200) {
-      ElMessage.success(editingRuleId.value ? '规则更新成功' : '规则创建成功')
-      ruleFormVisible.value = false
-      await loadAlertRules()
-    } else {
-      ElMessage.error(response.message || '保存失败')
+      const data = response.data
+      operationLogs.value = data.records || []
+      operationPagination.total = Number(data.total) || 0
     }
-  } catch { ElMessage.error('保存告警规则失败') }
-}
-
-async function handleDeleteRule(rule) {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除规则「${rule.ruleName}」吗？删除后不可恢复。`,
-      '删除确认',
-      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' }
-    )
-    const response = await deleteAlertRule(rule.id)
-    if (response.code === 200) {
-      ElMessage.success('规则已删除')
-      await loadAlertRules()
-    } else {
-      ElMessage.error(response.message || '删除失败')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除告警规则失败')
-    }
+  } catch {
+    ElMessage.error('加载操作日志失败')
+  } finally {
+    operationLoading.value = false
   }
 }
 
-async function handleToggleRule(rule) {
+async function loadLoginLogs() {
+  loginLoading.value = true
   try {
-    const newEnabled = !rule.enabled
-    const response = await toggleAlertRule(rule.id, newEnabled)
-    if (response.code === 200) {
-      rule.enabled = newEnabled
-      ElMessage.success(newEnabled ? '已启用' : '已禁用')
-    } else {
-      ElMessage.error(response.message || '操作失败')
+    const params = {
+      page: loginPagination.pageNum,
+      size: loginPagination.pageSize,
+      startDate: loginFilters.dateRange?.[0] || undefined,
+      endDate: loginFilters.dateRange?.[1] || undefined,
+      ip: loginFilters.ip || undefined
     }
-  } catch { ElMessage.error('切换规则状态失败') }
+    const response = await getLoginLogs(params)
+    if (response.code === 200) {
+      const data = response.data
+      loginLogs.value = data.records || []
+      loginPagination.total = Number(data.total) || 0
+    }
+  } catch {
+    ElMessage.error('加载登录日志失败')
+  } finally {
+    loginLoading.value = false
+  }
 }
 
-function getSeverityTag(severity) {
-  const map = { low: 'info', medium: 'warning', high: 'danger', critical: '' }
-  return map[severity] || 'info'
-}
-
-function getSeverityName(severity) {
-  const map = { low: '低', medium: '中', high: '高', critical: '严重' }
-  return map[severity] || severity
-}
-
-function getRuleTypeName(type) {
-  const map = { CPU: 'CPU', MEMORY: '内存', DISK: '磁盘', STORAGE: '存储', LOGIN_FAIL: '登录失败', CHECK_FAIL: '查重失败' }
-  return map[type] || type
+// ==================== 操作方法 ====================
+function viewLogDetail(log) {
+  currentLog.value = log
+  detailDialogVisible.value = true
 }
 
 async function exportLogs() {
@@ -976,188 +572,9 @@ async function exportLogs() {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
     ElMessage.success('日志导出成功')
-  } catch (error) {
+  } catch {
     ElMessage.error('日志导出失败')
   }
-}
-
-async function updateRealtimeStats() {
-  try {
-    const response = await getRealtimeStats()
-    if (response.code === 200) {
-      realtimeStats.value = {
-        onlineUsers: response.data.onlineUsers || 0,
-        warningCount: response.data.warningCount || 0,
-        errorCount: response.data.errorCount || 0,
-        systemLoad: response.data.systemLoad || '正常'
-      }
-    }
-  } catch (error) {
-    console.error('获取实时统计失败:', error)
-  }
-}
-
-async function loadOperationLogs() {
-  operationLoading.value = true
-  try {
-    const params = {
-      page: operationPagination.pageNum,
-      size: operationPagination.pageSize,
-      startDate: operationFilters.dateRange?.[0] || undefined,
-      endDate: operationFilters.dateRange?.[1] || undefined,
-      userType: operationFilters.userType || undefined,
-      operationType: operationFilters.operationType || undefined,
-      keyword: operationFilters.keyword || undefined
-    }
-    const response = await getOperationLogs(params)
-    if (response.code === 200) {
-      const data = response.data
-      operationLogs.value = data.records || []
-      operationPagination.total = Number(data.total) || 0
-    }
-  } catch (error) {
-    ElMessage.error('加载操作日志失败')
-  } finally {
-    operationLoading.value = false
-  }
-}
-
-async function loadLoginLogs() {
-  loginLoading.value = true
-  try {
-    const params = {
-      page: loginPagination.pageNum,
-      size: loginPagination.pageSize,
-      startDate: loginFilters.dateRange?.[0] || undefined,
-      endDate: loginFilters.dateRange?.[1] || undefined,
-      ip: loginFilters.ip || undefined
-    }
-    const response = await getLoginLogs(params)
-    if (response.code === 200) {
-      const data = response.data
-      loginLogs.value = data.records || []
-      loginPagination.total = Number(data.total) || 0
-    }
-  } catch (error) {
-    ElMessage.error('加载登录日志失败')
-  } finally {
-    loginLoading.value = false
-  }
-}
-
-async function loadSecurityLogs() {
-  securityLoading.value = true
-  try {
-    const params = {
-      page: securityPagination.pageNum,
-      size: securityPagination.pageSize,
-      startDate: securityFilters.dateRange?.[0] || undefined,
-      endDate: securityFilters.dateRange?.[1] || undefined,
-      eventType: securityFilters.eventType || undefined
-    }
-    const response = await getSecurityLogs(params)
-    if (response.code === 200) {
-      const data = response.data
-      securityLogs.value = data.records || []
-      securityPagination.total = Number(data.total) || 0
-    }
-  } catch (error) {
-    ElMessage.error('加载安全日志失败')
-  } finally {
-    securityLoading.value = false
-  }
-}
-
-// ==================== 图表 ====================
-function initChart() {
-  const chartDom = document.getElementById('response-time-chart')
-  if (chartDom && chartDom.clientWidth > 0) {
-    chartInstance.value = echarts.init(chartDom)
-    updateChart()
-  } else {
-    setTimeout(() => initChart(), 300)
-  }
-}
-
-function updateChart() {
-  if (!chartInstance.value || responseTimeData.value.timestamps.length === 0) return
-  const option = {
-    tooltip: { trigger: 'axis', formatter: '{b}: {c}ms' },
-    xAxis: { type: 'category', data: responseTimeData.value.timestamps.map(t => `${t}`) },
-    yAxis: { type: 'value', name: '响应时间(ms)', axisLabel: { formatter: '{value}ms' } },
-    series: [{
-      data: responseTimeData.value.responseTimes,
-      type: 'line', smooth: true,
-      areaStyle: { opacity: 0.15, color: '#0066cc' },
-      lineStyle: { width: 2, color: '#0066cc' },
-      itemStyle: { color: '#0066cc' }
-    }],
-    grid: { left: '10%', right: '10%', bottom: '10%', top: '10%' }
-  }
-  chartInstance.value.setOption(option)
-}
-
-async function loadApiResponseTimes() {
-  try {
-    const response = await getApiResponseTimes({ period: '1h' })
-    if (response.code === 200 && response.data) {
-      responseTimeData.value = {
-        timestamps: response.data.timestamps || [],
-        responseTimes: response.data.avgResponseTime || []
-      }
-      updateChart()
-    }
-  } catch (error) {
-    console.error('加载API响应时间失败:', error)
-  }
-}
-
-async function loadResourceUsage() {
-  try {
-    const response = await getResourceUsage()
-    if (response.code === 200 && response.data) {
-      resourceUsage.value = {
-        cpu: Math.round(response.data.cpuUsage || 0),
-        memory: Math.round(response.data.memoryUsage || 0),
-        disk: Math.round(response.data.diskUsage || 0),
-        dbConnections: Math.round(response.data.dbPoolUsage || response.data.connections || 0)
-      }
-    }
-  } catch (error) {
-    console.error('加载资源使用率失败:', error)
-  }
-}
-
-async function loadActiveAlerts() {
-  try {
-    const response = await getActiveAlerts()
-    if (response.code === 200) activeAlerts.value = response.data || []
-  } catch (error) {
-    console.error('加载活跃告警失败:', error)
-  }
-}
-
-// ==================== 操作方法 ====================
-function viewLogDetail(log) {
-  currentLog.value = log
-  detailDialogVisible.value = true
-}
-
-async function handleProcessAlert(alert) {
-  try {
-    const response = await handleAlert({ alertId: alert.id, action: 'resolve', remark: `处理预警：${alert.title}` })
-    if (response.code === 200) {
-      dismissAlert(alert.id)
-      ElMessage.success('预警处理完成')
-    }
-  } catch (error) {
-    ElMessage.error('处理预警失败')
-  }
-}
-
-function dismissAlert(alertId) {
-  const index = activeAlerts.value.findIndex(a => a.id === alertId)
-  if (index > -1) activeAlerts.value.splice(index, 1)
 }
 
 // ==================== 格式化工具函数 ====================
@@ -1184,55 +601,16 @@ function getOperationTag(type) {
   return operationTagMap[type] || 'info'
 }
 
-function getSecurityEventName(eventType) {
-  const map = {
-    'login_success': '登录成功', 'login_failed': '登录失败', 'logout': '用户登出',
-    'permission_denied': '权限拒绝', 'abnormal_access': '异常访问', 'data_modified': '数据修改',
-    'password_changed': '密码修改', 'account_locked': '账户锁定', 'account_unlocked': '账户解锁',
-    'session_expired': '会话过期'
-  }
-  return map[eventType] || eventType || ''
-}
-
-function getSecurityEventTag(eventType) {
-  const map = {
-    'login_success': 'success', 'login_failed': 'danger', 'logout': 'info',
-    'permission_denied': 'warning', 'abnormal_access': 'warning', 'data_modified': 'info',
-    'password_changed': 'success', 'account_locked': 'danger', 'account_unlocked': 'success',
-    'session_expired': 'warning'
-  }
-  return map[eventType] || 'info'
-}
-
-function getRiskLevelName(level) {
-  const map = { 'high': '高风险', 'medium': '中风险', 'low': '低风险' }
-  return map[level] || level || ''
-}
-
-function getRiskLevelTag(level) {
-  const map = { 'high': 'danger', 'medium': 'warning', 'low': 'success' }
-  return map[level] || 'info'
+function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i]
 }
 
 // ==================== 生命周期 ====================
-onMounted(async () => {
-  await refreshLogs(false)
-  setTimeout(() => initChart(), 500)
-  setInterval(async () => {
-    try {
-      await updateRealtimeStats()
-      await loadActiveAlerts()
-      await loadApiResponseTimes()
-      await loadResourceUsage()
-    } catch (error) {
-      console.warn('定时刷新数据失败:', error)
-    }
-  }, 120000)
-})
-
-onUnmounted(() => {
-  if (chartInstance.value) chartInstance.value.dispose()
-  if (updateTimer) clearTimeout(updateTimer)
+onMounted(() => {
+  refreshLogs(false)
 })
 </script>
 
@@ -1257,85 +635,6 @@ onUnmounted(() => {
   .header-actions { display: flex; gap: 0.75rem; }
 }
 
-.monitor-cards {
-  margin-bottom: 1.5rem;
-  .monitor-card {
-    border: 1px solid #d2d2d7;
-    border-radius: 18px;
-    .monitor-content {
-      display: flex;
-      align-items: center;
-      .monitor-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        margin-right: 1rem;
-        .el-icon { color: white; font-size: 1.5rem; }
-        &.bg-success { background: #34c759; }
-        &.bg-warning { background: #ff9500; }
-        &.bg-danger { background: #ff3b30; }
-        &.bg-info { background: #5ac8fa; }
-      }
-      .monitor-info {
-        .monitor-value { font-size: 1.75rem; font-weight: 700; color: #1d1d1f; line-height: 1; }
-        .monitor-label { font-size: 0.875rem; color: #86868b; margin-top: 0.25rem; }
-      }
-    }
-  }
-}
-
-.alert-card {
-  margin-bottom: 1.5rem;
-  border-radius: 18px;
-  border: 1px solid #d2d2d7;
-
-  :deep(.el-card__header) {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #d2d2d7;
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      .card-title {
-        display: flex;
-        align-items: center;
-        font-weight: 600;
-        color: #1d1d1f;
-        .el-icon { margin-right: 0.5rem; color: #0066cc; }
-      }
-    }
-  }
-
-  .alerts-container {
-    .alert-item {
-      display: flex;
-      align-items: flex-start;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      border-radius: 8px;
-      border-left: 4px solid;
-
-      &.alert-critical { background-color: rgba(139, 0, 0, 0.12); border-left-color: #8b0000; }
-      &.alert-high { background-color: rgba(255, 59, 48, 0.08); border-left-color: #ff3b30; }
-      &.alert-medium { background-color: rgba(255, 149, 0, 0.08); border-left-color: #ff9500; }
-      &.alert-low { background-color: rgba(52, 199, 89, 0.08); border-left-color: #34c759; }
-
-      .alert-icon { margin-right: 1rem; margin-top: 0.25rem; .el-icon { font-size: 1.25rem; } }
-      .alert-content {
-        flex: 1;
-        .alert-title { font-weight: 600; color: #1d1d1f; margin-bottom: 0.25rem; }
-        .alert-message { color: #86868b; margin-bottom: 0.25rem; line-height: 1.4; }
-        .alert-time { font-size: 0.875rem; color: #86868b; }
-      }
-      .alert-actions { display: flex; flex-direction: column; gap: 0.25rem; }
-    }
-    .no-alerts { padding: 2rem 0; text-align: center; }
-  }
-}
-
 .log-tabs {
   :deep(.el-tabs__content) { padding: 0; }
   .tab-header {
@@ -1355,32 +654,6 @@ onUnmounted(() => {
   padding-top: 0.5rem;
 }
 
-.resource-stats {
-  .resource-item {
-    margin-bottom: 1.25rem;
-    &:last-child { margin-bottom: 0; }
-    .resource-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.375rem;
-      > span:first-child { font-size: 0.875rem; color: #86868b; }
-      .resource-value { font-weight: 600; color: #1d1d1f; font-size: 1rem; }
-    }
-  }
-}
-
-.alert-config-header {
-  display: flex;
-  align-items: center;
-}
-.form-tip {
-  font-size: 0.75rem;
-  color: #909399;
-  margin-left: 0.5rem;
-}
-.chart-container { height: 300px; }
-
 .log-detail {
   :deep(.el-descriptions__label) { width: 100px; }
 }
@@ -1390,12 +663,6 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 1rem;
     .header-actions { width: 100%; .el-button { flex: 1; } }
-  }
-  .monitor-cards .el-col { margin-bottom: 0.75rem; }
-  .alert-card .alerts-container .alert-item {
-    flex-direction: column;
-    .alert-icon { margin-right: 0; margin-bottom: 0.5rem; }
-    .alert-actions { flex-direction: row; justify-content: flex-end; margin-top: 0.5rem; }
   }
   .log-tabs .tab-header .header-filters {
     flex-direction: column;

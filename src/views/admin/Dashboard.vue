@@ -316,7 +316,7 @@ const systemMonitorData = ref({
   systemVersion: '',
   uptime: '',
   database: '',
-  lastBackup: ''
+  lastBackup: '暂无'
 })
 const bizMetrics = ref({
   loginSuccess: 0,
@@ -390,7 +390,9 @@ const loadDashboardData = async () => {
       systemVersion: monitorData.javaVersion ? `Java ${monitorData.javaVersion}` : '未知',
       uptime: monitorData.uptime || '未知',
       database: monitorData.databaseType || '未知',
-      lastBackup: '--'
+      lastBackup: statsResponse.data.lastBackup
+        ? new Date(statsResponse.data.lastBackup).toLocaleString('zh-CN')
+        : '暂无'
     }
   } catch (error) {
     console.error('加载统计数据失败:', error)
