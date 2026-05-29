@@ -1203,7 +1203,7 @@ onMounted(() => {
 
 .text-segment.highlight {
   background: #fef0f0;
-  border-left: 3px solid #f56c6c;
+  border-color: #fecaca;
 }
 
 /* 建议列表 */
@@ -1215,18 +1215,18 @@ onMounted(() => {
 
 .suggestion-item {
   padding: 16px;
-  border-radius: 11px;
-  border-left: 4px solid;
+  border-radius: var(--apple-rounded-lg);
+  border: 1px solid var(--apple-hairline);
 }
 
 .suggestion-item.priority-high {
   background: #fef0f0;
-  border-color: #f56c6c;
+  border-color: #fecaca;
 }
 
 .suggestion-item.priority-medium {
   background: #fdf6ec;
-  border-color: #e6a23c;
+  border-color: #fde4b2;
 }
 
 .suggestion-item.priority-low {
@@ -1286,11 +1286,11 @@ onMounted(() => {
 
 /* 快速操作 */
 .quick-actions .el-button {
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease;
 }
 
 .quick-actions .el-button:active {
-  transform: scale(0.97);
+  transform: scale(0.985);
 }
 
 /* 加载状态 */

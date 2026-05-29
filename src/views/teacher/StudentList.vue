@@ -1321,24 +1321,23 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .student-management {
   min-height: 100vh;
-  background: #f5f5f7; // Slate-50
-  color: #1d1d1f; // Slate-900
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  padding: 24px;
+  background: var(--apple-canvas-parchment);
+  color: var(--apple-ink);
+  font-family: var(--apple-font-text);
+  padding: var(--apple-spacing-xl);
 }
 
 // 页面头部
 .page-header {
-  margin-bottom: 32px;
-  background: #ffffff;
-  border: 1px solid #d2d2d7;
-  border-radius: 18px;
-  padding: 24px;
-  transition: all 0.2s ease;
+  margin-bottom: var(--apple-spacing-xxl);
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-rounded-xl);
+  padding: var(--apple-spacing-xl);
+  transition: border-color 0.2s ease;
 
   &:hover {
-    /* box-shadow removed for Apple HIG */;
-    border-color: #d2d2d7;
+    border-color: var(--apple-hairline);
   }
 
   .header-content {
@@ -1353,12 +1352,12 @@ onMounted(async () => {
         margin: 0 0 8px 0;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #1d1d1f; // Slate-900
+        color: var(--apple-ink);
       }
 
       .page-subtitle {
         margin: 0;
-        color: #64748b; // Slate-500
+        color: var(--apple-ink-muted-48);
         font-size: 0.875rem;
       }
     }
@@ -1368,13 +1367,13 @@ onMounted(async () => {
       gap: 12px;
       
       .el-button {
-        border-radius: 11px;
-        transition: all 0.2s ease;
-        border: 1px solid #d2d2d7;
-        
+        border-radius: var(--apple-rounded-lg);
+        transition: border-color 0.2s ease;
+        border: 1px solid var(--apple-hairline);
+
         &:hover {
           /* translateY + box-shadow removed for Apple HIG */
-          border-color: #d2d2d7;
+          border-color: var(--apple-hairline);
         }
       }
     }
@@ -1389,16 +1388,16 @@ onMounted(async () => {
   gap: 16px;
 
   .stat-card {
-    background: #ffffff;
-    border: 1px solid #d2d2d7;
-    border-radius: 18px;
+    background: var(--apple-surface);
+    border: 1px solid var(--apple-hairline);
+    border-radius: var(--apple-rounded-xl);
     padding: 20px;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
     
     &:hover {
       /* translateY removed for Apple HIG */;
       /* box-shadow removed for Apple HIG */;
-      border-color: #d2d2d7;
+      border-color: var(--apple-hairline);
     }
 
     .stat-content {
@@ -1411,12 +1410,12 @@ onMounted(async () => {
         justify-content: center;
         width: 56px;
         height: 56px;
-        border-radius: 11px;
+        border-radius: var(--apple-rounded-lg);
         margin-right: 16px;
-        background: #f1f5f9;
+        background: var(--apple-canvas-parchment);
 
         .el-icon {
-          color: #475569; // Slate-600
+          color: var(--apple-ink-muted-48); // Slate-600
           font-size: 1.5rem;
         }
       }
@@ -1425,14 +1424,14 @@ onMounted(async () => {
         .stat-number {
           font-size: 1.75rem;
           font-weight: 700;
-          color: #1d1d1f; // Slate-900
+          color: var(--apple-ink); // Slate-900
           line-height: 1;
           margin-bottom: 4px;
         }
 
         .stat-label {
           font-size: 0.875rem;
-          color: #64748b; // Slate-500
+          color: var(--apple-ink-muted-48); // Slate-500
           margin: 0;
         }
       }
@@ -1443,15 +1442,15 @@ onMounted(async () => {
 // 筛选区域
 .filter-card {
   margin-bottom: 24px;
-  background: #ffffff;
-  border: 1px solid #d2d2d7;
-  border-radius: 18px;
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-rounded-xl);
   padding: 20px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
   
   &:hover {
     /* box-shadow removed for Apple HIG */;
-    border-color: #d2d2d7;
+    border-color: var(--apple-hairline);
   }
 
   .filter-content {
@@ -1471,12 +1470,12 @@ onMounted(async () => {
         width: 300px;
         
         :deep(.el-input__wrapper) {
-          border-radius: 11px;
-          border: 1px solid #d2d2d7;
-          transition: all 0.2s ease;
+          border-radius: var(--apple-rounded-lg);
+          border: 1px solid var(--apple-hairline);
+          transition: border-color 0.2s ease;
           
           &:hover {
-            border-color: #d2d2d7;
+            border-color: var(--apple-hairline);
             /* box-shadow removed for Apple HIG */
           }
         }
@@ -1486,12 +1485,12 @@ onMounted(async () => {
         width: 150px;
         
         :deep(.el-select__wrapper) {
-          border-radius: 11px;
-          border: 1px solid #d2d2d7;
-          transition: all 0.2s ease;
+          border-radius: var(--apple-rounded-lg);
+          border: 1px solid var(--apple-hairline);
+          transition: border-color 0.2s ease;
           
           &:hover {
-            border-color: #d2d2d7;
+            border-color: var(--apple-hairline);
             /* box-shadow removed for Apple HIG */
           }
         }
@@ -1503,13 +1502,13 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 11px;
-        transition: all 0.2s ease;
-        border: 1px solid #d2d2d7;
-        
+        border-radius: var(--apple-rounded-lg);
+        transition: border-color 0.2s ease;
+        border: 1px solid var(--apple-hairline);
+
         &:hover {
           /* translateY + box-shadow removed for Apple HIG */
-          border-color: #d2d2d7;
+          border-color: var(--apple-hairline);
         }
       }
     }
@@ -1518,15 +1517,15 @@ onMounted(async () => {
 
 // 列表卡片
 .list-card {
-  background: #ffffff;
-  border: 1px solid #d2d2d7;
-  border-radius: 18px;
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-rounded-xl);
   margin-bottom: 24px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
   
   &:hover {
     /* box-shadow removed for Apple HIG */;
-    border-color: #d2d2d7;
+    border-color: var(--apple-hairline);
   }
 
   .list-header {
@@ -1534,8 +1533,8 @@ onMounted(async () => {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: #f5f5f7;
-    border-bottom: 1px solid #d2d2d7;
+    background: var(--apple-canvas-parchment);
+    border-bottom: 1px solid var(--apple-hairline);
 
     .header-title {
       display: flex;
@@ -1543,15 +1542,15 @@ onMounted(async () => {
       gap: 8px;
       font-weight: 600;
       font-size: 1.125rem;
-      color: #1d1d1f; // Slate-900
+      color: var(--apple-ink); // Slate-900
 
       .el-icon {
-        color: #475569; // Slate-600
+        color: var(--apple-ink-muted-48); // Slate-600
       }
 
       .total-count {
         font-size: 0.875rem;
-        color: #64748b; // Slate-500
+        color: var(--apple-ink-muted-48); // Slate-500
         margin-left: 8px;
       }
     }
@@ -1561,13 +1560,13 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 11px;
-        transition: all 0.2s ease;
-        border: 1px solid #d2d2d7;
-        
+        border-radius: var(--apple-rounded-lg);
+        transition: border-color 0.2s ease;
+        border: 1px solid var(--apple-hairline);
+
         &:hover {
           /* translateY + box-shadow removed for Apple HIG */
-          border-color: #d2d2d7;
+          border-color: var(--apple-hairline);
         }
       }
     }
@@ -1577,33 +1576,33 @@ onMounted(async () => {
     width: 100%;
 
     :deep(.el-table__header-wrapper) {
-      background-color: #f5f5f7;
+      background-color: var(--apple-canvas-parchment);
       
       th {
-        color: #1d1d1f; // Slate-900
+        color: var(--apple-ink); // Slate-900
         font-weight: 600;
-        border-bottom: 2px solid #d2d2d7;
+        border-bottom: 2px solid var(--apple-hairline);
         padding: 12px 16px;
       }
     }
     
     :deep(.el-table__row:hover) {
-      background-color: #f5f5f7;
+      background-color: var(--apple-canvas-parchment);
       transition: background-color 0.2s ease;
     }
     
     :deep(.el-table__row) {
-      transition: all 0.2s ease;
+      transition: border-color 0.2s ease;
       padding: 16px 0;
     }
     
     :deep(.el-table__row.el-table__row--striped) {
-      background-color: #f1f5f9;
+      background-color: var(--apple-canvas-parchment);
     }
     
     :deep(.el-table__cell) {
       padding: 16px;
-      color: #1d1d1f; // Slate-900
+      color: var(--apple-ink); // Slate-900
     }
 
     .student-info {
@@ -1611,63 +1610,63 @@ onMounted(async () => {
       align-items: center;
       gap: 12px;
       padding: 8px;
-      background: #f5f5f7;
-      border-radius: 11px;
-      transition: all 0.2s ease;
+      background: var(--apple-canvas-parchment);
+      border-radius: var(--apple-rounded-lg);
+      transition: border-color 0.2s ease;
       
       &:hover {
-        background: #f1f5f9;
+        background: var(--apple-canvas-parchment);
       }
 
       .student-name {
         .name {
           font-weight: 600;
-          color: #1d1d1f; // Slate-900
+          color: var(--apple-ink); // Slate-900
         }
       }
     }
 
     .student-id {
       font-family: 'Monaco', 'Consolas', monospace;
-      color: #0066cc; // Blue-500
+      color: var(--apple-primary); // Blue-500
       font-weight: 600;
       padding: 4px 8px;
-      background: #f5f5f7;
+      background: var(--apple-canvas-parchment);
       border-radius: 8px;
     }
 
     .major,
     .grade {
-      color: #64748b; // Slate-500
+      color: var(--apple-ink-muted-48); // Slate-500
       padding: 4px 8px;
-      background: #f5f5f7;
+      background: var(--apple-canvas-parchment);
       border-radius: 8px;
     }
 
     .advisor-info {
       .advisor-name {
-        color: #1d1d1f; // Slate-900
+        color: var(--apple-ink); // Slate-900
         font-weight: 600;
         padding: 4px 8px;
-        background: #f5f5f7;
+        background: var(--apple-canvas-parchment);
         border-radius: 8px;
       }
     }
 
     .no-advisor,
     .no-submit {
-      color: #94a3b8; // Slate-400
+      color: var(--apple-ink-muted-48); // Slate-400
       font-style: italic;
       padding: 4px 8px;
-      background: #f5f5f7;
+      background: var(--apple-canvas-parchment);
       border-radius: 8px;
     }
 
     .submit-time {
-      color: #64748b; // Slate-500
+      color: var(--apple-ink-muted-48); // Slate-500
       font-size: 0.875rem;
       padding: 4px 8px;
-      background: #f5f5f7;
+      background: var(--apple-canvas-parchment);
       border-radius: 8px;
     }
 
@@ -1681,14 +1680,14 @@ onMounted(async () => {
       }
       
       :deep(.el-progress__bar__outer) {
-        background: #d2d2d7;
+        background: var(--apple-hairline);
         border-radius: 8px;
       }
     }
 
     .similarity-value {
       font-size: 0.875rem;
-      color: #64748b; // Slate-500
+      color: var(--apple-ink-muted-48); // Slate-500
       font-weight: 400;
     }
 
@@ -1697,13 +1696,13 @@ onMounted(async () => {
       gap: 8px;
       
       .el-button {
-        border-radius: 11px;
-        transition: all 0.2s ease;
-        border: 1px solid #d2d2d7;
-        
+        border-radius: var(--apple-rounded-lg);
+        transition: border-color 0.2s ease;
+        border: 1px solid var(--apple-hairline);
+
         &:hover {
           /* translateY + box-shadow removed for Apple HIG */
-          border-color: #d2d2d7;
+          border-color: var(--apple-hairline);
         }
       }
     }
@@ -1717,17 +1716,17 @@ onMounted(async () => {
     
     :deep(.el-pagination) {
       .el-pagination__item {
-        border-radius: 11px;
-        border: 1px solid #d2d2d7;
+        border-radius: var(--apple-rounded-lg);
+        border: 1px solid var(--apple-hairline);
         
         &:hover {
-          color: #0066cc; // Blue-500
-          border-color: #0066cc;
+          color: var(--apple-primary); // Blue-500
+          border-color: var(--apple-primary);
         }
         
         &.is-active {
-          background-color: #0066cc;
-          border-color: #0066cc;
+          background-color: var(--apple-primary);
+          border-color: var(--apple-primary);
         }
       }
     }
@@ -1742,15 +1741,15 @@ onMounted(async () => {
   z-index: 100;
 
   .batch-card {
-    background: #ffffff;
-    border: 1px solid #d2d2d7;
-    border-radius: 18px;
+    background: var(--apple-surface);
+    border: 1px solid var(--apple-hairline);
+    border-radius: var(--apple-rounded-xl);
     padding: 16px 24px;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
     
     &:hover {
       /* box-shadow removed for Apple HIG */;
-      border-color: #d2d2d7;
+      border-color: var(--apple-hairline);
     }
   }
 
@@ -1766,10 +1765,10 @@ onMounted(async () => {
       align-items: center;
       gap: 8px;
       font-weight: 400;
-      color: #1d1d1f; // Slate-900
+      color: var(--apple-ink); // Slate-900
 
       .el-icon {
-        color: #475569; // Slate-600
+        color: var(--apple-ink-muted-48); // Slate-600
       }
     }
 
@@ -1779,13 +1778,13 @@ onMounted(async () => {
       flex-wrap: wrap;
       
       .el-button {
-        border-radius: 11px;
-        transition: all 0.2s ease;
-        border: 1px solid #d2d2d7;
-        
+        border-radius: var(--apple-rounded-lg);
+        transition: border-color 0.2s ease;
+        border: 1px solid var(--apple-hairline);
+
         &:hover {
           /* translateY + box-shadow removed for Apple HIG */
-          border-color: #d2d2d7;
+          border-color: var(--apple-hairline);
         }
       }
     }
@@ -1805,19 +1804,19 @@ onMounted(async () => {
     flex-wrap: wrap;
     gap: 20px;
     padding: 16px;
-    background: #f5f5f7;
-    border: 1px solid #d2d2d7;
-    border-radius: 11px;
+    background: var(--apple-canvas-parchment);
+    border: 1px solid var(--apple-hairline);
+    border-radius: var(--apple-rounded-lg);
     margin-bottom: 16px;
     
     .info-item {
       .label {
         font-weight: 400;
-        color: #64748b; // Slate-500
+        color: var(--apple-ink-muted-48); // Slate-500
         margin-right: 4px;
       }
       .value {
-        color: #1d1d1f; // Slate-900
+        color: var(--apple-ink); // Slate-900
       }
     }
   }
@@ -1829,8 +1828,8 @@ onMounted(async () => {
     .preview-iframe {
       width: 100%;
       height: 100%;
-      border: 1px solid #d2d2d7;
-      border-radius: 11px;
+      border: 1px solid var(--apple-hairline);
+      border-radius: var(--apple-rounded-lg);
     }
     
     .preview-error {
@@ -1840,7 +1839,7 @@ onMounted(async () => {
       height: 100%;
       
       .error-detail {
-        color: #94a3b8; // Slate-400
+        color: var(--apple-ink-muted-48); // Slate-400
         margin: 16px 0;
       }
     }
@@ -1851,16 +1850,16 @@ onMounted(async () => {
     justify-content: flex-end;
     gap: 12px;
     padding-top: 16px;
-    border-top: 1px solid #d2d2d7;
+    border-top: 1px solid var(--apple-hairline);
     
     .el-button {
-      border-radius: 11px;
-      transition: all 0.2s ease;
-      border: 1px solid #d2d2d7;
+      border-radius: var(--apple-rounded-lg);
+      transition: border-color 0.2s ease;
+      border: 1px solid var(--apple-hairline);
       
       &:hover {
         /* translateY + box-shadow removed for Apple HIG */
-        border-color: #d2d2d7;
+        border-color: var(--apple-hairline);
       }
     }
   }
@@ -1872,48 +1871,48 @@ onMounted(async () => {
     width: 100%;
 
     :deep(.el-table__header-wrapper) {
-      background-color: #f5f5f7;
+      background-color: var(--apple-canvas-parchment);
       
       th {
-        color: #1d1d1f; // Slate-900
+        color: var(--apple-ink); // Slate-900
         font-weight: 600;
-        border-bottom: 2px solid #d2d2d7;
+        border-bottom: 2px solid var(--apple-hairline);
         padding: 12px 16px;
       }
     }
     
     :deep(.el-table__row:hover) {
-      background-color: #f5f5f7;
+      background-color: var(--apple-canvas-parchment);
       transition: background-color 0.2s ease;
     }
     
     :deep(.el-table__row) {
-      transition: all 0.2s ease;
+      transition: border-color 0.2s ease;
       padding: 16px 0;
     }
     
     :deep(.el-table__row.el-table__row--striped) {
-      background-color: #f1f5f9;
+      background-color: var(--apple-canvas-parchment);
     }
     
     :deep(.el-table__cell) {
       padding: 12px;
-      color: #1d1d1f; // Slate-900
+      color: var(--apple-ink); // Slate-900
     }
 
     .paper-title {
-      color: #1d1d1f;
+      color: var(--apple-ink);
       font-weight: 400;
       padding: 4px 8px;
-      background: #f5f5f7;
+      background: var(--apple-canvas-parchment);
       border-radius: 8px;
     }
 
     .submit-time {
-      color: #86868b;
+      color: var(--apple-ink-muted-48);
       font-size: 0.875rem;
       padding: 4px 8px;
-      background: #f5f5f7;
+      background: var(--apple-canvas-parchment);
       border-radius: 8px;
     }
 
@@ -1927,14 +1926,14 @@ onMounted(async () => {
       }
       
       :deep(.el-progress__bar__outer) {
-        background: #d2d2d7;
+        background: var(--apple-hairline);
         border-radius: 8px;
       }
     }
 
     .similarity-value {
       font-size: 0.875rem;
-      color: #86868b;
+      color: var(--apple-ink-muted-48);
       font-weight: 400;
     }
 
@@ -1944,7 +1943,7 @@ onMounted(async () => {
       
       .el-button {
         border-radius: 8px;
-        transition: all 0.3s ease;
+        transition: border-color 0.2s ease;
         
         &:hover {
           /* translateY + box-shadow removed for Apple HIG */

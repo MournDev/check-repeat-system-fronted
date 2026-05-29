@@ -463,6 +463,13 @@ export const downloadSharedFile = (fileId) => {
   });
 };
 
+export const deleteSharedFile = (fileId) => {
+  return request({
+    url: `/api/v1/student/messages/shared-file/${fileId}`,
+    method: 'delete'
+  });
+};
+
 export const markMessagesAsRead = (params) => {
   let sessionId;
   if (typeof params === 'object' && params !== null) {

@@ -124,6 +124,9 @@
             <a :class="['sidebar-item', { active: activeMenu === '/student/advisor-interaction' }]" @click="navigateTo('/student/advisor-interaction')">
               <el-icon><ChatDotRound /></el-icon><span>导师互动</span>
             </a>
+            <a :class="['sidebar-item', { active: activeMenu === '/student/file-management' }]" @click="navigateTo('/student/file-management')">
+              <el-icon><Folder /></el-icon><span>文件管理</span>
+            </a>
             <div class="sidebar-sub-label">查重管理</div>
             <a :class="['sidebar-item', { active: activeMenu === '/student/student-check-with-websocket' }]" @click="navigateTo('/student/student-check-with-websocket')">
               <el-icon><Document /></el-icon><span>查重任务</span>
@@ -170,6 +173,9 @@
             </a>
             <a :class="['sidebar-item', { active: activeMenu === '/teacher/chat-center' }]" @click="navigateTo('/teacher/chat-center')">
               <el-icon><ChatDotRound /></el-icon><span>在线聊天</span>
+            </a>
+            <a :class="['sidebar-item', { active: activeMenu === '/teacher/file-management' }]" @click="navigateTo('/teacher/file-management')">
+              <el-icon><Folder /></el-icon><span>文件管理</span>
             </a>
             <a :class="['sidebar-item', { active: activeMenu === '/teacher/similarity-thresholds' }]" @click="navigateTo('/teacher/similarity-thresholds')">
               <el-icon><TrendCharts /></el-icon><span>相似度阈值</span>
@@ -263,7 +269,7 @@ import { useMessageStore } from '@/stores/message'
 
 import {
   Notebook, User, UserFilled, Setting, SwitchButton, ArrowDown,
-  UploadFilled, FolderOpened, ChatDotRound, DataAnalysis,
+  UploadFilled, Folder, FolderOpened, ChatDotRound, DataAnalysis,
   DataBoard, EditPen, TrendCharts, Clock, Histogram,
   Monitor, Avatar, Lock, Connection, Pointer, MagicStick,
   Tools, Document, Bell, Files, Service, Check, Menu, Close
@@ -365,7 +371,8 @@ const getBreadcrumbTitle = (path) => {
     'student-check-with-websocket': '查重任务', 'review-templates': '审核意见模板',
     'student-groups': '学生分组管理', 'chat-center': '在线聊天',
     'similarity-thresholds': '相似度阈值设置', 'review-workflow': '审核工作流配置',
-    'knowledge-management': '知识库管理'
+    'knowledge-management': '知识库管理',
+    'file-management': '文件管理'
   }
   return titleMap[path] || path
 }

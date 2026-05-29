@@ -31,7 +31,7 @@
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: #0066cc;">
+            <div class="stat-icon-wrapper" style="background: var(--apple-primary)">
               <el-icon color="white" size="24"><Document /></el-icon>
             </div>
             <div class="stat-info">
@@ -49,7 +49,7 @@
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: #0066cc;">
+            <div class="stat-icon-wrapper" style="background: var(--apple-primary)">
               <el-icon color="white" size="24"><Clock /></el-icon>
             </div>
             <div class="stat-info">
@@ -67,7 +67,7 @@
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: #0066cc;">
+            <div class="stat-icon-wrapper" style="background: var(--apple-primary)">
               <el-icon color="white" size="24"><CircleCheck /></el-icon>
             </div>
             <div class="stat-info">
@@ -85,7 +85,7 @@
       <el-col :xs="24" :sm="12" :lg="6">
         <el-card class="stat-card" shadow="never">
           <div class="stat-content">
-            <div class="stat-icon-wrapper" style="background: #0066cc;">
+            <div class="stat-icon-wrapper" style="background: var(--apple-primary)">
               <el-icon color="white" size="24"><User /></el-icon>
             </div>
             <div class="stat-info">
@@ -705,7 +705,7 @@ onUnmounted(() => {
       
       .page-subtitle {
         margin: 0;
-        color: #606266;
+        color: var(--apple-ink-muted-48);
       }
     }
   }
@@ -732,13 +732,13 @@ onUnmounted(() => {
           .stat-number {
             font-size: 28px;
             font-weight: 700;
-            color: #303133;
+            color: var(--apple-ink);
             line-height: 1;
           }
           
           .stat-label {
             font-size: 17px;
-            color: #909399;
+            color: var(--apple-ink-muted-48);
             margin: 8px 0 4px 0;
           }
           
@@ -746,15 +746,15 @@ onUnmounted(() => {
             font-size: 12px;
             
             &.trend-up {
-              color: #67c23a;
+              color: var(--apple-success);
             }
             
             &.trend-down {
-              color: #f56c6c;
+              color: var(--apple-danger);
             }
             
             &.trend-flat {
-              color: #909399;
+              color: var(--apple-ink-muted-48);
             }
             
             .trend-icon {

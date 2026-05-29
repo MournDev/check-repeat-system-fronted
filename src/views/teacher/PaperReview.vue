@@ -52,7 +52,7 @@ const handleTabChange = (tab) => {
         color: #64748b;
         padding: 12px 16px;
         margin-right: 24px;
-        transition: all 0.2s ease;
+        transition: border-color 0.2s ease;
 
         &:hover {
           color: #1d1d1f;

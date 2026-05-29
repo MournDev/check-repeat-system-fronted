@@ -529,7 +529,7 @@ onMounted(() => {
         border: 1px solid #ebeef5;
         border-radius: 8px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: border-color 0.2s ease;
         
         &:hover {
           border-color: #0066cc;

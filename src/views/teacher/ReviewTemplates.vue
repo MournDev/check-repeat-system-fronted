@@ -538,7 +538,7 @@ onMounted(async () => {
         border-radius: 11px;
         padding: 16px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: border-color 0.2s ease;
         
         &:hover {
           border-color: #0066cc;
@@ -645,8 +645,8 @@ onMounted(async () => {
       border-radius: 8px;
       margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.2s;
-      
+      transition: border-color 0.2s ease;
+
       &:hover {
         border-color: #0066cc;
         background-color: #f5f5f7;

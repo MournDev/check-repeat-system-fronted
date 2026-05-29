@@ -797,7 +797,7 @@ const loadPaperContent = async () => {
           margin-bottom: 12px;
           border: 1px solid #d2d2d7;
           border-radius: 11px;
-          transition: all 0.3s ease;
+          transition: border-color 0.2s ease;
           
           &:hover {
             border-color: #0066cc;
@@ -968,8 +968,8 @@ const loadPaperContent = async () => {
   .template-card {
     margin-bottom: 16px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    
+    transition: border-color 0.2s ease;
+
     &:hover {
       border-color: #0066cc;
       /* box-shadow removed for Apple HIG */

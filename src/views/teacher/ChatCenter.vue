@@ -505,7 +505,7 @@ watch(
 <style lang="scss" scoped>
 .chat-center {
   padding: 20px;
-  background: white;
+  background: var(--apple-surface);
   border-radius: 11px;
   min-height: 600px;
 
@@ -515,11 +515,11 @@ watch(
     align-items: center;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #d2d2d7;
+    border-bottom: 1px solid var(--apple-hairline);
 
     h1 {
       margin: 0;
-      color: #1d1d1f;
+      color: var(--apple-ink);
       font-size: 24px;
     }
 
@@ -532,19 +532,19 @@ watch(
   .chat-container {
     display: flex;
     height: 600px;
-    border: 1px solid #d2d2d7;
+    border: 1px solid var(--apple-hairline);
     border-radius: 11px;
     overflow: hidden;
 
     .session-list {
       width: 300px;
-      border-right: 1px solid #d2d2d7;
+      border-right: 1px solid var(--apple-hairline);
       display: flex;
       flex-direction: column;
 
       .session-search {
         padding: 16px;
-        border-bottom: 1px solid #d2d2d7;
+        border-bottom: 1px solid var(--apple-hairline);
       }
 
       .session-items {
@@ -556,15 +556,15 @@ watch(
           align-items: center;
           padding: 16px;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: background-color 0.2s ease;
 
           &:hover {
-            background-color: #f5f5f7;
+            background-color: var(--apple-canvas-parchment);
           }
 
           &.active {
             background-color: #ecf5ff;
-            border-left: 4px solid #0066cc;
+            border-color: var(--apple-primary);
           }
 
           .session-avatar {
@@ -580,7 +580,7 @@ watch(
               align-items: center;
               justify-content: space-between;
               font-weight: 600;
-              color: #1d1d1f;
+              color: var(--apple-ink);
               margin-bottom: 4px;
               font-size: 17px;
             }
@@ -590,7 +590,7 @@ watch(
               align-items: center;
               justify-content: space-between;
               font-size: 12px;
-              color: #909399;
+              color: var(--apple-ink-muted-48);
 
               .last-message {
                 flex: 1;
@@ -601,7 +601,7 @@ watch(
               }
 
               .last-time {
-                color: #c0c4cc;
+                color: var(--apple-ink-muted-48);
               }
             }
           }
@@ -624,7 +624,7 @@ watch(
         justify-content: space-between;
         align-items: center;
         padding: 16px;
-        border-bottom: 1px solid #d2d2d7;
+        border-bottom: 1px solid var(--apple-hairline);
 
         .chat-header-info {
           display: flex;
@@ -635,13 +635,13 @@ watch(
 
             .chat-header-name {
               font-weight: 600;
-              color: #1d1d1f;
+              color: var(--apple-ink);
               font-size: 17px;
             }
 
             .chat-header-members {
               font-size: 12px;
-              color: #909399;
+              color: var(--apple-ink-muted-48);
             }
           }
         }
@@ -656,7 +656,7 @@ watch(
         flex: 1;
         padding: 20px;
         overflow-y: auto;
-        background-color: #f5f5f7;
+        background-color: var(--apple-canvas-parchment);
 
         .message-item {
           display: flex;
@@ -669,7 +669,7 @@ watch(
               align-items: flex-end;
 
               .message-text {
-                background-color: #0066cc;
+                background-color: var(--apple-primary);
                 color: white;
                 border-radius: 18px 12px 0 12px;
               }
@@ -688,7 +688,7 @@ watch(
 
             .message-sender {
               font-size: 12px;
-              color: #909399;
+              color: var(--apple-ink-muted-48);
               margin-bottom: 4px;
             }
 
@@ -702,7 +702,7 @@ watch(
 
             .message-time {
               font-size: 11px;
-              color: #c0c4cc;
+              color: var(--apple-ink-muted-48);
               margin-top: 4px;
             }
           }
@@ -718,7 +718,7 @@ watch(
         display: flex;
         align-items: flex-end;
         padding: 16px;
-        border-top: 1px solid #d2d2d7;
+        border-top: 1px solid var(--apple-hairline);
         gap: 12px;
 
         .upload-demo {
@@ -740,7 +740,7 @@ watch(
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #f5f5f7;
+      background-color: var(--apple-canvas-parchment);
     }
   }
 }
@@ -768,7 +768,7 @@ watch(
         width: 100%;
         height: 200px;
         border-right: none;
-        border-bottom: 1px solid #d2d2d7;
+        border-bottom: 1px solid var(--apple-hairline);
 
         .session-items {
           display: flex;

@@ -104,6 +104,12 @@ const asyncRoutes = [
         meta: { title: "导师互动" },
       },
       {
+        path: "file-management",
+        name: "StudentFileManagement",
+        component: () => import("@/views/student/FileManagement.vue"),
+        meta: { title: "文件管理" },
+      },
+      {
         path: "settings",
         name: "StudentSettings",
         component: () => import("@/views/student/Settings.vue"),
@@ -239,6 +245,12 @@ const asyncRoutes = [
         name: "ChatCenter",
         component: () => import("@/views/teacher/ChatCenter.vue"),
         meta: { title: "在线聊天" },
+      },
+      {
+        path: "file-management",
+        name: "TeacherFileManagement",
+        component: () => import("@/views/teacher/FileManagement.vue"),
+        meta: { title: "文件管理" },
       },
     ],
   },

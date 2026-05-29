@@ -491,7 +491,7 @@ const loadReportList = async () => {
     if (response.code === 200) {
       const data = response.data
       reportList.value = data.records || []
-      total.value = data.total || 0
+      total.value = Number(data.total) || 0
       totalReports.value = total.value
       completedReports.value = reportList.value.filter(r => r.status === '已完成').length
       const sum = reportList.value.reduce((acc, r) => acc + (r.similarity || 0), 0)

@@ -671,6 +671,14 @@ export const getTeachers = (params) => {
   })
 }
 
+// 删除共享文件
+export const deleteSharedFile = (fileId) => {
+  return request({
+    url: `/api/v1/teacher/message/files/${fileId}`,
+    method: 'delete'
+  })
+}
+
 // 导出聊天记录
 export const exportChatRecords = (params) => {
   return request({
@@ -748,5 +756,24 @@ export const getHistoryReportList = (paperId) => {
     params: {
       paperId
     }
+  })
+}
+
+// 共享文件列表
+export const getSharedFiles = (sessionId) => {
+  return request({
+    url: '/api/v1/teacher/message/files',
+    method: 'get',
+    params: { sessionId },
+    _skipLoginRedirect: true
+  })
+}
+
+// 下载共享文件
+export const downloadSharedFile = (fileId) => {
+  return request({
+    url: `/api/v1/teacher/message/files/${fileId}`,
+    method: 'get',
+    responseType: 'blob'
   })
 }

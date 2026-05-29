@@ -7,85 +7,8 @@
     </div>
 
     <el-row :gutter="20" class="interaction-content">
-      <!-- 左侧：导师信息和消息列表 -->
+      <!-- 左侧：消息会话列表 -->
       <el-col :xs="24" :lg="8">
-        <!-- 导师信息卡片 -->
-        <el-card class="advisor-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><UserFilled /></el-icon>
-                指导老师
-              </span>
-            </div>
-          </template>
-
-          <div v-if="advisorInfo" class="advisor-detail">
-            <div class="advisor-header">
-              <div class="advisor-avatar">
-                <el-avatar :size="80" :src="getAvatarUrl(advisorInfo.avatar)" :alt="advisorInfo.name">
-                  {{ advisorInfo.name?.charAt(0) }}
-                </el-avatar>
-              </div>
-              <div class="advisor-basic-info">
-                <h3>{{ advisorInfo.name }}</h3>
-                <p class="advisor-title">{{ advisorInfo.title }}</p>
-                <p class="advisor-field">
-                  <el-icon><School /></el-icon>
-                  {{ advisorInfo.researchField }}
-                </p>
-              </div>
-            </div>
-            <div class="advisor-details-grid">
-              <div class="detail-item">
-                <el-icon class="detail-icon"><Message /></el-icon>
-                <div class="detail-content">
-                  <span class="detail-label">邮箱</span>
-                  <span class="detail-value">{{ advisorInfo.email }}</span>
-                </div>
-              </div>
-              <div class="detail-item">
-                <el-icon class="detail-icon"><Phone /></el-icon>
-                <div class="detail-content">
-                  <span class="detail-label">电话</span>
-                  <span class="detail-value">{{ advisorInfo.phone }}</span>
-                </div>
-              </div>
-              <div class="detail-item">
-                <el-icon class="detail-icon"><OfficeBuilding /></el-icon>
-                <div class="detail-content">
-                  <span class="detail-label">办公室</span>
-                  <span class="detail-value">{{ advisorInfo.office }}</span>
-                </div>
-              </div>
-              <div class="detail-item">
-                <el-icon class="detail-icon"><Clock /></el-icon>
-                <div class="detail-content">
-                  <span class="detail-label">办公时间</span>
-                  <span class="detail-value">{{ advisorInfo.officeHours }}</span>
-                </div>
-              </div>
-            </div>
-            <div v-if="advisorInfo.bio" class="advisor-bio">
-              <h4>导师简介</h4>
-              <p>{{ advisorInfo.bio }}</p>
-            </div>
-            <div class="advisor-actions">
-              <el-button type="primary" :icon="ChatDotRound" @click="startNewMessage" class="primary-button">
-                发送消息
-              </el-button>
-              <el-button text :icon="User" @click="viewAdvisorProfile" class="secondary-button">
-                查看详情
-              </el-button>
-            </div>
-          </div>
-          <div v-else class="no-advisor">
-            <el-empty description="暂未分配指导老师" :image-size="80">
-              <p class="no-advisor-tip">请等待管理员分配指导老师</p>
-            </el-empty>
-          </div>
-        </el-card>
-
         <!-- 消息会话列表 -->
         <el-card class="sessions-card" shadow="never">
           <template #header>
@@ -147,6 +70,9 @@
                 </el-tag>
               </span>
               <div class="chat-actions">
+                <el-button text :icon="User" @click="showAdvisorDialog = true">
+                  导师信息
+                </el-button>
                 <el-button text :icon="Refresh" @click="refreshMessages">
                   刷新
                 </el-button>
@@ -158,7 +84,7 @@
                     <el-dropdown-menu>
                       <el-dropdown-item :icon="Delete" @click="clearMessages">清空消息</el-dropdown-item>
                       <el-dropdown-item :icon="Download" @click="exportChatHistory">导出聊天记录</el-dropdown-item>
-                      <el-dropdown-item divided :icon="User" @click="viewAdvisorProfile">查看导师主页</el-dropdown-item>
+
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -300,58 +226,6 @@
           </div>
         </el-card>
 
-        <!-- 论文相关文件 -->
-        <el-card class="files-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">
-                <el-icon><Folder /></el-icon>
-                共享文件
-              </span>
-              <div class="card-actions">
-                <el-input
-                  v-model="fileSearch"
-                  placeholder="搜索文件"
-                  size="small"
-                  prefix-icon="Search"
-                  style="width: 200px"
-                />
-                <el-button type="primary" text size="small" @click="uploadFile">
-                  上传文件
-                </el-button>
-              </div>
-            </div>
-          </template>
-
-          <div v-if="sharedFiles.length === 0" class="no-files">
-            <el-empty description="暂无共享文件" :image-size="80" />
-          </div>
-          <div v-else class="files-grid">
-            <div v-for="file in filteredFiles" :key="file.id" class="file-card">
-              <div class="file-icon">
-                <el-icon :size="48">
-                  <component :is="getFileIcon(file.type)" />
-                </el-icon>
-              </div>
-              <div class="file-info">
-                <div class="file-name">{{ file.name }}</div>
-                <div class="file-meta">
-                  <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                  <span class="file-uploader">{{ file.uploader }}</span>
-                  <span class="file-time">{{ formatDate(file.uploadTime) }}</span>
-                </div>
-              </div>
-              <div class="file-actions">
-                <el-button type="primary" text size="small" @click="previewFile(file)">
-                  预览
-                </el-button>
-                <el-button type="success" text size="small" @click="downloadSharedFileById(file.id)">
-                  下载
-                </el-button>
-              </div>
-            </div>
-          </div>
-        </el-card>
       </el-col>
     </el-row>
 
@@ -395,12 +269,68 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 导师信息对话框 -->
+    <el-dialog v-model="showAdvisorDialog" title="导师信息" width="480px" center>
+      <div v-if="advisorInfo" class="advisor-dialog-content">
+        <div class="advisor-dialog-header">
+          <el-avatar :size="72" :src="getAvatarUrl(advisorInfo.avatar)" :alt="advisorInfo.name">
+            {{ advisorInfo.name?.charAt(0) }}
+          </el-avatar>
+          <div class="advisor-dialog-title">
+            <h3>{{ advisorInfo.name }}</h3>
+            <p>{{ advisorInfo.title }}</p>
+            <p class="advisor-dialog-field">
+              <el-icon><School /></el-icon>
+              {{ advisorInfo.researchField }}
+            </p>
+          </div>
+        </div>
+        <div class="advisor-dialog-grid">
+          <div class="detail-item">
+            <el-icon class="detail-icon"><Message /></el-icon>
+            <div class="detail-content">
+              <span class="detail-label">邮箱</span>
+              <span class="detail-value">{{ advisorInfo.email }}</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <el-icon class="detail-icon"><Phone /></el-icon>
+            <div class="detail-content">
+              <span class="detail-label">电话</span>
+              <span class="detail-value">{{ advisorInfo.phone }}</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <el-icon class="detail-icon"><OfficeBuilding /></el-icon>
+            <div class="detail-content">
+              <span class="detail-label">办公室</span>
+              <span class="detail-value">{{ advisorInfo.office }}</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <el-icon class="detail-icon"><Clock /></el-icon>
+            <div class="detail-content">
+              <span class="detail-label">办公时间</span>
+              <span class="detail-value">{{ advisorInfo.officeHours }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="advisorInfo.bio" class="advisor-dialog-bio">
+          <h4>导师简介</h4>
+          <p>{{ advisorInfo.bio }}</p>
+        </div>
+      </div>
+      <div v-else class="no-advisor-dialog">
+        <el-empty description="暂未分配指导老师" :image-size="80" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import Cookies from 'js-cookie'
 import { useUserStore } from '@/stores/user'
 
@@ -414,17 +344,15 @@ import {
   downloadMessageAttachment,
   clearMessages as clearMsgApi,
   exportChatHistory as exportHistoryApi,
-  getSharedFiles,
-  downloadSharedFile,
   markMessagesAsRead,
   recallMessage
 } from "@/api/student.js";
 
 // 图标引入
 import {
-  UserFilled, School, Message, Phone, OfficeBuilding, Clock,
+  School, Message, Phone, OfficeBuilding, Clock,
   ChatLineRound, ChatDotRound, Promotion, Paperclip, Picture,
-  Folder, Download, Document, Refresh, MoreFilled, Delete, User
+  Download, Document, Refresh, MoreFilled, Delete, User
 } from '@element-plus/icons-vue'
 import { getAvatarUrl } from '@/utils/avatar'
 import { useMessageWebSocket } from '@/composables/useMessageWebSocket'
@@ -438,10 +366,9 @@ const currentMessages = ref([])
 const newMessage = ref('')
 const attachments = ref([])
 const messageDialogVisible = ref(false)
-const sharedFiles = ref([])
+const showAdvisorDialog = ref(false)
 const loadingMessages = ref(false)
 const showEmojiPicker = ref(false)
-const fileSearch = ref('')
 const chatContainerRef = ref(null)
 const chatContainer = ref(null)
 const currentPage = ref(1)
@@ -480,16 +407,6 @@ const messageForm = reactive({
 // 计算属性
 const currentSession = computed(() => {
   return messageSessions.value.find(session => session.id === activeSessionId.value)
-})
-
-// 过滤文件列表
-const filteredFiles = computed(() => {
-  if (!fileSearch.value) {
-    return sharedFiles.value
-  }
-  return sharedFiles.value.filter(file => 
-    file.name.toLowerCase().includes(fileSearch.value.toLowerCase())
-  )
 })
 
 // 方法：从会话成员中提取对方（非当前用户）的头像
@@ -566,19 +483,6 @@ const loadAdvisorData = async () => {
     } else {
       console.warn('获取会话列表失败:', sessionsRes.message);
       messageSessions.value = [];
-    }
-    
-    // 获取共享文件（单独处理错误，不影响整体页面）
-    if (activeSessionId.value) {
-      try {
-        const filesRes = await getSharedFiles(activeSessionId.value);
-        if (filesRes.code === 200) {
-          sharedFiles.value = filesRes.data;
-        }
-      } catch (error) {
-        console.warn('获取共享文件失败:', error);
-        // 共享文件获取失败不影响页面整体功能
-      }
     }
   } catch (error) {
     console.error('加载导师数据失败:', error);
@@ -837,31 +741,6 @@ const refreshMessages = async () => {
   }
 }
 
-// 查看导师主页
-const viewAdvisorProfile = () => {
-  
-  if (advisorInfo.value) {
-    ElMessageBox.alert(
-      `<div style="text-align: left;">
-        <p><strong>姓名：</strong>${advisorInfo.value.name}</p>
-        <p><strong>职称：</strong>${advisorInfo.value.title}</p>
-        <p><strong>研究方向：</strong>${advisorInfo.value.researchField}</p>
-        <p><strong>邮箱：</strong>${advisorInfo.value.email}</p>
-        <p><strong>电话：</strong>${advisorInfo.value.phone}</p>
-        <p><strong>办公室：</strong>${advisorInfo.value.office}</p>
-        <p><strong>办公时间：</strong>${advisorInfo.value.officeHours}</p>
-      </div>`,
-      '导师信息',
-      {
-        dangerouslyUseHTMLString: true,
-        confirmButtonText: '确定'
-      }
-    )
-  } else {
-    ElMessage.warning('暂无导师信息');
-  }
-}
-
 // 下载附件
 const downloadAttachment = async (file) => {
   try {
@@ -949,18 +828,6 @@ const attachImage = async () => {
   }
 };
 
-const getFileIcon = (fileType) => {
-  const iconMap = {
-    'pdf': 'Document',
-    'doc': 'Document',
-    'docx': 'Document',
-    'xls': 'Document',
-    'xlsx': 'Document',
-    'zip': 'Folder'
-  }
-  return iconMap[fileType] || 'Document'
-}
-
 // 格式化消息时间- 更详细的时间显示
 const formatMessageTime = (date) => {
   if (!date) return ''
@@ -994,14 +861,6 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('zh-CN')
 }
 
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
 // 是否在两条消息之间显示居中时间分隔（例如相邻消息间隔 >= 5 分钟）
 const shouldShowTimeSeparator = (index, message) => {
   try {
@@ -1016,74 +875,6 @@ const shouldShowTimeSeparator = (index, message) => {
     return diffMinutes >= 5 // 5 分钟阈值，可根据需求调整
   } catch (e) {
     return false
-  }
-}
-
-// 上传文件
-const uploadFile = async () => {
-  try {
-    // 创建文件选择器
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.multiple = true
-    input.accept = '.doc,.docx,.pdf,.txt,.xls,.xlsx,.jpg,.jpeg,.png'
-    
-    input.onchange = async (e) => {
-      const files = Array.from(e.target.files)
-      for (let file of files) {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('sessionId', activeSessionId.value)
-        
-        try {
-          const res = await uploadMessageFile(formData)
-          if (res.code === 200) {
-            // 刷新共享文件列表
-            if (activeSessionId.value) {
-              const filesRes = await getSharedFiles(activeSessionId.value)
-              if (filesRes.code === 200) {
-                sharedFiles.value = filesRes.data
-              }
-            }
-            ElMessage.success(`${file.name} 上传成功`)
-          }
-        } catch (error) {
-          console.error('文件上传失败:', error)
-          ElMessage.error(`${file.name} 上传失败`)
-        }
-      }
-    }
-    
-    input.click()
-  } catch (error) {
-    console.error('附件上传失败:', error)
-    ElMessage.error('附件上传失败')
-  }
-}
-
-// 预览文件
-const previewFile = (file) => {
-  // 这里可以添加文件预览逻辑
-  ElMessage.info(`预览文件: ${file.name}`)
-  // 实际项目中可以根据文件类型打开不同的预览方式
-}
-
-// 下载共享文件
-const downloadSharedFileById = async (fileId) => {
-  try {
-    const res = await downloadSharedFile(fileId)
-    // 创建下载链接
-    const blob = new Blob([res.data])
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `file_${fileId}`
-    link.click()
-    window.URL.revokeObjectURL(url)
-    ElMessage.success('文件下载成功')
-  } catch (error) {
-    console.error('下载失败:', error)
-    ElMessage.error('下载失败')
   }
 }
 
@@ -1171,152 +962,105 @@ onMounted(() => {
   }
 }
 
-.advisor-detail {
-  padding: 1.5rem 1rem;
-  
-  .advisor-header {
+// 导师信息对话框
+.advisor-dialog-content {
+  .advisor-dialog-header {
     display: flex;
     align-items: center;
+    gap: 1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid #f0f0f0;
-    
-    .advisor-avatar {
-      margin-right: 1rem;
-      
-      .el-avatar {
-        border: 2px solid white;
-      }
-    }
-    
-    .advisor-basic-info {
-      flex: 1;
-      
+
+    .advisor-dialog-title {
       h3 {
         margin: 0 0 0.25rem 0;
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 600;
         color: #1d1d1f;
       }
-      
-      .advisor-title {
-        margin: 0 0 0.5rem 0;
+
+      p {
+        margin: 0 0 0.25rem 0;
         color: #0066cc;
         font-weight: 600;
         font-size: 0.9rem;
       }
-      
-      .advisor-field {
+
+      .advisor-dialog-field {
         margin: 0;
         color: #86868b;
         font-size: 0.85rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        
+
         .el-icon {
           color: #0066cc;
-          font-size: 17px;
+          font-size: 16px;
         }
       }
     }
   }
-  
-  .advisor-details-grid {
+
+  .advisor-dialog-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    
-    .detail-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      padding: 0.75rem;
-      background: #f5f5f7;
-      border-radius: 11px;
-      
-      .detail-icon {
-        color: #0066cc;
-        font-size: 16px;
-        margin-top: 2px;
-      }
-      
-      .detail-content {
-        flex: 1;
-        
-        .detail-label {
-          display: block;
-          font-size: 0.75rem;
-          color: #86868b;
-          margin-bottom: 2px;
-        }
-        
-        .detail-value {
-          display: block;
-          font-size: 0.85rem;
-          color: #1d1d1f;
-          word-break: break-all;
-        }
-      }
-    }
+    margin-bottom: 1.25rem;
   }
-  
-  .advisor-bio {
-    margin-bottom: 1.5rem;
+
+  .advisor-dialog-bio {
     padding: 1rem;
     background: #f5f5f7;
     border-radius: 11px;
-    
+
     h4 {
       margin: 0 0 0.5rem 0;
       font-size: 0.9rem;
       font-weight: 600;
       color: #1d1d1f;
     }
-    
+
     p {
       margin: 0;
       font-size: 0.85rem;
-      line-height: 1.4;
+      line-height: 1.5;
       color: #86868b;
-    }
-  }
-  
-  .advisor-actions {
-    display: flex;
-    gap: 0.75rem;
-    
-    .primary-button {
-      flex: 1;
-      background: #0066cc;
-      border-color: #0066cc;
-      
-      &:hover {
-        background: #0055aa;
-        border-color: #0055aa;
-      }
-    }
-    
-    .secondary-button {
-      flex: 1;
-      color: #0066cc;
-      
-      &:hover {
-        color: #0055aa;
-      }
     }
   }
 }
 
-.no-advisor {
-  text-align: center;
-  padding: 2rem 0;
-  
-  .no-advisor-tip {
-    margin-top: 0.5rem;
-    color: #86868b;
-    font-size: 0.875rem;
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f5f5f7;
+  border-radius: 11px;
+
+  .detail-icon {
+    color: #0066cc;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+
+  .detail-content {
+    flex: 1;
+
+    .detail-label {
+      display: block;
+      font-size: 0.75rem;
+      color: #86868b;
+      margin-bottom: 2px;
+    }
+
+    .detail-value {
+      display: block;
+      font-size: 0.85rem;
+      color: #1d1d1f;
+      word-break: break-all;
+    }
   }
 }
 
@@ -1757,33 +1501,4 @@ onMounted(() => {
   }
 }
 
-.files-card {
-  .card-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    
-    .el-input {
-      flex-shrink: 0;
-    }
-  }
-  
-  .no-files {
-    text-align: center;
-    padding: 2rem 0;
-  }
-  
-  .files-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-    
-    .file-card {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-    }
-  }
-}
 </style>
