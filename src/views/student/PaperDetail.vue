@@ -419,7 +419,7 @@
                         <template #header>
                             <div class="section-header">
                                 <el-icon>
-                                    <History />
+                                    <Timer />
                                 </el-icon>
                                 <span class="section-title">审核历史</span>
                             </div>
@@ -512,7 +512,7 @@ import { getSimilarityColor, getSimilarityTagType as baseGetSimilarityTagType } 
 import {
     ArrowLeft, Edit, Download, Share, Printer, Delete, More,
     Calendar, Document, List, TrendCharts, InfoFilled, Timer,
-    ChatLineRound, ChatDotRound, Paperclip, Plus, View, Refresh, Clock, History,
+    ChatLineRound, ChatDotRound, Paperclip, Plus, View, Refresh, Clock,
     DocumentChecked, DocumentAdd, Picture, VideoPlay, EditPen, FullScreen
 } from '@element-plus/icons-vue'
 import { getFileInfo } from "@/api/student.js"
