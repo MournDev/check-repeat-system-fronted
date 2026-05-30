@@ -204,63 +204,56 @@
                                             查看报告
                                         </el-button>
                                     </div>
-
-                                    <!-- 独立出来的弹窗（放在相似度卡片外面） -->
-                                    <el-dialog v-model="similarityPreviewVisible" title="相似度报告预览" width="90%" top="5vh"
-                                        destroy-on-close @closed="closeSimilarityPreview">
-                                        <div class="preview-wrapper" v-loading="similarityPreviewLoading">
-                                            <iframe v-if="similarityPreviewUrl && !similarityPreviewError"
-                                                :src="similarityPreviewUrl" class="preview-iframe"
-                                                @load="onSimilarityIframeLoad"
-                                                @error="onSimilarityIframeError"></iframe>
-
-                                            <div v-if="similarityPreviewError" class="preview-error">
-                                                <el-empty description="报告加载失败">
-                                                    <p class="error-detail">{{ similarityErrorMessage }}</p>
-                                                    <div style="margin-top: 16px;">
-                                                        <el-button type="primary" @click="retrySimilarityPreview">
-                                                            <el-icon>
-                                                                <Refresh />
-                                                            </el-icon>
-                                                            重新加载
-                                                        </el-button>
-                                                        <el-button @click="closeSimilarityPreview">关闭</el-button>
-                                                    </div>
-                                                </el-empty>
-                                            </div>
-                                        </div>
-
-                                        <template #footer>
-                                            <div class="preview-footer">
-                                                <div class="file-info">
-                                                    <span class="file-name">相似度检测报告</span>
-                                                    <span class="file-size" v-if="currentSimilarityFileSize">
-                                                        • {{ currentSimilarityFileSize }}
-                                                    </span>
-                                                </div>
-                                                <div class="footer-actions">
-                                                    <el-button @click="downloadSimilarityReport">
-                                                        <el-icon>
-                                                            <Download />
-                                                        </el-icon>
-                                                        下载报告
-                                                    </el-button>
-                                                    <el-button @click="openReportInNewWindow">
-                                                        <el-icon>
-                                                            <FullScreen />
-                                                        </el-icon>
-                                                        新窗口
-                                                    </el-button>
-                                                    <el-button @click="closeSimilarityReport">
-                                                        关闭</el-button>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </el-dialog>
                                 </div>
                             </div>
                         </div>
                     </el-card>
+
+                    <!-- 相似度报告预览弹窗 -->
+                    <el-dialog v-model="similarityPreviewVisible" title="相似度报告预览" width="90%" top="5vh"
+                        destroy-on-close @closed="closeSimilarityPreview">
+                        <div class="preview-wrapper" v-loading="similarityPreviewLoading">
+                            <iframe v-if="similarityPreviewUrl && !similarityPreviewError"
+                                :src="similarityPreviewUrl" class="preview-iframe"
+                                @load="onSimilarityIframeLoad"
+                                @error="onSimilarityIframeError"></iframe>
+
+                            <div v-if="similarityPreviewError" class="preview-error">
+                                <el-empty description="报告加载失败">
+                                    <p class="error-detail">{{ similarityErrorMessage }}</p>
+                                    <div style="margin-top: 16px;">
+                                        <el-button type="primary" @click="retrySimilarityPreview">
+                                            <el-icon><Refresh /></el-icon>
+                                            重新加载
+                                        </el-button>
+                                        <el-button @click="closeSimilarityPreview">关闭</el-button>
+                                    </div>
+                                </el-empty>
+                            </div>
+                        </div>
+
+                        <template #footer>
+                            <div class="preview-footer">
+                                <div class="file-info">
+                                    <span class="file-name">相似度检测报告</span>
+                                    <span class="file-size" v-if="currentSimilarityFileSize">
+                                        • {{ currentSimilarityFileSize }}
+                                    </span>
+                                </div>
+                                <div class="footer-actions">
+                                    <el-button @click="downloadSimilarityReport">
+                                        <el-icon><Download /></el-icon>
+                                        下载报告
+                                    </el-button>
+                                    <el-button @click="openReportInNewWindow">
+                                        <el-icon><FullScreen /></el-icon>
+                                        新窗口
+                                    </el-button>
+                                    <el-button @click="closeSimilarityReport">关闭</el-button>
+                                </div>
+                            </div>
+                        </template>
+                    </el-dialog>
 
                     <!-- 审核进度 -->
                     <el-card class="section-card" shadow="hover">
@@ -281,13 +274,14 @@
                                     :description="paperDetails.teacherName || '处理中'" />
                                 <el-step :title="getReviewStepTitle(paperDetails.paperStatus)"
                                     :description="getReviewStepDesc(paperDetails)" />
-                                <el-step title="审核完成" description="--" />
+                                <el-step title="审核完成"
+                                    :description="paperDetails.paperStatus === 'completed' ? formatDate(paperDetails.reviewTime) : '--'" />
                             </el-steps>
                         </div>
                     </el-card>
 
                     <!-- 导师反馈 -->
-                    <el-card v-if="paperDetails.feedback" class="section-card feedback-card" shadow="hover">
+                    <el-card class="section-card feedback-card" shadow="hover">
                         <template #header>
                             <div class="section-header">
                                 <div class="feedback-header-left">
@@ -303,8 +297,14 @@
                             </div>
                         </template>
 
-                        <div class="feedback-content">
+                        <div v-if="paperDetails.feedback" class="feedback-content">
                             {{ paperDetails.feedback }}
+                        </div>
+
+                        <div v-else class="no-feedback">
+                            <el-empty description="导师暂未给出反馈" :image-size="64">
+                                <p class="empty-tip">请耐心等待导师审核并给出反馈意见</p>
+                            </el-empty>
                         </div>
 
                         <div class="feedback-actions">
@@ -433,7 +433,7 @@
                                             {{ review.reviewerName?.charAt(0) }}
                                         </el-avatar>
                                         <span class="reviewer-name">{{ review.reviewerName }}</span>
-                                        <el-tag size="mini" :type="getReviewTypeTag(review.type)">
+                                        <el-tag size="small" :type="getReviewTypeTag(review.type)">
                                             {{ getReviewTypeText(review.type) }}
                                         </el-tag>
                                     </div>
@@ -500,7 +500,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineProps } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
@@ -512,12 +512,11 @@ import { getSimilarityColor, getSimilarityTagType as baseGetSimilarityTagType } 
 import {
     ArrowLeft, Edit, Download, Share, Printer, Delete, More,
     Calendar, Document, List, TrendCharts, InfoFilled, Timer,
-    ChatLineRound, Paperclip, Plus, View, Refresh,
+    ChatLineRound, ChatDotRound, Paperclip, Plus, View, Refresh, Clock, History,
     DocumentChecked, DocumentAdd, Picture, VideoPlay, EditPen, FullScreen
 } from '@element-plus/icons-vue'
 import { getFileInfo } from "@/api/student.js"
 import { getSubjectFieldTree } from '@/api/user.js'
-import { tr } from 'element-plus/es/locales.mjs'
 const props = defineProps({
   paperId: {
     type: [String, Number],
@@ -544,14 +543,14 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewLoading = ref(false)
 const previewError = ref(false)
-const previewMode = ref('')
 const errorMessage = ref('')
 // 相似度报告预览相关数据
 const similarityPreviewVisible = ref(false)
 const similarityPreviewUrl = ref('')
-const reportLoading = ref(false)
-const reportError = ref(false)
-const reportErrorMessage = ref('')
+const similarityPreviewLoading = ref(false)
+const similarityPreviewError = ref(false)
+const similarityErrorMessage = ref('')
+const currentSimilarityFileSize = ref('')
 
 // 当前文件信息
 const currentFileId = ref('')
@@ -564,20 +563,6 @@ const previewTitle = computed(() => {
     return currentFileName.value ? `预览 - ${currentFileName.value}` : '文件预览'
 })
 
-const hasReport = computed(() => {
-    return checkTask.value?.checkStatus === 'completed' &&
-        checkTask.value?.reportId
-})
-
-// 是否可以查看报告
-const canViewReport = computed(() => {
-    return hasReport.value
-})
-
-// 是否可以下载报告
-const canDownloadReport = computed(() => {
-    return hasReport.value
-})
 // 相似度报告当前相似度
 // 后端 checkRate 可能是小数(0.23)或整数(23)，统一转为整数百分比
 const getSimilarityRate = computed(() => {
@@ -612,7 +597,6 @@ const previewFile = async (file) => {
     previewLoading.value = true
     previewError.value = false
     previewUrl.value = ''
-    previewMode.value = ''
 
     try {
         const previewApiUrl = `/check/api/v1/file/smartPreview?fileId=${file.id}`
@@ -673,7 +657,11 @@ const openInNewWindow = () => {
 
 // 下载代替预览
 const downloadInstead = () => {
-    downloadCurrentFile()
+    if (currentFileId.value) {
+        const encodedFileName = encodeURIComponent(currentFileName.value || 'document')
+        const downloadUrl = `/check/api/v1/file/download/${currentFileId.value}/${encodedFileName}`
+        window.open(downloadUrl, '_blank')
+    }
     closePreview()
 }
 
@@ -705,91 +693,12 @@ const handlePreviewError = (error) => {
     errorMessage.value = error.message || '文件预览失败，请尝试下载文件查看';
 }
 
-const openSimilarityReport = async () => {
-    const currentCheckTask = checkTask.value
-    if (!currentCheckTask) {
-        ElMessage.warning('暂无检测记录')
-        return
-    }
-    if (currentCheckTask.checkStatus.toLowerCase() !== 'completed') {
-        if (currentCheckTask.checkStatus.toLowerCase() === 'checking') {
-            ElMessage.warning('检测正在进行中，请稍后再查看报告')
-        } else if (currentCheckTask.checkStatus.toLowerCase() === 'failure') {
-            ElMessage.error(`检测失败`)
-        } else {
-            ElMessage.warning('请先完成相似度检测')
-        }
-        return
-    }
-    //2. 检查报告ID
-    if (!currentCheckTask.reportId) {
-        ElMessage.warning('报告生成中，请稍后重试')
-        return
-    }
-    // 3.显示弹窗
-    similarityPreviewVisible.value = true
-    reportLoading.value = true
-    reportError.value = false
-    reportErrorMessage.value = ''
-
-    try {
-        const currentPaperId = paperId.value
-        // 调用API获取预览URL
-        const response = await getSimilarityReportPreview(currentPaperId)
-
-        if (response.code === 200 && response.data) {
-            similarityPreviewUrl.value = response.data
-            ElMessage.success('报告加载成功')
-        } else {
-            throw new Error(response.message || '获取报告失败')
-        }
-    } catch (error) {
-        console.error('打开相似度报告失败:', error)
-        reportError.value = true
-        reportErrorMessage.value = error.message || '报告加载失败，请稍后重试'
-        ElMessage.error('加载报告失败')
-    } finally {
-        reportLoading.value = false
-    }
-}
-
-// 获取相似度报告预览URL的API
-const getSimilarityReportPreview = async (paperIdParam) => {
-    try {
-        // 这个接口返回的是PDF文件，不是JSON
-        const url = `/check/api/v1/file/smartPreviewReport?paperId=${paperIdParam}`;
-
-        // 直接返回URL，让iframe加载
-        return {
-            code: 200,
-            data: url, // 直接返回URL
-            message: 'success'
-        };
-
-    } catch (error) {
-        throw error;
-    }
-};
-
-// iframe加载完成
-const onReportIframeLoad = () => {
-    reportLoading.value = false
-    reportError.value = false
-}
-
-// iframe加载错误
-const onReportIframeError = () => {
-    reportLoading.value = false
-    reportError.value = true
-    reportErrorMessage.value = '报告预览加载失败，可能是文件格式不支持或服务异常'
-}
-
 // 重试预览
 const retryReportPreview = () => {
-    if (paperDetails.value?.checkTask?.reportId) {
-        reportLoading.value = true
-        reportError.value = false
-        openSimilarityReport() // 重新调用打开方法
+    if (checkTask.value?.reportSummary?.reportId) {
+        similarityPreviewLoading.value = true
+        similarityPreviewError.value = false
+        viewSimilarityReport()
     }
 }
 
@@ -810,7 +719,7 @@ const downloadSimilarityReport = async () => {
         }
 
         // 3. 检查报告ID
-        const reportId = checkTask.value.reportSummary.reportId
+        const reportId = checkTask.value.reportSummary?.reportId
         if (!reportId) {
             ElMessage.warning('报告ID不存在，无法下载')
             return
@@ -893,9 +802,9 @@ const openReportInNewWindow = () => {
 const closeSimilarityReport = () => {
     similarityPreviewVisible.value = false
     similarityPreviewUrl.value = ''
-    reportLoading.value = false
-    reportError.value = false
-    reportErrorMessage.value = ''
+    similarityPreviewLoading.value = false
+    similarityPreviewError.value = false
+    similarityErrorMessage.value = ''
 }
 
 const deleteFile = async (file) => {
@@ -940,7 +849,7 @@ const replaceFile = async (file) => {
                 
                 try {
                     // 调用上传接口
-                    const uploadRes = await uploadFile(formData);
+                    const uploadRes = await uploadFileAPI(formData);
                     if (uploadRes.code === 200) {
                         // 上传成功后，调用替换文件接口
                         const replaceRes = await updatePaperFile(paperId.value, uploadRes.data.fileId, uploadRes.data.md5);
@@ -970,45 +879,89 @@ const replaceFile = async (file) => {
     }
 }
 
-// 上传文件的API调用
-const uploadFile = async (formData) => {
-    try {
-        const response = await fetch('/check/api/v1/file/upload', {
-            method: 'POST',
-            body: formData
-        });
-        return await response.json();
-    } catch (error) {
-        throw error;
+// 上传文件操作（打开文件选择器）
+const uploadFile = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.doc,.docx,.pdf,.txt'
+    input.style.display = 'none'
+    document.body.appendChild(input)
+    input.click()
+
+    input.onchange = async (e) => {
+        const selectedFile = e.target.files[0]
+        if (!selectedFile) {
+            document.body.removeChild(input)
+            return
+        }
+
+        const loading = ElLoading.service({
+            lock: true,
+            text: '正在上传文件...',
+            background: 'rgba(0, 0, 0, 0.7)'
+        })
+
+        try {
+            const formData = new FormData()
+            formData.append('file', selectedFile)
+            formData.append('userId', localStorage.getItem('userId') || '1')
+
+            const uploadRes = await uploadFileAPI(formData)
+            if (uploadRes.code === 200) {
+                const replaceRes = await updatePaperFile(paperId.value, uploadRes.data.fileId, uploadRes.data.md5)
+                if (replaceRes.code === 200) {
+                    ElMessage.success('文件上传成功')
+                    await loadPaperDetails()
+                } else {
+                    ElMessage.error(replaceRes.message || '关联文件失败')
+                }
+            } else {
+                ElMessage.error(uploadRes.message || '文件上传失败')
+            }
+        } catch (error) {
+            ElMessage.error('网络错误，请检查连接后重试')
+        } finally {
+            loading.close()
+            document.body.removeChild(input)
+        }
     }
-};
+}
+
+// 上传文件的API调用
+const uploadFileAPI = async (formData) => {
+    const token = userStore.token || localStorage.getItem('token') || ''
+    const response = await fetch('/check/api/v1/file/upload', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData
+    })
+    return await response.json()
+}
 
 // 更新论文文件的API调用
 const updatePaperFile = async (paperId, fileId, fileMd5) => {
-    try {
-        // 使用现有的updatePaper接口来更新论文文件
-        // 需要提供完整的论文信息
-        const response = await fetch(`/check/api/v1/papers/${paperId}/update`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                subjectCode: paperDetails.value.subjectCode || '',
-                paperTitle: paperDetails.value.paperTitle || '',
-                collegeId: paperDetails.value.collegeId || 1,
-                majorId: paperDetails.value.majorId || 1,
-                paperType: paperDetails.value.paperType || 'graduation',
-                paperAbstract: paperDetails.value.paperAbstract || '',
-                fileId: fileId,
-                fileMd5: fileMd5
-            })
-        });
-        return await response.json();
-    } catch (error) {
-        throw error;
-    }
-};
+    const token = userStore.token || localStorage.getItem('token') || ''
+    const response = await fetch(`/check/api/v1/papers/${paperId}/update`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            subjectCode: paperDetails.value.subjectCode || '',
+            paperTitle: paperDetails.value.paperTitle || '',
+            collegeId: paperDetails.value.collegeId || 1,
+            majorId: paperDetails.value.majorId || 1,
+            paperType: paperDetails.value.paperType || 'graduation',
+            paperAbstract: paperDetails.value.paperAbstract || '',
+            fileId: fileId,
+            fileMd5: fileMd5
+        })
+    })
+    return await response.json()
+}
 
 
 const loadPaperDetails = async () => {
@@ -1087,7 +1040,7 @@ const getBackButtonText = computed(() => {
 })
 
 const editPaper = () => {
-    if (paperDetails.value.status === 'rejected' || paperDetails.value.status === 'pending') {
+    if (paperDetails.value.paperStatus === 'rejected' || paperDetails.value.paperStatus === 'pending') {
         router.push(`/student/paper-edit/${paperId.value}`)
     } else {
         ElMessage.warning('当前状态下不可修改论文')
@@ -1095,13 +1048,21 @@ const editPaper = () => {
 }
 
 const downloadPaper = () => {
-    ElMessage.info('开始下载论文文档...')
+    if (fileInfo.value && fileInfo.value.id) {
+        downloadFile(fileInfo.value)
+    } else {
+        ElMessage.warning('暂无可下载的论文文件')
+    }
 }
 
 const handleMoreActions = (command) => {
     switch (command) {
         case 'share':
-            ElMessage.info('生成分享链接')
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                ElMessage.success('链接已复制到剪贴板')
+            }).catch(() => {
+                ElMessage.warning('复制失败，请手动复制地址栏链接')
+            })
             break
         case 'print':
             window.print()
@@ -1180,77 +1141,79 @@ const viewSimilarityReport = async () => {
     if (!checkTask.value) {
         // 检查paperDetails中是否有相似度数据
         if (paperDetails.value.similarityRate || paperDetails.value.similarity) {
-            // 尝试直接打开报告，基于paperId
             similarityPreviewVisible.value = true
-            reportLoading.value = true
-            reportError.value = false
-            reportErrorMessage.value = ''
+            similarityPreviewLoading.value = true
+            similarityPreviewError.value = false
+            similarityErrorMessage.value = ''
             try {
-                similarityPreviewUrl.value = `/check/api/v1/file/smartPreviewReport?paperId=${idToUse}`;
-                ElMessage.success('报告加载成功');
+                similarityPreviewUrl.value = `/check/api/v1/file/smartPreviewReport?paperId=${idToUse}`
             } catch (error) {
                 console.error('打开相似度报告失败:', error)
-                reportError.value = true
-                reportErrorMessage.value = error.message || '报告加载失败，请稍后重试'
+                similarityPreviewError.value = true
+                similarityErrorMessage.value = error.message || '报告加载失败，请稍后重试'
                 ElMessage.error('加载报告失败: ' + error.message)
             } finally {
-                reportLoading.value = false
+                similarityPreviewLoading.value = false
             }
         } else {
             ElMessage.warning('暂无检测记录，请先进行相似度检测')
             return
         }
     } else if (checkTask.value.checkStatus.toLowerCase() !== 'completed') {
-            const statusMap = {
-                'checking': '检测正在进行中，请稍后再查看报告',
-                'failure': '检测失败，无法查看报告',
-                'pending': '检测排队中'
-            }
-            ElMessage.warning(statusMap[checkTask.value.checkStatus.toLowerCase()] || '检测未完成')
-            return
-        } else if (!checkTask.value.reportSummary?.reportId) {
+        const statusMap = {
+            'checking': '检测正在进行中，请稍后再查看报告',
+            'failure': '检测失败，无法查看报告',
+            'pending': '检测排队中'
+        }
+        ElMessage.warning(statusMap[checkTask.value.checkStatus.toLowerCase()] || '检测未完成')
+        return
+    } else if (!checkTask.value.reportSummary?.reportId) {
         ElMessage.warning('报告生成中，请稍后重试')
         return
     } else {
-        // 正常流程，基于checkTask打开报告
         similarityPreviewVisible.value = true
-        reportLoading.value = true
-        reportError.value = false
-        reportErrorMessage.value = ''
+        similarityPreviewLoading.value = true
+        similarityPreviewError.value = false
+        similarityErrorMessage.value = ''
         try {
-            // 调用API获取预览URL
-            similarityPreviewUrl.value = `/check/api/v1/file/smartPreviewReport?paperId=${idToUse}`;
-            ElMessage.success('报告加载成功');
+            similarityPreviewUrl.value = `/check/api/v1/file/smartPreviewReport?paperId=${idToUse}`
         } catch (error) {
             console.error('打开相似度报告失败:', error)
-            reportError.value = true
-            reportErrorMessage.value = error.message || '报告加载失败，请稍后重试'
+            similarityPreviewError.value = true
+            similarityErrorMessage.value = error.message || '报告加载失败，请稍后重试'
             ElMessage.error('加载报告失败: ' + error.message)
         } finally {
-            reportLoading.value = false
+            similarityPreviewLoading.value = false
         }
     }
 };
 const onSimilarityIframeLoad = () => {
-    reportLoading.value = false
+    similarityPreviewLoading.value = false
 }
 const onSimilarityIframeError = () => {
-    reportLoading.value = false
-    reportError.value = true
-    reportErrorMessage.value = '报告加载失败，可能文件不存在或格式错误'
+    similarityPreviewLoading.value = false
+    similarityPreviewError.value = true
+    similarityErrorMessage.value = '报告加载失败，可能文件不存在或格式错误'
 }
+const retrySimilarityPreview = () => {
+    similarityPreviewLoading.value = true
+    similarityPreviewError.value = false
+    similarityErrorMessage.value = ''
+    viewSimilarityReport()
+}
+
 const closeSimilarityPreview = () => {
     similarityPreviewVisible.value = false
     similarityPreviewUrl.value = ''
-    reportLoading.value = false
-    reportError.value = false
-    reportErrorMessage.value = ''
+    similarityPreviewLoading.value = false
+    similarityPreviewError.value = false
+    similarityErrorMessage.value = ''
 }
 
 const contactAdvisor = () => {
     if (paperDetails.value && paperDetails.value.teacherName) {
-        const phone = advisorInfo.value.phone
-        const email = advisorInfo.value.email
+        const phone = paperDetails.value.teacherPhone || '未提供'
+        const email = paperDetails.value.teacherEmail || '未提供'
 
         ElMessageBox.alert(
             `联系 ${paperDetails.value.teacherName} 老师\n\n电话：${phone}\n邮箱：${email}`,
@@ -1352,8 +1315,14 @@ const getPaperTypeTag = (type) => {
 }
 
 const getWordCountPercentage = (wordCount) => {
-    const target = 8000
     if (!wordCount) return 0
+    const type = paperDetails.value?.paperType
+    const targetMap = {
+        'graduation': 10000,
+        'course': 3000,
+        'other': 5000
+    }
+    const target = targetMap[type] || 8000
     return Math.min(Math.round((wordCount / target) * 100), 100)
 }
 
@@ -1452,6 +1421,9 @@ const getReviewStepDesc = (paper) => {
 
 const getReviewTypeTag = (type) => {
     const tagMap = {
+        'completed': 'success',
+        'approved': 'success',
+        'rejected': 'danger',
         'advisor': 'primary',
         'committee': 'success'
     }
@@ -1460,6 +1432,9 @@ const getReviewTypeTag = (type) => {
 
 const getReviewTypeText = (type) => {
     const textMap = {
+        'completed': '审核通过',
+        'approved': '审核通过',
+        'rejected': '审核不通过',
         'advisor': '导师',
         'committee': '委员会'
     }
@@ -1938,6 +1913,16 @@ onMounted(() => {
     background: #f5f5f7;
     border-radius: 11px;
     border-left: 4px solid #0066cc;
+}
+
+.no-feedback {
+    padding: 24px 0;
+
+    .empty-tip {
+        color: #86868b;
+        font-size: 14px;
+        margin-top: 8px;
+    }
 }
 
 .abstract-footer {

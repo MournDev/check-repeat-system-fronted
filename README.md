@@ -1,56 +1,57 @@
-# 论文查重管理系统前端
+# 论文查重管理系统（前端）
 
 ## 项目简介
 
-论文查重管理系统是一个基于 Vue 3 + Element Plus 构建的现代化前端应用，用于管理和处理学术论文的查重、审核和管理流程。系统支持学生、教师和管理员三个角色，提供完整的论文提交、审核、统计分析等功能。
-
-## 功能特点
-
-### 学生端功能
-
-- 📄 论文提交与管理
-- 🔍 查重结果查看
-- 📊 个人能力评估
-- 📅 重要时间节点提醒
-- 👨‍🏫 导师信息与联系方式
-- 📈 论文进度跟踪
-
-### 教师端功能
-
-- 📋 论文审核工作台
-- 📊 审核统计分析
-- 👥 学生管理
-- 📁 论文下载与管理
-- ⚡ 快速操作面板
-- 📈 审核效率统计
-
-### 管理员端功能
-
-- 🏫 学校概览
-- 👥 用户管理
-- 📄 论文库管理
-- 📋 报告管理
-- ⚙️ 系统配置
-- 📊 数据统计
+论文查重管理系统前端，基于 Vue 3 + Element Plus 构建，为学生、教师、管理员三种角色提供完整的论文查重管理界面。支持论文提交、查重报告查看、在线审核、实时消息、系统监控等功能。
 
 ## 技术栈
 
-- **前端框架**: Vue 3 + Vite
-- **UI 库**: Element Plus
-- **状态管理**: Pinia
-- **路由管理**: Vue Router
-- **HTTP 客户端**: Axios
-- **时间处理**: Day.js
-- **图表库**: ECharts
-- **CSS 预处理器**: SCSS
-- **图标库**: Element Plus Icons
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| Vue | 3 | 前端框架（Composition API） |
+| rolldown-vite | — | 构建工具（Vite 替代实现） |
+| Element Plus | — | UI 组件库（自动导入） |
+| Pinia | — | 状态管理 |
+| Vue Router | — | 路由管理 |
+| Axios | — | HTTP 客户端 |
+| ECharts | — | 图表可视化 |
+| Day.js | — | 时间处理 |
+| SCSS | — | CSS 预处理器 |
+
+## 核心功能
+
+### 学生端
+- **论文提交**：支持 Word/PDF 上传，自动计算 MD5 秒传
+- **论文详情**：查看论文状态、导师反馈、审核历史、文件格式
+- **查重报告**：相似度分析、章节对比、相似来源列表
+- **查重历史**：历史查重记录、相似度趋势图
+- **版本对比**：多版本论文差异对比
+- **导师互动**：实时消息聊天、文件共享、消息撤回
+- **个人工作台**：论文统计、待办事项、重要时间节点
+
+### 教师端
+- **待审核列表**：按优先级/相似度/等待时间排序筛选
+- **论文审核**：通过/驳回/修改建议，支持批量操作
+- **审核统计**：审核趋势图、通过率分析、工作量统计
+- **学生管理**：学生分组、论文下载、联系学生
+- **消息系统**：师生私信、系统通知
+
+### 管理员端
+- **系统概览**：用户/论文/查重统计数据、系统健康度
+- **用户管理**：增删改查、角色分配、批量导入
+- **论文管理**：论文分配、状态管理、批量操作
+- **报告管理**：查重报告查看与导出
+- **系统配置**：查重规则、分配规则、系统参数
+- **监控中心**：CPU/内存/磁盘实时监控、趋势图表
+- **日志管理**：操作日志、登录日志、安全审计
+- **数据备份**：手动/自动备份、备份恢复
 
 ## 快速开始
 
 ### 环境要求
 
-- Node.js 14.0+
-- npm 6.0+
+- Node.js 18+
+- npm 9+（或 pnpm）
 
 ### 安装依赖
 
@@ -64,11 +65,15 @@ npm install
 npm run dev
 ```
 
+开发服务器运行在 `http://localhost:3000`，自动代理 `/check` 和 `/ws` 请求到后端 `http://localhost:8080`。
+
 ### 构建生产版本
 
 ```bash
 npm run build
 ```
+
+构建产物输出到 `dist/` 目录。
 
 ### 预览构建结果
 
@@ -79,119 +84,80 @@ npm run preview
 ## 项目结构
 
 ```
-check-repeat-frontend/
-├── public/             # 静态资源
-├── src/
-│   ├── api/            # API 接口调用
-│   ├── assets/         # 静态资源
-│   ├── components/     # 通用组件
-│   ├── composables/    # 组合式函数
-│   ├── directives/     # 自定义指令
-│   ├── router/         # 路由配置
-│   ├── stores/         # Pinia 状态管理
-│   ├── styles/         # 全局样式
-│   ├── utils/          # 工具函数
-│   ├── views/          # 页面组件
-│   ├── App.vue         # 根组件
-│   └── main.js         # 入口文件
-├── .env                # 环境变量
-├── .env.development    # 开发环境变量
-├── eslintrc.json       # ESLint 配置
-├── index.html          # HTML 模板
-├── package.json        # 项目配置
-└── vite.config.js      # Vite 配置
+src/
+├── api/                    # API 接口定义
+│   ├── request.js          #   Axios 实例（JWT 注入、401 拦截）
+│   ├── student.js          #   学生端接口（62 个）
+│   ├── teacher.js          #   教师端接口（78 个）
+│   ├── user.js             #   用户/认证接口（25 个）
+│   └── admin/              #   管理员接口（91 个，按模块拆分）
+├── components/
+│   └── layout/             #   布局组件（侧边栏、顶栏）
+├── composables/            #   组合式函数
+│   ├── useCheckProgress.js #     查重进度 WebSocket
+│   └── useMessageWebSocket.js #  消息 STOMP WebSocket
+├── directives/             #   自定义指令（v-permission）
+├── router/                 #   路由配置（角色守卫）
+├── stores/                 #   Pinia 状态
+│   ├── user.js             #     认证状态（token、角色）
+│   └── message.js          #     消息状态
+├── styles/                 #   全局样式
+├── utils/                  #   工具函数
+├── views/
+│   ├── login/              #     登录页
+│   ├── student/            #     学生端页面
+│   ├── teacher/            #     教师端页面
+│   └── admin/              #     管理员页面
+├── App.vue                 #   根组件
+└── main.js                 #   入口文件
 ```
 
-## 核心功能模块
+## 环境变量
 
-### 1. 认证系统
+在项目根目录创建 `.env.development` 或 `.env.production`：
 
-- 登录/注册/密码重置
-- 角色权限管理
-- 状态持久化
+```bash
+# 后端 API 地址
+VITE_API_BACKEND_URL=http://localhost:8080
 
-### 2. 论文管理
-
-- 论文提交与版本管理
-- 查重结果分析
-- 论文状态跟踪
-
-### 3. 审核流程
-
-- 教师审核工作台
-- 审核状态管理
-- 反馈与修改建议
-
-### 4. 数据统计
-
-- 个人能力评估
-- 相似度趋势分析
-- 专业对比分析
-
-### 5. 消息通知
-
-- 实时消息提醒
-- 通知中心
-- 消息历史记录
-
-## 响应式设计
-
-系统采用响应式设计，适配以下设备：
-
-- 桌面端 (1200px+)
-- 平板端 (768px-1199px)
-- 移动端 (320px-767px)
-
-## 开发指南
-
-### 代码规范
-
-- 使用 ESLint 进行代码检查
-- 遵循 Vue 3 组合式 API 最佳实践
-- 组件命名使用 PascalCase
-- 变量命名使用 camelCase
-
-### 提交规范
-
-- 提交信息使用英文
-- 提交信息格式：`type(scope): subject`
-- 类型包括：feat, fix, docs, style, refactor, test, chore
-
-## 部署说明
-
-### 生产环境部署
-
-1. 构建生产版本：`npm run build`
-2. 将 `dist` 目录部署到 web 服务器
-3. 配置 Nginx 或其他 web 服务器
-
-### 环境变量配置
-
-在 `.env` 文件中配置以下环境变量：
-
-```
-VITE_API_BASE_URL=https://api.example.com
+# 应用标题
 VITE_APP_TITLE=论文查重管理系统
 ```
 
-## 贡献指南
+## 权限控制
 
-1. Fork 本仓库
-2. 创建特性分支：`git checkout -b feature/AmazingFeature`
-3. 提交更改：`git commit -m 'Add some AmazingFeature'`
-4. 推送到分支：`git push origin feature/AmazingFeature`
-5. 打开 Pull Request
+- **路由守卫**：`router/index.js` 中根据 `userStore.roles` 控制页面访问
+- **元素级权限**：`v-permission` 指令控制按钮/组件显示
+- **API 拦截**：`request.js` 自动注入 JWT Token，401 时跳转登录
+
+## WebSocket
+
+系统使用两套 WebSocket：
+
+1. **查重进度**（原生 WebSocket）：实时推送查重任务进度
+   - `useCheckProgress.js` — 单任务进度
+   - `useBatchCheckProgress.js` — 批量任务进度
+
+2. **消息系统**（STOMP + SockJS）：师生私信与系统通知
+   - `useMessageWebSocket.js`
+
+## 开发规范
+
+- 使用 Composition API（`<script setup>`）
+- 组件命名 PascalCase，变量命名 camelCase
+- Element Plus 组件通过 `unplugin-vue-components` 自动导入
+- API 统一通过 `src/api/` 模块调用，不直接使用 axios
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+MIT License
 
 ## 联系方式
 
-- 项目维护者：MournDev
+- 开发者：MournDev
 - 邮箱：3070500838@qq.com
 - 问题反馈：[GitHub Issues](https://github.com/MournDev/check-repeat-frontend/issues)
 
 ---
 
-**备注**：本项目仅为前端部分，需要配合后端 API 服务使用。
+**备注**：本项目为前端部分，需配合后端 API 服务使用。

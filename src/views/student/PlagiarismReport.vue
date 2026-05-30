@@ -128,7 +128,7 @@
                   </el-col>
                   <el-col :span="6">
                     <div class="stat-item">
-                      <div class="stat-value">{{ reportData.similarSources || 0 }}</div>
+                      <div class="stat-value">{{ reportData.similarSourceCount || 0 }}</div>
                       <div class="stat-label">相似文献</div>
                     </div>
                   </el-col>
@@ -420,7 +420,7 @@ const distributionData = ref([])
 
 // 相似文献数据，从 reportData 中获取
 const similarSources = computed(() => {
-  const sources = reportData.value.similarSources || [];
+  const sources = reportData.value.similarSourceList || [];
   // 确保返回的是数组格式
   return Array.isArray(sources) ? sources : [];
 });
@@ -554,14 +554,14 @@ const loadReportData = async () => {
         // 统计信息
         wordCount: data.wordCount || 0,
         citationCount: data.citationCount || 0,
-        similarSources: data.similarSources || data.similarSourceCount || 0,
+        similarSourceCount: data.similarSources || data.similarSourceCount || 0,
         checkEngines: data.checkEngines || ['本地查重引擎'],
 
         // 章节信息
         sections,
 
         // 相似来源
-        similarSources: sourceList
+        similarSourceList: sourceList
       };
 
       // 从 sections 推导相似度分布数据
