@@ -15,6 +15,13 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { registerPermissionDirective } from '@/directives/permission'
 
 const app = createApp(App)
+
+// 全局错误处理：防止组件渲染异常导致白屏
+app.config.errorHandler = (err, instance, info) => {
+  console.error('[Vue Global Error]', err, info)
+  // 可以在此上报错误到监控平台
+}
+
 // 全局注册所有 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIcons)) {
   app.component(key, component)

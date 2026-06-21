@@ -30,3 +30,19 @@ export const forgetPassword = (data) => {
     data: data
   })
 }
+
+export const sendPasswordResetCode = (data) => {
+  return request({
+    url: '/api/v1/auth/send-password-reset-code',
+    method: 'post',
+    data: data
+  })
+}
+
+export const logout = () => {
+  return request({
+    url: '/api/v1/auth/logout',
+    method: 'post',
+    _skipLoginRedirect: true
+  })
+}

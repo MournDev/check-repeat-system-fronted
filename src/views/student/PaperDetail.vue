@@ -33,26 +33,6 @@
                     </div>
                 </div>
 
-                <div class="action-section">
-                    <el-button-group class="header-actions">
-                        <el-button type="primary" :icon="Edit" @click="editPaper" size="large">
-                            修改
-                        </el-button>
-                        <el-button :icon="Download" @click="downloadPaper" size="large">
-                            下载
-                        </el-button>
-                        <el-dropdown @command="handleMoreActions">
-                            <el-button :icon="More" size="large" />
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item :icon="Share" command="share">分享</el-dropdown-item>
-                                    <el-dropdown-item :icon="Printer" command="print">打印</el-dropdown-item>
-                                    <el-dropdown-item :icon="Delete" command="delete" divided>删除</el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
-                    </el-button-group>
-                </div>
             </div>
         </div>
 
@@ -61,150 +41,99 @@
             <el-row :gutter="24">
                 <!-- 左侧：论文核心信息 -->
                 <el-col :xs="24" :lg="16">
-                    <!-- 论文摘要 -->
-                    <el-card class="section-card" shadow="hover">
+                    <!-- 论文信息（摘要 + 详情合并） -->
+                    <el-card class="section-card" shadow="never">
                         <template #header>
                             <div class="section-header">
-                                <el-icon>
-                                    <Document />
-                                </el-icon>
-                                <span class="section-title">论文摘要</span>
+                                <el-icon><Document /></el-icon>
+                                <span class="section-title">论文信息</span>
                             </div>
                         </template>
 
-                        <div class="abstract-content">
-                            {{ paperDetails.paperAbstract }}
+                        <div class="info-section">
+                            <div class="info-label">论文摘要</div>
+                            <div class="info-value abstract-text">{{ paperDetails.paperAbstract || '暂无摘要' }}</div>
                         </div>
 
-                        <div class="abstract-footer">
-                            <div class="word-count-info">
-                                <span class="count-label">字数统计：</span>
-                                <span class="count-value">{{ paperDetails.wordCount || 0 }}</span>
-                                <span class="count-unit">字</span>
-                                <el-progress :percentage="getWordCountPercentage(paperDetails.wordCount)"
-                                    :stroke-width="6" :show-text="false" class="count-progress" />
-                            </div>
-                        </div>
-                    </el-card>
+                        <div class="info-divider"></div>
 
-                    <!-- 论文详情 -->
-                    <el-card class="section-card" shadow="hover">
-                        <template #header>
-                            <div class="section-header">
-                                <el-icon>
-                                    <List />
-                                </el-icon>
-                                <span class="section-title">论文详情</span>
+                        <div class="info-grid">
+                            <div class="info-cell">
+                                <span class="info-label">学科领域</span>
+                                <span class="info-value">{{ findSubjectLabelByCode(paperDetails.subjectCode) }}</span>
                             </div>
-                        </template>
-
-                        <div class="details-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">学科领域：</span>
-                                <span class="detail-value">
-                                    {{ findSubjectLabelByCode(paperDetails.subjectCode) }}
-                                </span>
+                            <div class="info-cell">
+                                <span class="info-label">论文类型</span>
+                                <span class="info-value">{{ getPaperTypeText(paperDetails.paperType) }}</span>
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">论文类型：</span>
-                                <el-tag :type="getPaperTypeTag(paperDetails.paperType)" size="small">
-                                    {{ getPaperTypeText(paperDetails.paperType) }}
-                                </el-tag>
+                            <div class="info-cell">
+                                <span class="info-label">字数统计</span>
+                                <span class="info-value">{{ paperDetails.wordCount || 0 }} 字</span>
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">文档格式：</span>
-                                <span class="detail-value">{{ paperDetails.fileFormat || '.docx' }}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">文件大小：</span>
-                                <span class="detail-value">{{ fileInfo?.fileSizeDesc }}</span>
+                            <div class="info-cell">
+                                <span class="info-label">文件大小</span>
+                                <span class="info-value">{{ fileInfo?.fileSizeDesc || '--' }}</span>
                             </div>
                         </div>
 
-                        <div class="keywords-section">
-                            <span class="keywords-label">关键词：</span>
-                            <div class="keywords-container">
-                                <el-tag v-for="keyword in paperDetails.keywords" :key="keyword" type="info" size="small"
-                                    class="keyword-tag">
+                        <div v-if="paperDetails.keywords?.length" class="info-divider"></div>
+
+                        <div v-if="paperDetails.keywords?.length" class="info-section">
+                            <div class="info-label">关键词</div>
+                            <div class="keywords-list">
+                                <el-tag v-for="keyword in paperDetails.keywords" :key="keyword" size="small" effect="plain">
                                     {{ keyword }}
                                 </el-tag>
-                                <span v-if="!paperDetails.keywords?.length" class="no-keywords">未设置关键词</span>
                             </div>
                         </div>
                     </el-card>
 
                     <!-- 相似度检测 -->
-                    <el-card class="section-card similarity-card" shadow="hover">
+                    <el-card class="section-card" shadow="never">
                         <template #header>
                             <div class="section-header">
-                                <el-icon>
-                                    <TrendCharts />
-                                </el-icon>
+                                <el-icon><TrendCharts /></el-icon>
                                 <span class="section-title">相似度检测</span>
-                                <el-tag v-if="checkTask" :type="getCheckStatusTag(checkTask.checkStatus)" size="small">
+                                <el-tag v-if="checkTask" :type="getCheckStatusTag(checkTask.checkStatus)" size="small" class="header-tag">
                                     {{ getCheckStatusText(checkTask.checkStatus) }}
                                 </el-tag>
-                                <el-tag v-else-if="paperDetails.similarityRate || paperDetails.similarity" type="success" size="small">
-                                    已检测
-                                </el-tag>
-                                <el-tag v-else type="info" size="small">未检测</el-tag>
+                                <el-tag v-else type="info" size="small" class="header-tag">未检测</el-tag>
                             </div>
                         </template>
 
-                        <div class="similarity-content">
-                            <div class="similarity-main">
-                                <div class="similarity-value">
-                                    <el-progress type="dashboard" :percentage="getSimilarityRate" :width="100"
-                                        :stroke-width="10" :color="getSimilarityColor(getSimilarityRate)">
-                                        <template #default="{ percentage }">
-                                            <span class="percentage-value">{{ percentage }}%</span>
-                                        </template>
-                                    </el-progress>
-                                </div>
-                                <div class="similarity-info">
-                                    <div class="similarity-status">
-                                        <el-tag :type="getSimilarityTagType(getSimilarityRate)" size="large"
-                                            effect="light">
-                                            {{ getSimilarityStatus(getSimilarityRate) }}
-                                        </el-tag>
-                                    </div>
-                                    <!-- 显示检测任务详情 -->
-                                    <div v-if="checkTask" class="similarity-details">
-                                        <div class="detail-item">
-                                            <span class="detail-label">任务编号：</span>
-                                            <span class="detail-value">{{ checkTask.taskNo || '--' }}</span>
-                                        </div>
-                                        <div class="detail-item" v-if="checkTask.startTime">
-                                            <span class="detail-label">开始时间：</span>
-                                            <span class="detail-value">{{ formatDateTime(checkTask.startTime) }}</span>
-                                        </div>
-                                        <div class="detail-item" v-if="checkTask.endTime">
-                                            <span class="detail-label">结束时间：</span>
-                                            <span class="detail-value">{{ formatDateTime(checkTask.endTime) }}</span>
-                                        </div>
-                                        <div class="detail-item" v-if="checkTask.failReason">
-                                            <span class="detail-label">失败原因：</span>
-                                            <span class="detail-value error-text">{{ checkTask.failReason }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="similarity-tips">
-                                        <el-icon>
-                                            <InfoFilled />
-                                        </el-icon>
-                                        <span>{{ getSimilarityTips(getSimilarityRate) }}</span>
-                                    </div>
-                                    <div class="similarity-actions">
-                                        <el-button type="primary" :icon="Refresh" size="small"
-                                            @click="recheckSimilarity">
-                                            重新检测
-                                        </el-button>
+                        <div class="similarity-row">
+                            <div class="similarity-rate" :style="{ color: getSimilarityColor(getSimilarityRate) }">
+                                {{ getSimilarityRate }}%
+                            </div>
+                            <div class="similarity-detail">
+                                <el-tag :type="getSimilarityTagType(getSimilarityRate)" size="small" effect="light">
+                                    {{ getSimilarityStatus(getSimilarityRate) }}
+                                </el-tag>
+                                <span class="similarity-tip">{{ getSimilarityTips(getSimilarityRate) }}</span>
+                            </div>
+                            <div class="similarity-actions">
+                                <el-button type="primary" plain :icon="Refresh" size="small" @click="recheckSimilarity">重新检测</el-button>
+                                <el-button type="success" plain :icon="View" size="small" @click="viewSimilarityReport" :disabled="!checkTask">查看报告</el-button>
+                            </div>
+                        </div>
 
-                                        <el-button type="success" :icon="View" size="small"
-                                            @click="viewSimilarityReport" :disabled="!checkTask">
-                                            查看报告
-                                        </el-button>
-                                    </div>
-                                </div>
+                        <!-- 检测任务详情 -->
+                        <div v-if="checkTask" class="check-task-info">
+                            <div class="task-row">
+                                <span class="task-label">任务编号</span>
+                                <span class="task-value">{{ checkTask.taskNo || '--' }}</span>
+                            </div>
+                            <div class="task-row" v-if="checkTask.startTime">
+                                <span class="task-label">开始时间</span>
+                                <span class="task-value">{{ formatDateTime(checkTask.startTime) }}</span>
+                            </div>
+                            <div class="task-row" v-if="checkTask.endTime">
+                                <span class="task-label">结束时间</span>
+                                <span class="task-value">{{ formatDateTime(checkTask.endTime) }}</span>
+                            </div>
+                            <div class="task-row" v-if="checkTask.failReason">
+                                <span class="task-label">失败原因</span>
+                                <span class="task-value error-text">{{ checkTask.failReason }}</span>
                             </div>
                         </div>
                     </el-card>
@@ -223,8 +152,7 @@
                                     <p class="error-detail">{{ similarityErrorMessage }}</p>
                                     <div style="margin-top: 16px;">
                                         <el-button type="primary" @click="retrySimilarityPreview">
-                                            <el-icon><Refresh /></el-icon>
-                                            重新加载
+                                            <el-icon><Refresh /></el-icon> 重新加载
                                         </el-button>
                                         <el-button @click="closeSimilarityPreview">关闭</el-button>
                                     </div>
@@ -236,18 +164,13 @@
                             <div class="preview-footer">
                                 <div class="file-info">
                                     <span class="file-name">相似度检测报告</span>
-                                    <span class="file-size" v-if="currentSimilarityFileSize">
-                                        • {{ currentSimilarityFileSize }}
-                                    </span>
                                 </div>
                                 <div class="footer-actions">
                                     <el-button @click="downloadSimilarityReport">
-                                        <el-icon><Download /></el-icon>
-                                        下载报告
+                                        <el-icon><Download /></el-icon> 下载报告
                                     </el-button>
                                     <el-button @click="openReportInNewWindow">
-                                        <el-icon><FullScreen /></el-icon>
-                                        新窗口
+                                        <el-icon><FullScreen /></el-icon> 新窗口
                                     </el-button>
                                     <el-button @click="closeSimilarityReport">关闭</el-button>
                                 </div>
@@ -256,171 +179,96 @@
                     </el-dialog>
 
                     <!-- 审核进度 -->
-                    <el-card class="section-card" shadow="hover">
+                    <el-card class="section-card" shadow="never">
                         <template #header>
                             <div class="section-header">
-                                <el-icon>
-                                    <Timer />
-                                </el-icon>
+                                <el-icon><Timer /></el-icon>
                                 <span class="section-title">审核进度</span>
                             </div>
                         </template>
 
-                        <div class="progress-section">
-                            <el-steps :active="getActiveStep(paperDetails.paperStatus)" finish-status="success"
-                                align-center>
-                                <el-step title="提交论文" :description="formatDate(paperDetails.submitTime)" />
-                                <el-step :title="paperDetails.teacherName ? '分配导师' : '等待分配'"
-                                    :description="paperDetails.teacherName || '处理中'" />
-                                <el-step :title="getReviewStepTitle(paperDetails.paperStatus)"
-                                    :description="getReviewStepDesc(paperDetails)" />
-                                <el-step title="审核完成"
-                                    :description="paperDetails.paperStatus === 'completed' ? formatDate(paperDetails.reviewTime) : '--'" />
-                            </el-steps>
-                        </div>
-                    </el-card>
-
-                    <!-- 导师反馈 -->
-                    <el-card class="section-card feedback-card" shadow="hover">
-                        <template #header>
-                            <div class="section-header">
-                                <div class="feedback-header-left">
-                                    <el-icon>
-                                        <ChatLineRound />
-                                    </el-icon>
-                                    <span class="section-title">导师反馈</span>
-                                </div>
-                                <div class="feedback-header-right">
-                                    <span class="advisor-name">{{ paperDetails.teacherName }}</span>
-                                    <span class="feedback-time">{{ formatDate(paperDetails.feedbackTime) }}</span>
-                                </div>
-                            </div>
-                        </template>
-
-                        <div v-if="paperDetails.feedback" class="feedback-content">
-                            {{ paperDetails.feedback }}
-                        </div>
-
-                        <div v-else class="no-feedback">
-                            <el-empty description="导师暂未给出反馈" :image-size="64">
-                                <p class="empty-tip">请耐心等待导师审核并给出反馈意见</p>
-                            </el-empty>
-                        </div>
-
-                        <div class="feedback-actions">
-                            <el-button :icon="ChatDotRound" @click="contactAdvisor">
-                                联系导师
-                            </el-button>
-                            <el-button :icon="Edit" @click="replyToFeedback">
-                                回复反馈
-                            </el-button>
-                        </div>
+                        <el-steps :active="getActiveStep(paperDetails.paperStatus)" finish-status="success" align-center>
+                            <el-step title="提交论文" :description="formatDate(paperDetails.submitTime)" />
+                            <el-step :title="paperDetails.teacherName ? '分配导师' : '等待分配'"
+                                :description="paperDetails.teacherName || '处理中'" />
+                            <el-step :title="getReviewStepTitle(paperDetails.paperStatus)"
+                                :description="getReviewStepDesc(paperDetails)" />
+                            <el-step title="审核完成"
+                                :description="paperDetails.paperStatus === 'completed' ? formatDate(paperDetails.reviewTime) : '--'" />
+                        </el-steps>
                     </el-card>
                 </el-col>
 
                 <!-- 右侧：相关信息 -->
                 <el-col :xs="24" :lg="8">
-                    <!-- 论文附件 -->
-                    <el-card class="sidebar-card" shadow="hover">
+                    <!-- 论文文件 -->
+                    <el-card class="section-card" shadow="never">
                         <template #header>
                             <div class="section-header">
-                                <el-icon>
-                                    <Paperclip />
-                                </el-icon>
+                                <el-icon><Paperclip /></el-icon>
                                 <span class="section-title">论文文件</span>
-                                <el-button v-if="!fileInfo" text size="small" :icon="Plus" @click="uploadFile"
-                                    class="add-file" />
                             </div>
                         </template>
 
-                        <!-- 文件信息展示 -->
                         <div v-if="fileInfo && fileInfo.id" class="file-info-container">
-                            <!-- 文件基本信息 -->
                             <div class="file-card">
                                 <div class="file-header">
                                     <div class="file-icon-wrapper" :class="getFileIconClass(fileInfo.originalFilename)">
-                                        <el-icon :size="28">
+                                        <el-icon :size="24">
                                             <component :is="getFileIcon(fileInfo.originalFilename)" />
                                         </el-icon>
                                     </div>
                                     <div class="file-main-info">
-                                        <div class="file-name" :title="fileInfo.originalFilename">
-                                            {{ fileInfo.originalFilename }}
-                                        </div>
+                                        <div class="file-name" :title="fileInfo.originalFilename">{{ fileInfo.originalFilename }}</div>
                                         <div class="file-meta">
-                                            <span class="meta-item">
-                                                <el-icon size="12">
-                                                    <Document />
-                                                </el-icon>
-                                                {{ fileInfo.fileSizeDesc }}
-                                            </span>
-                                            <span class="meta-item" v-if="fileInfo.wordCount > 0">
-                                                <el-icon size="12">
-                                                    <EditPen />
-                                                </el-icon>
-                                                {{ fileInfo.wordCount }}字
-                                            </span>
-                                            <span class="meta-item">
-                                                <el-icon size="12">
-                                                    <Clock />
-                                                </el-icon>
-                                                {{ formatDate(fileInfo.uploadTime) }}
-                                            </span>
+                                            <span>{{ fileInfo.fileSizeDesc }}</span>
+                                            <span v-if="fileInfo.wordCount > 0">{{ fileInfo.wordCount }}字</span>
+                                            <span>{{ formatDate(fileInfo.uploadTime) }}</span>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- 文件操作 -->
                                 <div class="file-actions">
-                                    <el-button-group>
-                                        <el-tooltip content="下载文件" placement="top">
-                                            <el-button type="primary" :icon="Download" @click="downloadFile(fileInfo)"
-                                                circle size="small" />
-                                        </el-tooltip>
-                                        <el-tooltip content="在线预览" placement="top">
-                                            <el-button :icon="View" @click="previewFile(fileInfo)" circle
-                                                size="small" />
-                                        </el-tooltip>
-                                        <el-tooltip content="替换文件" placement="top">
-                                            <el-button :icon="Refresh" @click="replaceFile(fileInfo)" circle
-                                                size="small" />
-                                        </el-tooltip>
-                                        <el-tooltip content="删除文件" placement="top">
-                                            <el-button :icon="Delete" @click="deleteFile(fileInfo)" circle size="small"
-                                                type="danger" />
-                                        </el-tooltip>
-                                    </el-button-group>
+                                    <el-button type="primary" plain :icon="Download" size="small" @click="downloadFile(fileInfo)">下载</el-button>
+                                    <el-button plain :icon="View" size="small" @click="previewFile(fileInfo)">预览</el-button>
                                 </div>
                             </div>
-
-                            <!-- 文件状态提示 -->
-                            <div class="file-status-tip" v-if="fileInfo.wordCount === 0">
-                                <el-alert title="字数统计未完成" type="info" :closable="false" show-icon
-                                    description="系统正在统计文件字数，请稍后刷新查看" size="small" />
+                            <div v-if="fileInfo.wordCount === 0" class="file-status-tip">
+                                <el-alert title="字数统计未完成" type="info" :closable="false" show-icon size="small" />
                             </div>
                         </div>
-
-                        <!-- 无文件时的显示 -->
                         <div v-else class="no-file">
-                            <div class="empty-state">
-                                <el-icon :size="48" color="#c0c4cc">
-                                    <Document />
-                                </el-icon>
-                                <p class="empty-text">暂无论文文件</p>
-                                <el-button type="primary" :icon="Upload" @click="uploadFile" size="large">
-                                    上传论文文件
-                                </el-button>
+                            <el-empty description="暂无论文文件" :image-size="48">
+                                <el-button type="primary" :icon="Upload" @click="uploadFile">上传论文文件</el-button>
+                            </el-empty>
+                        </div>
+                    </el-card>
+
+                    <!-- 导师反馈 -->
+                    <el-card class="section-card" shadow="never">
+                        <template #header>
+                            <div class="section-header">
+                                <el-icon><ChatLineRound /></el-icon>
+                                <span class="section-title">导师反馈</span>
+                                <span v-if="paperDetails.teacherName" class="header-tag advisor-name">{{ paperDetails.teacherName }}</span>
                             </div>
+                        </template>
+
+                        <div v-if="paperDetails.feedback" class="feedback-text">{{ paperDetails.feedback }}</div>
+                        <div v-else class="no-feedback">
+                            <el-empty description="导师暂未给出反馈" :image-size="48" />
+                        </div>
+
+                        <div class="feedback-actions">
+                            <el-button :icon="ChatDotRound" size="small" @click="contactAdvisor">联系导师</el-button>
+                            <el-button :icon="ChatDotRound" size="small" @click="replyToFeedback">回复反馈</el-button>
                         </div>
                     </el-card>
 
                     <!-- 审核历史 -->
-                    <el-card v-if="paperDetails.reviewHistory?.length" class="sidebar-card" shadow="hover">
+                    <el-card v-if="paperDetails.reviewHistory?.length" class="section-card" shadow="never">
                         <template #header>
                             <div class="section-header">
-                                <el-icon>
-                                    <Timer />
-                                </el-icon>
+                                <el-icon><Timer /></el-icon>
                                 <span class="section-title">审核历史</span>
                             </div>
                         </template>
@@ -429,7 +277,7 @@
                             <div v-for="review in paperDetails.reviewHistory" :key="review.id" class="review-item">
                                 <div class="review-header">
                                     <div class="reviewer-info">
-                                        <el-avatar :size="24" :src="getAvatarUrl(review.reviewerAvatar)" class="reviewer-avatar">
+                                        <el-avatar :size="20" :src="getAvatarUrl(review.reviewerAvatar)">
                                             {{ review.reviewerName?.charAt(0) }}
                                         </el-avatar>
                                         <span class="reviewer-name">{{ review.reviewerName }}</span>
@@ -437,11 +285,9 @@
                                             {{ getReviewTypeText(review.type) }}
                                         </el-tag>
                                     </div>
-                                    <div class="review-time">{{ formatDate(review.reviewTime) }}</div>
+                                    <span class="review-time">{{ formatDate(review.reviewTime) }}</span>
                                 </div>
-                                <div class="review-content">
-                                    {{ review.comments }}
-                                </div>
+                                <div class="review-content">{{ review.comments }}</div>
                             </div>
                         </div>
                     </el-card>
@@ -504,15 +350,14 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
-import { getPaperDetails, deleteFile as deleteFileAPI, deletePaper as deletePaperAPI, createCheckTask, getCheckTaskDetail } from "@/api/student.js"
+import { getPaperDetails, deleteFile as deleteFileAPI, createCheckTask, getCheckTaskDetail } from "@/api/student.js"
 import { getAvatarUrl } from '@/utils/avatar'
 import { getSimilarityColor, getSimilarityTagType as baseGetSimilarityTagType } from '@/utils/reviewStatus.js'
 
 // 图标引入
 import {
-    ArrowLeft, Edit, Download, Share, Printer, Delete, More,
-    Calendar, Document, List, TrendCharts, InfoFilled, Timer,
-    ChatLineRound, ChatDotRound, Paperclip, Plus, View, Refresh, Clock,
+    ArrowLeft, Download, Document, TrendCharts, Timer,
+    ChatLineRound, ChatDotRound, Paperclip, Upload, View, Refresh,
     DocumentChecked, DocumentAdd, Picture, VideoPlay, EditPen, FullScreen
 } from '@element-plus/icons-vue'
 import { getFileInfo } from "@/api/student.js"
@@ -741,8 +586,7 @@ const downloadSimilarityReport = async () => {
             const response = await fetch(downloadUrl, {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/pdf',
-                    // 'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    'Accept': 'application/pdf'
                 }
             })
 
@@ -929,7 +773,7 @@ const uploadFile = () => {
 
 // 上传文件的API调用
 const uploadFileAPI = async (formData) => {
-    const token = userStore.token || localStorage.getItem('token') || ''
+    const token = userStore.token || ''
     const response = await fetch('/check/api/v1/file/upload', {
         method: 'POST',
         headers: {
@@ -942,7 +786,7 @@ const uploadFileAPI = async (formData) => {
 
 // 更新论文文件的API调用
 const updatePaperFile = async (paperId, fileId, fileMd5) => {
-    const token = userStore.token || localStorage.getItem('token') || ''
+    const token = userStore.token || ''
     const response = await fetch(`/check/api/v1/papers/${paperId}/update`, {
         method: 'PUT',
         headers: {
@@ -1038,58 +882,6 @@ const getBackButtonText = computed(() => {
         return '返回首页'
     }
 })
-
-const editPaper = () => {
-    if (paperDetails.value.paperStatus === 'rejected' || paperDetails.value.paperStatus === 'pending') {
-        router.push(`/student/paper-edit/${paperId.value}`)
-    } else {
-        ElMessage.warning('当前状态下不可修改论文')
-    }
-}
-
-const downloadPaper = () => {
-    if (fileInfo.value && fileInfo.value.id) {
-        downloadFile(fileInfo.value)
-    } else {
-        ElMessage.warning('暂无可下载的论文文件')
-    }
-}
-
-const handleMoreActions = (command) => {
-    switch (command) {
-        case 'share':
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                ElMessage.success('链接已复制到剪贴板')
-            }).catch(() => {
-                ElMessage.warning('复制失败，请手动复制地址栏链接')
-            })
-            break
-        case 'print':
-            window.print()
-            break
-        case 'delete':
-            deletePaper()
-            break
-    }
-}
-
-const deletePaper = async () => {
-    ElMessageBox.confirm('确定要删除这篇论文吗？删除后不可恢复！', '删除确认', {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning'
-    }).then(async () => {
-        const deleteRes = await deletePaperAPI(paperId.value)
-        if (deleteRes.code === 200) {
-            ElMessage.success('论文删除成功')
-            goBack()
-        } else {
-            ElMessage.error(deleteRes.message || '删除论文失败')
-        }
-    }).catch(() => {
-        ElMessage.info('已取消删除')
-    })
-}
 
 const recheckSimilarity = async () => {
     const currentPaperId = paperId.value
@@ -1396,6 +1188,9 @@ const getReviewStepDesc = (paper) => {
         if (paper.allocationStatus === 'confirmed') {
             return `${paper.teacherName} 老师正在审核`
         }
+        if (paper.allocationStatus === 'pending_reassign') {
+            return `${paper.teacherName} 拒绝接收，正在重新分配`
+        }
         if (paper.allocationStatus === 'rejected') {
             return `${paper.teacherName} 拒绝接收，等待重新分配`
         }
@@ -1547,126 +1342,373 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.similarity-card {
-    margin-bottom: 16px;
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-
-        .similarity-rate-tag {
-            margin-left: auto;
-        }
-    }
-
-    .similarity-content {
-        .similarity-main {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            margin-bottom: 16px;
-
-            @media (max-width: 768px) {
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .similarity-value {
-                flex-shrink: 0;
-
-                .percentage-value {
-                    display: block;
-                    font-size: 1.25rem;
-                    font-weight: 600;
-                    text-align: center;
-                    margin-top: 8px;
-                }
-            }
-
-            .similarity-info {
-                flex: 1;
-
-                .similarity-status {
-                    margin-bottom: 12px;
-                }
-
-                .similarity-details {
-                    .detail-item {
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 6px;
-                        font-size: 17px;
-
-                        .detail-label {
-                            color: #86868b;
-                            min-width: 80px;
-                        }
-
-                        .detail-value {
-                            color: #1d1d1f;
-                        }
-                    }
-                }
-            }
-        }
-
-        .similarity-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-
-            .el-button {
-                flex: 1;
-            }
-        }
-    }
+.paper-details-container {
+    padding: 24px;
+    min-height: 100vh;
+    background: #f5f5f7;
 }
 
-// 相似度报告弹窗样式
-.similarity-report-dialog {
-    :deep(.el-dialog) {
-        border-radius: 18px;
-        overflow: hidden;
-        max-width: 1200px;
-    }
+// 页面头部
+.paper-header {
+    margin-bottom: 24px;
+    background: #0066cc;
+    border-radius: 16px;
+    padding: 28px 32px;
 
-    :deep(.el-dialog__header) {
-        padding: 16px 20px;
-        border-bottom: 1px solid #e4e7ed;
-        background: #0066cc;
-        margin-right: 0;
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
 
-        .el-dialog__title {
-            color: white;
-            font-weight: 600;
+        .back-btn {
+            padding-left: 0;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+
+            &:hover {
+                color: white;
+            }
         }
 
-        .el-dialog__headerbtn {
-            top: 16px;
+        .paper-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            line-height: 1.4;
+        }
 
-            .el-dialog__close {
-                color: white;
+        .paper-status-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
 
-                &:hover {
+            .paper-meta {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+
+                .meta-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 13px;
                     color: rgba(255, 255, 255, 0.8);
                 }
             }
         }
     }
+}
 
-    :deep(.el-dialog__body) {
-        padding: 0;
-    }
+// 内容区域
+.paper-content {
+    .section-card {
+        margin-bottom: 20px;
+        border-radius: 12px;
+        border: 1px solid #e8ecf1;
 
-    :deep(.el-dialog__footer) {
-        padding: 12px 20px;
-        border-top: 1px solid #e4e7ed;
-        background: #fafafa;
+        :deep(.el-card__header) {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f0f2f5;
+            background: #fafbfc;
+        }
+
+        :deep(.el-card__body) {
+            padding: 20px;
+        }
     }
 }
 
-// 预览容器
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1d1d1f;
+    font-size: 15px;
+
+    .el-icon {
+        color: #0066cc;
+    }
+
+    .header-tag {
+        margin-left: auto;
+    }
+
+    .advisor-name {
+        margin-left: auto;
+        color: #0066cc;
+        font-size: 13px;
+        font-weight: 500;
+    }
+}
+
+// 论文信息卡片
+.info-section {
+    margin-bottom: 0;
+
+    .info-label {
+        font-size: 13px;
+        color: #86868b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #1d1d1f;
+        line-height: 1.6;
+    }
+
+    .abstract-text {
+        color: #4a5568;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+}
+
+.info-divider {
+    height: 1px;
+    background: #f0f2f5;
+    margin: 16px 0;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+
+    .info-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .info-label {
+            font-size: 12px;
+            color: #86868b;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #1d1d1f;
+            font-weight: 500;
+        }
+    }
+}
+
+.keywords-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+// 相似度检测
+.similarity-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+
+    .similarity-rate {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .similarity-detail {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        .similarity-tip {
+            font-size: 13px;
+            color: #86868b;
+        }
+    }
+
+    .similarity-actions {
+        display: flex;
+        gap: 8px;
+    }
+}
+
+.check-task-info {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f2f5;
+
+    .task-row {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 13px;
+
+        .task-label {
+            color: #86868b;
+            min-width: 70px;
+        }
+
+        .task-value {
+            color: #1d1d1f;
+        }
+
+        .error-text {
+            color: #f56c6c;
+        }
+    }
+}
+
+// 审核进度
+:deep(.el-steps) {
+    .el-step__title {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .el-step__description {
+        font-size: 12px;
+        color: #86868b;
+    }
+}
+
+// 导师反馈
+.feedback-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4a5568;
+    padding: 16px;
+    background: #f8f9fb;
+    border-radius: 8px;
+    border-left: 3px solid #0066cc;
+    margin-bottom: 16px;
+}
+
+.no-feedback {
+    padding: 16px 0;
+}
+
+.feedback-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+// 论文文件
+.file-info-container {
+    .file-card {
+        padding: 14px;
+        border-radius: 8px;
+        background: #f8f9fb;
+        border: 1px solid #e8ecf1;
+    }
+
+    .file-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .file-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        &.file-icon-doc { background: rgba(0, 102, 204, 0.1); color: #0066cc; }
+        &.file-icon-pdf { background: rgba(255, 77, 79, 0.08); color: #ff4d4f; }
+        &.file-icon-excel { background: rgba(82, 196, 26, 0.08); color: #52c41a; }
+        &.file-icon-ppt { background: rgba(114, 46, 209, 0.08); color: #722ed1; }
+        &.file-icon-txt { background: rgba(250, 173, 20, 0.08); color: #faad14; }
+        &.file-icon-default { background: rgba(0, 102, 204, 0.1); color: #0066cc; }
+    }
+
+    .file-main-info {
+        flex: 1;
+        min-width: 0;
+
+        .file-name {
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #86868b;
+        }
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .file-status-tip {
+        margin-top: 12px;
+    }
+}
+
+.no-file {
+    padding: 16px 0;
+}
+
+// 审核历史
+.review-history {
+    .review-item {
+        padding: 12px;
+        background: #f8f9fb;
+        border-radius: 8px;
+        margin-bottom: 10px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+
+            .reviewer-info {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+
+                .reviewer-name {
+                    font-weight: 600;
+                    color: #1d1d1f;
+                    font-size: 13px;
+                }
+            }
+
+            .review-time {
+                font-size: 12px;
+                color: #86868b;
+            }
+        }
+
+        .review-content {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+            padding-left: 26px;
+        }
+    }
+}
+
+// 预览弹窗
 .preview-wrapper {
     height: 70vh;
     position: relative;
@@ -1679,13 +1721,9 @@ onMounted(() => {
         background: white;
     }
 
-    .preview-error,
-    .no-report {
+    .preview-error {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1694,1025 +1732,49 @@ onMounted(() => {
         .error-detail {
             margin-top: 8px;
             color: #86868b;
-            font-size: 17px;
-            max-width: 400px;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        .error-actions {
-            margin-top: 16px;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .empty-tip {
-            margin-top: 8px;
-            color: #86868b;
-            max-width: 300px;
+            font-size: 14px;
             text-align: center;
         }
     }
 }
 
-// 预览页脚
 .preview-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
 
-    .report-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex: 1;
-        min-width: 0;
-
-        .report-name {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-            color: #1d1d1f;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-
-            .el-icon {
-                color: #0066cc;
-                flex-shrink: 0;
-            }
-        }
-
-        .report-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #86868b;
-            font-size: 17px;
-            flex-shrink: 0;
-        }
+    .file-info .file-name {
+        font-weight: 600;
+        color: #1d1d1f;
     }
 
     .footer-actions {
         display: flex;
         gap: 8px;
-        flex-shrink: 0;
     }
 }
 
-.paper-details-container {
-    padding: 20px;
-    min-height: 100vh;
-    background: #f5f5f7;
-}
-
-// 页面头部
-.paper-header {
-    margin-bottom: 24px;
-    background: #0066cc;
-    border-radius: 18px;
-    padding: 24px;
-
-    .header-content {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-
-        .back-section {
-            .back-btn {
-                padding-left: 0;
-                color: rgba(255, 255, 255, 0.9);
-                font-weight: 600;
-
-                &:hover {
-                    color: white;
-                }
-            }
-        }
-
-        .title-section {
-            .paper-title {
-                margin: 0 0 16px 0;
-                font-size: 1.75rem;
-                font-weight: 600;
-                color: white;
-                line-height: 1.3;
-            }
-
-            .paper-status-row {
-                display: flex;
-                align-items: center;
-                gap: 24px;
-                flex-wrap: wrap;
-
-                .status-tag {
-                    font-weight: 600;
-                }
-
-                .paper-meta {
-                    display: flex;
-                    gap: 24px;
-                    flex-wrap: wrap;
-
-                    .meta-item {
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        font-size: 17px;
-                        color: rgba(255, 255, 255, 0.8);
-
-                        .el-icon {
-                            color: rgba(255, 255, 255, 0.9);
-                        }
-                    }
-                }
-            }
-        }
-
-        .action-section {
-            .header-actions {
-                display: flex;
-                gap: 8px;
-            }
-        }
-    }
-}
-
-// 主要内容区域
-.paper-content {
-    .section-card {
-        margin-bottom: 24px;
-        border-radius: 18px;
-        border: none;
-        transition: border-color 0.2s ease;
-
-        &:hover {
-            transform: none;
-        }
-
-        :deep(.el-card__header) {
-            padding: 16px 20px;
-            border-bottom: 1px solid #f1f2f6;
-            background: #f5f5f7;
-        }
-
-        :deep(.el-card__body) {
-            padding: 20px;
-        }
-    }
-
-    .sidebar-card {
-        margin-bottom: 24px;
-        border-radius: 18px;
-        border: none;
-        transition: border-color 0.2s ease;
-
-        &:hover {
-            transform: none;
-        }
-
-        :deep(.el-card__header) {
-            padding: 16px;
-            border-bottom: 1px solid #f1f2f6;
-            background: #f5f5f7;
-        }
-
-        :deep(.el-card__body) {
-            padding: 16px;
-        }
-    }
-}
-
-// 通用样式
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    color: #1d1d1f;
-
-    .el-icon {
-        color: #0066cc;
-    }
-
-    .section-title {
-        font-size: 1.125rem;
-    }
-}
-
-// 论文摘要部分
-.abstract-content {
-    line-height: 1.6;
-    color: #86868b;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: #f5f5f7;
-    border-radius: 11px;
-    border-left: 4px solid #0066cc;
-}
-
-.no-feedback {
-    padding: 24px 0;
-
-    .empty-tip {
-        color: #86868b;
-        font-size: 14px;
-        margin-top: 8px;
-    }
-}
-
-.abstract-footer {
-    .word-count-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        padding: 12px;
-        background: #f5f5f7;
-        border-radius: 11px;
-
-        .count-label {
-            color: #86868b;
-            font-weight: 600;
-        }
-
-        .count-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #0066cc;
-        }
-
-        .count-unit {
-            color: #86868b;
-        }
-
-        .count-progress {
-            flex: 1;
-            max-width: 200px;
-        }
-    }
-}
-
-// 论文详情部分
-.details-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-
-    .detail-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px;
-        background: #f5f5f7;
-        border-radius: 11px;
-
-        .detail-label {
-            color: #86868b;
-            white-space: nowrap;
-            font-weight: 600;
-        }
-
-        .detail-value {
-            color: #1d1d1f;
-            font-weight: 600;
-        }
-    }
-}
-
-.keywords-section {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    background: #f5f5f7;
-    border-radius: 11px;
-
-    .keywords-label {
-        color: #86868b;
-        white-space: nowrap;
-        padding-top: 4px;
-        font-weight: 600;
-    }
-
-    .keywords-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-
-        .keyword-tag {
-            font-size: 12px;
-            background: #e6f7ff;
-            border-color: #91d5ff;
-            color: #0066cc;
-        }
-
-        .no-keywords {
-            color: #999;
-            font-style: italic;
-        }
-    }
-}
-
-// 相似度检测部分
-.similarity-card {
-    .similarity-content {
-        .similarity-main {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            padding: 20px;
-            background: #f5f5f7;
-            border-radius: 11px;
-
-            @media (max-width: 768px) {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .similarity-value {
-                flex-shrink: 0;
-
-                .percentage-value {
-                    display: block;
-                    font-size: 1.5rem;
-                    font-weight: 600;
-                    text-align: center;
-                    margin-top: 8px;
-                }
-            }
-
-            .similarity-info {
-                flex: 1;
-
-                .similarity-status {
-                    margin-bottom: 12px;
-                }
-
-                .similarity-tips {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    margin-bottom: 16px;
-                    color: #86868b;
-
-                    .el-icon {
-                        color: #faad14;
-                    }
-                }
-
-                .similarity-actions {
-                    display: flex;
-                    gap: 12px;
-
-                    .el-button {
-                        flex: 1;
-                    }
-                }
-            }
-        }
-    }
-}
-
-// 审核进度部分
-.progress-section {
-    padding: 20px;
-    background: #f5f5f7;
-    border-radius: 11px;
-
-    :deep(.el-steps) {
-        .el-step__head {
-            .el-step__icon {
-                width: 32px;
-                height: 32px;
-                font-size: 17px;
-            }
-        }
-
-        .el-step__title {
-            font-size: 17px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        .el-step__description {
-            font-size: 12px;
-            color: #86868b;
-        }
-    }
-}
-
-// 导师反馈部分
-.feedback-card {
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .feedback-header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .feedback-header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 17px;
-
-            .advisor-name {
-                color: #0066cc;
-                font-weight: 600;
-            }
-
-            .feedback-time {
-                color: #86868b;
-            }
-        }
-    }
-
-    .feedback-content {
-        line-height: 1.6;
-        color: #86868b;
-        padding: 20px;
-        background: #f5f5f7;
-        border-radius: 11px;
-        border-left: 4px solid #0066cc;
-        margin-bottom: 20px;
-    }
-
-    .feedback-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-end;
-    }
-}
-
-// 指导老师部分（侧边栏）
-.advisor-info {
-    .advisor-avatar-section {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 20px;
-        padding: 16px;
-        background: #f5f5f7;
-        border-radius: 11px;
-
-        .advisor-avatar {
-            flex-shrink: 0;
-            border: 3px solid #fff;
-            /* box-shadow removed */
-        }
-
-        .advisor-basic {
-            .advisor-name {
-                margin: 0 0 4px 0;
-                font-size: 1.125rem;
-                color: #1d1d1f;
-                font-weight: 600;
-            }
-
-            .advisor-title {
-                margin: 0;
-                color: #0066cc;
-                font-size: 17px;
-            }
-        }
-    }
-
-    .advisor-contact {
-        margin-bottom: 20px;
-        padding: 16px;
-        background: #f5f5f7;
-        border-radius: 11px;
-
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            color: #86868b;
-            font-size: 17px;
-
-            .el-icon {
-                color: #0066cc;
-                width: 16px;
-            }
-        }
-    }
-
-    .advisor-actions {
-        .contact-btn {
-            width: 100%;
-        }
-    }
-}
-
-.no-advisor {
-    text-align: center;
-    padding: 20px 0;
-
-    .no-advisor-tips {
-        margin-top: 12px;
-        color: #86868b;
-        font-size: 17px;
-    }
-}
-
-// 论文附件部分
-.attachments-list {
-    .attachment-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f2f6;
-
-        &:last-child {
-            border-bottom: none;
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-
-            .file-icon {
-                flex-shrink: 0;
-            }
-
-            .file-details {
-                flex: 1;
-                min-width: 0;
-
-                .file-name {
-                    font-weight: 600;
-                    color: #1d1d1f;
-                    margin-bottom: 4px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .file-meta {
-                    display: flex;
-                    gap: 12px;
-                    font-size: 12px;
-                    color: #86868b;
-                }
-            }
-        }
-
-        .file-actions {
-            flex-shrink: 0;
-            display: flex;
-            gap: 4px;
-        }
-    }
-
-    .no-attachments {
-        padding: 20px 0;
-        text-align: center;
-    }
-}
-
-.add-attachment {
-    margin-left: auto;
-}
-
-// 审核历史部分
-.review-history {
-    .review-item {
-        padding: 16px;
-        background: #f5f5f7;
-        border-radius: 11px;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-
-        &:hover {
-            /* box-shadow removed */
-        }
-
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-
-            .reviewer-info {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-
-                .reviewer-avatar {
-                    flex-shrink: 0;
-                }
-
-                .reviewer-name {
-                    font-weight: 600;
-                    color: #1d1d1f;
-                }
-            }
-
-            .review-time {
-                font-size: 12px;
-                color: #86868b;
-            }
-        }
-
-        .review-content {
-            font-size: 17px;
-            color: #86868b;
-            line-height: 1.4;
-            padding-left: 32px;
-        }
-    }
-}
-
-// 响应式设计
+// 响应式
 @media (max-width: 768px) {
-    .paper-header {
+    .paper-details-container {
         padding: 16px;
-
-        .header-content {
-            .title-section {
-                .paper-title {
-                    font-size: 1.5rem;
-                }
-
-                .paper-status-row {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 12px;
-                }
-            }
-
-            .action-section {
-                .header-actions {
-                    flex-wrap: wrap;
-                }
-            }
-        }
     }
 
-    .details-grid {
+    .paper-header {
+        padding: 20px;
+    }
+
+    .info-grid {
         grid-template-columns: 1fr;
     }
 
-    .similarity-card {
-        .similarity-content {
-            .similarity-main {
-                flex-direction: column;
-                text-align: center;
-                gap: 16px;
-
-                .similarity-info {
-                    .similarity-actions {
-                        justify-content: center;
-                    }
-                }
-            }
-        }
-    }
-
-    .feedback-card {
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-
-            .feedback-header-right {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-    }
-}
-
-/* 文件信息样式 */
-.file-info-container {
-    .file-card {
-        padding: 16px;
-        border-radius: 11px;
-        background: #f5f5f7;
-        border: 1px solid #e0e6ef;
-        margin-bottom: 16px;
-    }
-
-    .file-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
-
-    .file-icon-wrapper {
-        width: 56px;
-        height: 56px;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-
-        &.file-icon-doc {
-            background: rgba(0, 102, 204, 0.10);
-            color: #0066cc;
-        }
-
-        &.file-icon-pdf {
-            background: rgba(255, 77, 79, 0.08);
-            color: #ff4d4f;
-        }
-
-        &.file-icon-excel {
-            background: rgba(82, 196, 26, 0.08);
-            color: #52c41a;
-        }
-
-        &.file-icon-ppt {
-            background: rgba(114, 46, 209, 0.08);
-            color: #722ed1;
-        }
-
-        &.file-icon-txt {
-            background: rgba(250, 173, 20, 0.08);
-            color: #faad14;
-        }
-
-        &.file-icon-default {
-            background: rgba(0, 102, 204, 0.10);
-            color: #0066cc;
-        }
-    }
-
-    .file-main-info {
-        flex: 1;
-        min-width: 0;
-
-        .file-name {
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 1.1rem;
-        }
-
-        .file-meta {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-
-            .meta-item {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                font-size: 12px;
-                color: #86868b;
-
-                .el-icon {
-                    color: #0066cc;
-                }
-            }
-        }
-    }
-
-    .file-actions {
-        display: flex;
-        justify-content: center;
-
-        .el-button-group {
-            display: flex;
-            gap: 8px;
-
-            .el-button {
-                transition: all 0.3s ease;
-
-                &:hover {
-                    /* translateY removed */
-                    /* box-shadow removed */
-                }
-
-                &:active {
-                    transform: scale(0.95);
-                }
-            }
-        }
-    }
-
-    .file-status-tip {
-        margin-top: 12px;
-
-        :deep(.el-alert) {
-            border-radius: 11px;
-            border: 1px solid #e0e6ef;
-        }
-    }
-
-    /* 无文件状态 */
-    .no-file {
-        .empty-state {
-            text-align: center;
-            padding: 32px 0;
-
-            .empty-text {
-                margin: 16px 0 8px;
-                color: #1d1d1f;
-                font-weight: 600;
-            }
-
-            .empty-tip {
-                color: #86868b;
-                margin-bottom: 24px;
-                font-size: 17px;
-            }
-        }
-    }
-}
-
-.add-file {
-    margin-left: auto;
-}
-
-.file-preview-dialog {
-    .el-dialog__body {
-        padding: 0;
-    }
-
-    .preview-wrapper {
-        height: 70vh;
-        position: relative;
-        background: #f5f5f7;
-        border-radius: 4px;
-        overflow: hidden;
-
-        .preview-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .word-preview {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-
-            .word-preview-tip {
-                padding: 12px;
-                background: white;
-                border-top: 1px solid #e4e7ed;
-            }
-        }
-
-        .preview-error {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-
-            .error-detail {
-                margin-top: 8px;
-                color: #86868b;
-                font-size: 17px;
-            }
-        }
-    }
-
-    .preview-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .file-info {
-            .file-name {
-                font-weight: 600;
-                color: #1d1d1f;
-            }
-
-            .file-size {
-                color: #86868b;
-                font-size: 12px;
-                margin-left: 8px;
-            }
-        }
-
-        .footer-actions {
-            display: flex;
-            gap: 8px;
-        }
-    }
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-    .file-info-container {
-        .file-header {
-            flex-direction: column;
-            text-align: center;
-            gap: 12px;
-        }
-
-        .file-meta {
-            justify-content: center;
-        }
-
-        .file-actions {
-            .el-button-group {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
-    }
-
-    .file-preview-dialog {
-        .el-dialog {
-            width: 95% !important;
-            margin-top: 10vh !important;
-        }
-
-        .preview-wrapper {
-            height: 60vh;
-        }
-
-        .preview-footer {
-            flex-direction: column;
-            gap: 12px;
-
-            .file-info {
-                width: 100%;
-                text-align: center;
-            }
-
-            .footer-actions {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    }
-}
-
-@media (max-width: 1200px) {
-    .paper-content {
-        .el-col {
-            &:first-child {
-                margin-bottom: 16px;
-            }
-        }
-    }
-}
-
-@media (max-width: 768px) {
-    .similarity-actions {
+    .similarity-row {
         flex-direction: column;
-
-        .el-button {
-            width: 100%;
-        }
+        align-items: flex-start;
     }
 
-    .preview-footer {
+    .feedback-actions {
         flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-
-        .report-info {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 4px;
-        }
-
-        .footer-actions {
-            width: 100%;
-            justify-content: flex-end;
-        }
-    }
-
-    .similarity-report-dialog {
-        width: 95% !important;
-        margin-top: 2vh !important;
-
-        :deep(.el-dialog__body) {
-            height: 60vh;
-        }
-    }
-
-    .preview-wrapper {
-        height: 60vh;
     }
 }
 </style>

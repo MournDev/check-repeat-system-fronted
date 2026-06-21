@@ -1,5 +1,13 @@
 import request from './request'
 
+// 获取当前登录用户的完整信息（含 email/phone 等敏感字段）
+export const getCurrentUserInfo = () => {
+  return request({
+    url: '/api/v1/user/info/get',
+    method: 'get'
+  })
+}
+
 export const updateUserInfo = (data) => {
   return request({
     url: '/api/v1/user/info/update-info',

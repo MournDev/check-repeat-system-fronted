@@ -263,7 +263,7 @@ const exportReport = async () => {
     })
     
     // 创建下载链接
-    const blob = new Blob([response], { type: 'application/pdf' })
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/pdf' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

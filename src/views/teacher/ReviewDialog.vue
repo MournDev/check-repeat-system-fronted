@@ -155,7 +155,6 @@
       <div class="dialog-footer">
         <div class="review-actions">
           <el-button @click="handleClose">取消</el-button>
-          <el-button type="warning" @click="saveDraft">保存草稿</el-button>
           <el-button @click="openTemplateDialog">使用模板</el-button>
           <el-dropdown @command="handleReviewAction">
             <el-button type="primary">
@@ -491,7 +490,9 @@ const goToTemplatesPage = () => {
 }
 
 const handleReviewAction = (command) => {
-  reviewForm.value.status = command
+  // "暂缓审核" 映射为 "需要修改"，两者共用 revision_needed 状态
+  const mappedCommand = command === 'defer' ? 'modify' : command
+  reviewForm.value.status = mappedCommand
   switch (command) {
     case 'approve':
       opinionDialogTitle.value = '审核通过'
@@ -523,10 +524,6 @@ const handleReviewAction = (command) => {
   }
   
   opinionDialogVisible.value = true
-}
-
-const saveDraft = () => {
-  ElMessage.success('草稿已保存')
 }
 
 const submitReview = async () => {

@@ -394,7 +394,8 @@ import {
 } from '@element-plus/icons-vue'
 import {
   updateUserInfo, uploadAvatar, updatePassword, getAllColleges, getLoginHistory,
-  sendVerifyEmail, verifyEmail as verifyEmailAPI, sendEmailCode as sendEmailCodeAPI, updateUserEmail
+  sendVerifyEmail, verifyEmail as verifyEmailAPI, sendEmailCode as sendEmailCodeAPI, updateUserEmail,
+  getCurrentUserInfo
 } from '@/api/user'
 import { updateUser } from '@/api/admin/users'
 import { updateInfo, getInfo, changePassword } from '@/api/teacher'
@@ -726,9 +727,10 @@ function initAdminTeacher() {
   })
 }
 
-function initStudent() {
+async function initStudent() {
   const info = userStore.userInfo
   if (!info) return
+  // 先用本地缓存快速填充表单
   userInfo.value = { ...info, emailVerified: info.emailVerified ?? false }
   Object.assign(profileForm, {
     realName: info.realName || '', username: info.username || '',
@@ -737,6 +739,22 @@ function initStudent() {
     grade: info.grade || '', className: info.className || info.classInfo || '',
     introduce: info.introduce || '',
   })
+  // 从后端获取完整信息（含 email/phone 等 localStorage 未保存的字段）
+  try {
+    const res = await getCurrentUserInfo()
+    if (res.code === 200 && res.data) {
+      const full = { ...info, ...res.data }
+      userInfo.value = { ...full, emailVerified: full.emailVerified ?? false }
+      userStore.setUserInfo(full)
+      Object.assign(profileForm, {
+        realName: full.realName || '', username: full.username || '',
+        email: full.email || '', phone: full.phone || '',
+        major: full.major || '', collegeName: full.collegeName || '',
+        grade: full.grade || '', className: full.className || '',
+        introduce: full.introduce || '',
+      })
+    }
+  } catch { /* ignore, use cached data */ }
 }
 
 async function checkEmailVerification() {

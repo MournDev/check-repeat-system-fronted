@@ -177,6 +177,14 @@
               批量第三方查重
             </el-button>
             <el-button
+              type="primary"
+              :icon="Stamp"
+              :disabled="selectedPapers.length === 0"
+              @click="showBatchAuditDialog"
+            >
+              批量审核
+            </el-button>
+            <el-button
               :icon="Download"
               @click="exportLibrary"
             >
@@ -269,7 +277,7 @@
             {{ row.wordCount }}字
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" width="250">
+        <el-table-column label="操作" fixed="right" width="280">
           <template #default="{ row }">
             <el-button size="small" type="primary" text @click="viewPaper(row)">
               查看
@@ -282,6 +290,9 @@
             </el-button>
             <el-button size="small" type="warning" text @click="performThirdPartyCheck(row)">
               第三方查重
+            </el-button>
+            <el-button size="small" type="primary" text @click="showAuditDialog(row)">
+              审核
             </el-button>
             <el-button size="small" type="danger" text @click="removePaper(row)">
               删除
@@ -484,6 +495,25 @@
         <el-button type="primary" @click="handleDownloadPaper(currentPaper)">下载原文</el-button>
       </template>
     </el-dialog>
+
+    <!-- 审核对话框 -->
+    <el-dialog v-model="auditDialogVisible" :title="isBatchAudit ? '批量审核' : '论文审核'" width="500px" destroy-on-close>
+      <el-form :model="auditForm" label-width="100px">
+        <el-form-item label="审核结果">
+          <el-radio-group v-model="auditForm.auditResult">
+            <el-radio value="approved">通过</el-radio>
+            <el-radio value="rejected">不通过</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="审核意见">
+          <el-input v-model="auditForm.auditComment" type="textarea" :rows="4" placeholder="请输入审核意见" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="auditDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitAudit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -503,7 +533,9 @@ import {
   batchThirdPartyCheck,
   exportPapers,
   uploadPaper,
-  downloadPaper
+  downloadPaper,
+  auditPaper,
+  batchAuditPapers
 } from '@/api/admin/papers'
 
 // 导入通用接口
@@ -512,7 +544,7 @@ import { getMajors, getColleges } from '@/api/admin/common'
 // 图标导入
 import {
   Upload, Refresh, Search, RefreshLeft, Document, Check, Warning,
-  TrendCharts, Files, Download, MagicStick, UploadFilled
+  TrendCharts, Files, Download, MagicStick, UploadFilled, Stamp
 } from '@element-plus/icons-vue'
 
 // 响应式数据
@@ -524,6 +556,15 @@ const selectedPapers = ref([])
 const uploadDialogVisible = ref(false)
 const detailDialogVisible = ref(false)
 const currentPaper = ref(null)
+
+// 审核相关
+const auditDialogVisible = ref(false)
+const isBatchAudit = ref(false)
+const currentAuditPaper = ref(null)
+const auditForm = reactive({
+  auditResult: 'approved',
+  auditComment: ''
+})
 
 // 统计数据
 const libraryStats = ref({
@@ -769,9 +810,10 @@ const getStatusText = (status) => {
 
 const getAllocationStatusType = (status) => {
   const statusMap = {
-    'pending': 'info',
-    'allocated': 'success',
-    'unallocated': 'warning'
+    'pending': 'warning',
+    'confirmed': 'success',
+    'rejected': 'danger',
+    'pending_reassign': 'info'
   }
   return statusMap[status] || 'info'
 }
@@ -780,7 +822,8 @@ const getAllocationStatusText = (status) => {
   const statusMap = {
     'pending': '待确认',
     'confirmed': '已确认',
-    'rejected': '已拒绝'
+    'rejected': '已拒绝',
+    'pending_reassign': '待重新分配'
   }
   return statusMap[status] || status
 }
@@ -1057,6 +1100,54 @@ const exportLibrary = () => {
   })
 }
 
+// 审核相关方法
+const showAuditDialog = (paper) => {
+  isBatchAudit.value = false
+  currentAuditPaper.value = paper
+  auditForm.auditResult = 'approved'
+  auditForm.auditComment = ''
+  auditDialogVisible.value = true
+}
+
+const showBatchAuditDialog = () => {
+  if (selectedPapers.value.length === 0) {
+    ElMessage.warning('请先选择论文')
+    return
+  }
+  isBatchAudit.value = true
+  currentAuditPaper.value = null
+  auditForm.auditResult = 'approved'
+  auditForm.auditComment = ''
+  auditDialogVisible.value = true
+}
+
+const submitAudit = async () => {
+  try {
+    let res
+    if (isBatchAudit.value) {
+      const paperIds = selectedPapers.value.map(p => p.id)
+      res = await batchAuditPapers({
+        paperIds,
+        auditResult: auditForm.auditResult,
+        auditComment: auditForm.auditComment
+      })
+    } else {
+      res = await auditPaper(currentAuditPaper.value.id, {
+        auditResult: auditForm.auditResult,
+        auditComment: auditForm.auditComment
+      })
+    }
+    if (res.code === 200) {
+      ElMessage.success(res.message || '审核成功')
+      auditDialogVisible.value = false
+      await loadPaperList()
+    }
+  } catch (err) {
+    console.error('审核失败', err)
+    ElMessage.error(err.message || '审核失败')
+  }
+}
+
 // 获取学院列表
 const loadColleges = async () => {
   try {
@@ -1090,7 +1181,7 @@ const loadMajors = async () => {
 // 学院选择变化处理
 const handleCollegeChange = () => {
   // 清空已选择的专业
-  filterForm.majorName = ''
+  filterForm.majorId = ''
 }
 
 // 生命周期

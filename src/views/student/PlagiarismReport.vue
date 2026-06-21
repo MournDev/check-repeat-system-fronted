@@ -485,7 +485,7 @@ const exportReport = async (format) => {
       const latestReport = reportListRes.data[0];
       const response = await exportCheckReport(latestReport.id, format)
       // 处理文件下载
-      const blob = new Blob([response])
+      const blob = response.data instanceof Blob ? response.data : new Blob([response.data])
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url

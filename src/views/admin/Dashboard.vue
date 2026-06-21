@@ -4,18 +4,10 @@
     <div class="welcome-section">
       <div class="welcome-content">
         <div class="welcome-left">
-          <h1 class="welcome-title">系统概览</h1>
-          <p class="welcome-subtitle">欢迎回来，{{ userStore.userInfo?.realName || '管理员' }}！这里是系统管理中心</p>
+          <h1 class="welcome-title">运营概览</h1>
+          <p class="welcome-subtitle">欢迎回来，{{ userStore.userInfo?.realName || '管理员' }}！这里是业务数据总览</p>
         </div>
         <div class="welcome-actions">
-          <el-button type="primary" @click="goToUserManagement">
-            <el-icon><UserFilled /></el-icon>
-            用户管理
-          </el-button>
-          <el-button @click="goToSchoolOverview">
-            <el-icon><DataAnalysis /></el-icon>
-            全校概览
-          </el-button>
           <el-button @click="refreshData">
             <el-icon><Refresh /></el-icon>
             刷新数据
@@ -174,48 +166,11 @@
           </div>
         </div>
 
-        <!-- 快速操作 -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">
-              <el-icon><Operation /></el-icon>
-              快速操作
-            </div>
-          </div>
-          
-          <div class="action-buttons">
-            <el-button
-              type="primary"
-              @click="goToUserManagement"
-            >
-              <el-icon><UserFilled /></el-icon>
-              用户管理
-            </el-button>
-            <el-button
-              @click="goToAdvisorAssign"
-            >
-              <el-icon><Connection /></el-icon>
-              导师分配
-            </el-button>
-            <el-button
-              @click="goToSystemConfig"
-            >
-              <el-icon><Setting /></el-icon>
-              系统配置
-            </el-button>
-            <el-button
-              @click="goToLogCenter"
-            >
-              <el-icon><Document /></el-icon>
-              日志中心
-            </el-button>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- 业务指标 -->
-    <div class="card business-metrics-card">
+    <!-- 业务指标（仅 ADMIN 可见） -->
+    <div v-if="userStore.role === 'ADMIN' || userStore.role === 'SUPER_ADMIN'" class="card business-metrics-card">
       <div class="card-header">
         <div class="card-title">
           <el-icon><TrendCharts /></el-icon>
@@ -258,8 +213,8 @@
       </div>
     </div>
 
-    <!-- 响应时间趋势图 -->
-    <div class="card response-time-card">
+    <!-- 响应时间趋势图（仅 ADMIN 可见） -->
+    <div v-if="userStore.role === 'ADMIN' || userStore.role === 'SUPER_ADMIN'" class="card response-time-card">
       <div class="card-header">
         <div class="card-title">
           <el-icon><Timer /></el-icon>
@@ -280,7 +235,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
@@ -293,12 +247,10 @@ import { getAssignmentStats } from '@/api/admin/assignment'
 
 // 图标引入
 import {
-  UserFilled, Refresh, User, Document, Connection, TrendCharts,
-  List, More, CollectionTag, Clock, Check, Monitor, SuccessFilled,
-  PieChart, Operation, Setting, Histogram, DataAnalysis, Timer
+  Refresh, User, Document, Connection, TrendCharts,
+  Monitor, SuccessFilled, PieChart, Timer
 } from '@element-plus/icons-vue'
 
-const router = useRouter()
 const userStore = useUserStore()
 
 // 响应时间趋势
@@ -400,26 +352,6 @@ const loadDashboardData = async () => {
   }
 }
 
-const goToUserManagement = () => {
-  router.push('/admin/user-management')
-}
-
-const goToAdvisorAssign = () => {
-  router.push('/admin/paper-assignment')
-}
-
-const goToSystemConfig = () => {
-  router.push('/admin/system-config')
-}
-
-const goToLogCenter = () => {
-  router.push('/admin/log-center')
-}
-
-const goToSchoolOverview = () => {
-  router.push('/admin/school-overview')
-}
-
 const loadBusinessMetrics = async () => {
   try {
     const res = await getBusinessMetrics()
@@ -512,8 +444,10 @@ const formatTime = (date) => {
 
 onMounted(() => {
   loadDashboardData()
-  loadBusinessMetrics()
-  initResponseTimeChart()
+  if (userStore.role === 'ADMIN' || userStore.role === 'SUPER_ADMIN') {
+    loadBusinessMetrics()
+    initResponseTimeChart()
+  }
 })
 
 onUnmounted(() => {
@@ -785,17 +719,6 @@ onUnmounted(() => {
         font-size: 0.875rem;
       }
     }
-  }
-}
-
-// 快速操作
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-
-  .el-button {
-    justify-content: center;
   }
 }
 

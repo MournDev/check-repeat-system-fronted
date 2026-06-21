@@ -147,6 +147,15 @@
                   <el-icon><Upload /></el-icon>
                   <span>提交修改</span>
                 </button>
+                <!-- 需要修改状态：重新提交 -->
+                <button
+                  v-if="paper.paperStatus === 'revision_needed'"
+                  class="action-button primary"
+                  @click="resubmitAfterRevision(paper)"
+                >
+                  <el-icon><Upload /></el-icon>
+                  <span>重新提交</span>
+                </button>
                 <!-- 重新编辑已撤回论文 -->
                 <button
                   v-if="paper.paperStatus === 'withdrawn'"
@@ -158,7 +167,7 @@
                 </button>
                 <!-- 撤回申请 -->
                 <button
-                  v-if="['pending', 'checking', 'auditing'].includes(paper.paperStatus)"
+                  v-if="['pending', 'checking', 'auditing', 'revision_needed'].includes(paper.paperStatus)"
                   class="action-button warning"
                   @click="withdrawPaper(paper)"
                 >
@@ -221,7 +230,7 @@
               </div>
               <div class="meta-item">
                 <el-icon><Files /></el-icon>
-                <span>相似度：{{ paper.similarityRate }}%</span>
+                <span>相似度：{{ paper.similarityRate != null ? paper.similarityRate + '%' : '未检测' }}</span>
               </div>
             </div>
 
@@ -538,7 +547,6 @@ import {
   EditPen,
   InfoFilled
 } from "@element-plus/icons-vue";
-import useStore from "element-plus/es/components/table/src/store/index.mjs";
 
 const router = useRouter();
 const route = useRoute();
@@ -680,7 +688,7 @@ const downloadPaper = async (paper) => {
     const res = await downloadPaperApi(paper.id);
     
     // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/octet-stream' });
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/octet-stream' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -710,6 +718,14 @@ const resubmitPaper = (paper) => {
   });
 };
 
+const resubmitAfterRevision = (paper) => {
+  // 跳转到论文提交页面，带上论文ID和revision标记
+  router.push({
+    path: '/student/paper-submit',
+    query: { paperId: paper.id, action: 'revision' }
+  });
+};
+
 const toggleVersions = async (paperId) => {
   const paper = papers.value.find((p) => String(p.id) === String(paperId));
   if (!paper) return;
@@ -730,28 +746,37 @@ const toggleVersions = async (paperId) => {
   paper.showVersions = !paper.showVersions;
 };
 
-// 状态映射
+// 状态映射（与后端 PaperStatusEnum 一致）
 const getStatusType = (status) => {
   const typeMap = {
+    draft: "info",
+    submitted: "info",
     pending: "info",
     checking: "warning",
-    withdrawn: "warning",
     auditing: "primary",
+    reviewed: "primary",
     completed: "success",
     rejected: "danger",
+    revision_needed: "warning",
+    revised: "warning",
+    withdrawn: "warning",
   };
   return typeMap[status] || "info";
 };
 
 const getStatusText = (status) => {
   const textMap = {
-    assigned: "已分配",
-    withdrawn: "已撤回",
-    pending: "待分配",
+    draft: "草稿",
+    submitted: "已提交",
+    pending: "待处理",
     checking: "待查重",
     auditing: "审核中",
+    reviewed: "已评审",
     completed: "已完成",
-    rejected: "需修改",
+    rejected: "审核不通过",
+    revision_needed: "需要修改",
+    revised: "修改中",
+    withdrawn: "已撤回",
   };
   return textMap[status] || "未知状态";
 };
@@ -962,7 +987,7 @@ const downloadCompareReport = async () => {
     const res = await downloadVersionCompare(paperId, selectedVersionIds.value);
     
     // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/pdf' });
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -1029,7 +1054,7 @@ const downloadVersion = async (version) => {
     const res = await downloadVersionApi(version.id);
     
     // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/octet-stream' });
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/octet-stream' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -1053,7 +1078,7 @@ const downloadAttachment = async (attachment) => {
     const res = await downloadAttachmentApi(attachment.id);
     
     // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/octet-stream' });
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/octet-stream' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -1127,7 +1152,7 @@ const batchDownload = async () => {
     const res = await batchDownloadPapers(selectedPaperIds.value);
     
     // 创建下载链接
-    const blob = new Blob([res.data], { type: 'application/zip' });
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/zip' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

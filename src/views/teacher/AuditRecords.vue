@@ -43,6 +43,7 @@
                 <el-select v-model="filterForm.status" placeholder="全部状态" clearable>
                   <el-option label="全部" value="" />
                   <el-option label="审核通过" value="completed" />
+                  <el-option label="需要修改" value="revision_needed" />
                   <el-option label="未通过" value="rejected" />
                 </el-select>
               </el-form-item>
@@ -240,7 +241,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PaperDetail from '@/views/student/PaperDetail.vue'
-import { getReviewedList, downloadPaper, contactStudent } from '@/api/teacher.js'
+import { getReviewedList, downloadPaper, contactStudent, exportReviewRecords } from '@/api/teacher.js'
 import { getStatusText, getStatusType, getSimilarityColor, getSimilarityClass } from '@/utils/reviewStatus.js'
 import { formatDateTime } from '@/utils/dataType.js'
 import {
@@ -268,7 +269,7 @@ const reviewData = ref([])
 // 分页相关
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(100)
+const total = ref(0)
 const loading = ref(false)
 
 // 对话框
@@ -296,8 +297,32 @@ const refreshData = () => {
   fetchReviewData()
 }
 
-const exportData = () => {
-  ElMessage.success('数据导出成功')
+const exportData = async () => {
+  if (reviewData.value.length === 0) {
+    ElMessage.warning('暂无数据可导出')
+    return
+  }
+  try {
+    ElMessage.info('正在导出审核记录...')
+    const params = {
+      studentName: filterForm.studentName || undefined,
+      paperTitle: filterForm.paperTitle || undefined
+    }
+    const res = await exportReviewRecords(params)
+    const blob = res.data || res
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `审核记录_${new Date().toISOString().slice(0, 10)}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('审核记录导出成功')
+  } catch (error) {
+    console.error('导出审核记录失败:', error)
+    ElMessage.error(error.message || '导出审核记录失败')
+  }
 }
 
 const fetchReviewData = async () => {
@@ -366,7 +391,7 @@ const handleMoreAction = async (row, command) => {
       }
       try {
         const res = await downloadPaper(paperId)
-        const blob = new Blob([res.data], { type: 'application/octet-stream' })
+        const blob = res.data instanceof Blob ? res.data : new Blob([res.data])
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url

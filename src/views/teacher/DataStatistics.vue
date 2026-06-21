@@ -250,28 +250,28 @@ const handleTimeRangeChange = (range) => {
 }
 
 const loadData = async () => {
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '正在加载数据...',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+
   try {
-    // 显示加载状态
-    const loadingInstance = ElLoading.service({
-      lock: true,
-      text: '正在加载数据...',
-      background: 'rgba(0, 0, 0, 0.7)'
-    })
-    
     // 并行加载统计数据和详细数据
     await Promise.all([
       loadStats(),
       loadDetailData()
     ])
-    
+
     // 初始化图表
     await initCharts()
-    
-    loadingInstance.close()
+
     ElMessage.success('数据加载完成')
   } catch (error) {
     console.error('加载数据失败:', error)
     ElMessage.error('加载数据失败: ' + error.message)
+  } finally {
+    loadingInstance.close()
   }
 }
 
@@ -630,36 +630,37 @@ const getTrendIcon = (type) => {
 }
 
 const exportData = async () => {
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '正在导出数据...',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+
   try {
-    const loadingInstance = ElLoading.service({
-      lock: true,
-      text: '正在导出数据...',
-      background: 'rgba(0, 0, 0, 0.7)'
-    })
-    
     const params = {
       teacherId: userStore.userInfo?.userId,
       timeRange: timeRange.value,
       exportFormat: 'excel',
       includeCharts: true
     }
-    
+
     const res = await exportTeacherData(params)
-    
+
     // 创建下载链接
-    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
     link.download = `教师数据统计_${new Date().toISOString().slice(0, 10)}.xlsx`
     link.click()
     window.URL.revokeObjectURL(url)
-    
-    loadingInstance.close()
+
     ElMessage.success('数据导出成功')
   } catch (error) {
     console.error('导出数据失败:', error)
     ElMessage.error('导出数据失败: ' + error.message)
+  } finally {
+    loadingInstance.close()
   }
 }
 

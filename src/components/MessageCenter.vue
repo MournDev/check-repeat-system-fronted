@@ -240,7 +240,7 @@ import {
   getMessageList, markAsRead as markAsReadApi, batchMarkAsRead as batchMarkAsReadApi, deleteMessage as deleteMessageApi, deleteAllMessages,
   confirmPaper, rejectPaper as rejectAssignment, getPendingPapers, getPaperDetail
 } from '@/api/user.js'
-import { useCheckProgress } from '@/composables/useCheckProgress'
+import { useMessageWebSocket } from '@/composables/useMessageWebSocket'
 
 const props = defineProps({
   onMessageClick: {
@@ -254,27 +254,19 @@ const userStore = useUserStore()
 const messageStore = useMessageStore()
 
 // WebSocket连接
-const { connect: wsConnect, disconnect: wsDisconnect, isConnected } = useCheckProgress()
+const { connect: wsConnect, disconnect: wsDisconnect, isConnected } = useMessageWebSocket()
 
 // 连接WebSocket接收实时通知
 const connectWebSocket = () => {
   const userId = userStore.userInfo?.userId
   if (!userId) return
-  
-  wsConnect(
-    `notification-${userId}`,
-    (data) => {
-      if (data.type === 'notification') {
-        // 收到新通知
-        ElMessage.success(`收到新消息: ${data.data.title}`)
-        // 重新加载消息列表
-        loadMessages()
-      }
-    },
-    (error) => {
-      console.error('WebSocket连接失败:', error)
+
+  wsConnect(userId, (data) => {
+    if (data.type === 'notification') {
+      ElMessage.success(`收到新消息: ${data.data?.title || ''}`)
+      loadMessages()
     }
-  )
+  })
 }
 
 // 断开WebSocket连接
@@ -373,8 +365,8 @@ const showAssignmentDialog = async (notification, type) => {
   currentAssignment.value = {
     ...notification,
     paperId: paperId,
-    paperTitle: paperDetail.data.paperTitle || `论文 ${paperId}`,
-    studentName: paperDetail.data.author || '待确认学生'
+    paperTitle: paperDetail.paperTitle || `论文 ${paperId}`,
+    studentName: paperDetail.author || paperDetail.studentName || '待确认学生'
   }
   if (type === 'reject') {
     rejectForm.value.reason = ''

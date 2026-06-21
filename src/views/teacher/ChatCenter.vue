@@ -368,7 +368,7 @@ const handleExportChat = async () => {
     })
     
     // 处理文件下载
-    const blob = new Blob([response], { type: 'text/plain' })
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url

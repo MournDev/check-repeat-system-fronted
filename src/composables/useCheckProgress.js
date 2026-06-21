@@ -1,5 +1,6 @@
 import { ref, reactive, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import Cookies from 'js-cookie';
 
 /**
  * 查重任务进度监听 Hook（Vue 3 Composition API）
@@ -8,7 +9,9 @@ import { ElMessage } from 'element-plus';
 export function useCheckProgress() {
   let ws = null;
   let reconnectTimer = null;
-  
+  let reconnectAttempts = 0;
+  const maxReconnectAttempts = 5;
+
   // 响应式进度数据
   const progress = reactive({
     taskId: null,
@@ -45,10 +48,14 @@ export function useCheckProgress() {
     error.value = null;
 
     try {
-      // 构建 WebSocket URL
-      const baseUrl = import.meta.env.VITE_WS_BASE_URL || 'http://localhost:8080';
-      // 将 http 转换为 ws，https 转换为 wss
-      const wsUrl = baseUrl.replace('http', 'ws') + `/ws/check-progress/${paperId}`;
+      // 构建 WebSocket URL（自动根据页面协议选择 ws:// 或 wss://）
+      const token = Cookies.get('token') || '';
+      const wsBase = import.meta.env.VITE_WS_BASE_URL || (
+        window.location.protocol === 'https:'
+          ? `wss://${window.location.host}`
+          : `ws://${window.location.host}`
+      );
+      const wsUrl = `${wsBase}/ws/check-progress/${paperId}?token=${encodeURIComponent(token)}`;
 
       ws = new WebSocket(wsUrl);
 
@@ -56,6 +63,7 @@ export function useCheckProgress() {
         console.log('WebSocket 连接成功，开始监听查重进度');
         isConnected.value = true;
         isConnecting.value = false;
+        reconnectAttempts = 0;
       };
 
       ws.onmessage = (event) => {
@@ -111,12 +119,19 @@ export function useCheckProgress() {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
     }
-    
-    // 5秒后尝试重连
+
+    reconnectAttempts++;
+    if (reconnectAttempts > maxReconnectAttempts) {
+      console.error('WebSocket 重连失败次数过多，停止尝试');
+      ElMessage.error('查重进度连接失败，请刷新页面重试');
+      return;
+    }
+
+    const delay = 1000 * Math.pow(2, reconnectAttempts - 1);
+    console.log(`尝试重新连接 WebSocket (${reconnectAttempts}/${maxReconnectAttempts})，延迟 ${delay}ms`);
     reconnectTimer = setTimeout(() => {
-      console.log('尝试重新连接 WebSocket');
       connect(paperId, onMessage);
-    }, 5000);
+    }, delay);
   };
 
   /**

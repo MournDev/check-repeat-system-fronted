@@ -103,7 +103,7 @@
         <el-table-column prop="similarityRate" label="相似度" width="100">
           <template #default="{ row }">
             <span :class="getSimilarityClass(row.similarityRate)">
-              {{ row.similarityRate }}%
+              {{ row.similarityRate != null ? row.similarityRate + '%' : '未检测' }}
             </span>
           </template>
         </el-table-column>
@@ -262,6 +262,9 @@ const getPaperTypeTagType = (type) => {
 
 const getPaperTypeText = (type) => {
   const textMap = {
+    'THESIS': '学位论文',
+    'JOURNAL': '期刊论文',
+    'CONFERENCE': '会议论文',
     'graduation': '毕业论文',
     'course': '课程论文',
     'other': '其他'
@@ -271,12 +274,16 @@ const getPaperTypeText = (type) => {
 
 const getStatusTagType = (status) => {
   const statusMap = {
+    'draft': 'info',
     'pending': 'info',
     'assigned': '',
+    'submitted': 'info',
     'checking': 'primary',
     'auditing': 'warning',
+    'reviewed': 'warning',
     'completed': 'success',
     'rejected': 'danger',
+    'revised': 'warning',
     'withdrawn': 'info'
   }
   return statusMap[status] || 'info'
@@ -284,11 +291,17 @@ const getStatusTagType = (status) => {
 
 const getStatusText = (status) => {
   const textMap = {
-    'auditing': '待审核',
+    'draft': '草稿',
     'pending': '待分配',
+    'assigned': '已分配',
+    'submitted': '已提交',
     'checking': '待查重',
+    'auditing': '待审核',
+    'reviewed': '已审核',
     'completed': '审核通过',
-    'rejected': '审核驳回'
+    'rejected': '审核驳回',
+    'revised': '需修改',
+    'withdrawn': '已撤回'
   }
   return textMap[status] || '未知状态'
 }

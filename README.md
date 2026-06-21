@@ -39,12 +39,16 @@
 ### 管理员端
 - **系统概览**：用户/论文/查重统计数据、系统健康度
 - **用户管理**：增删改查、角色分配、批量导入
-- **论文管理**：论文分配、状态管理、批量操作
+- **论文管理**：论文分配、状态管理、批量操作、单篇/批量审核
 - **报告管理**：查重报告查看与导出
 - **系统配置**：查重规则、分配规则、系统参数
-- **监控中心**：CPU/内存/磁盘实时监控、趋势图表
-- **日志管理**：操作日志、登录日志、安全审计
+- **监控中心**：CPU/内存/磁盘实时监控、数据库连接池、API 响应时间趋势、ECharts 图表
+- **日志管理**：操作日志、登录日志、安全审计、统计分析（热门操作/用户活跃度/模块使用率）、批量清理
 - **数据备份**：手动/自动备份、备份恢复
+- **通知管理**：站内通知列表、已读/未读筛选、优先级筛选、批量操作、发送测试通知
+- **消息模板**：模板 CRUD、启用/禁用、变量渲染预览
+- **查重规则管理**：规则配置、启用/禁用、设置默认规则
+- **对比库管理**：对比库数据管理
 
 ## 快速开始
 
@@ -90,9 +94,16 @@ src/
 │   ├── student.js          #   学生端接口（62 个）
 │   ├── teacher.js          #   教师端接口（78 个）
 │   ├── user.js             #   用户/认证接口（25 个）
-│   └── admin/              #   管理员接口（91 个，按模块拆分）
+│   └── admin/              #   管理员接口（按模块拆分）
+│       ├── monitoring.js   #     系统监控接口
+│       ├── notices.js      #     系统通知接口
+│       ├── templates.js    #     消息模板接口
+│       ├── logs.js         #     日志管理接口（含统计分析）
+│       └── papers.js       #     论文管理接口（含审核）
 ├── components/
-│   └── layout/             #   布局组件（侧边栏、顶栏）
+│   ├── layout/             #   布局组件（侧边栏、顶栏）
+│   ├── PaperPreviewDialog  #   论文预览对话框
+│   └── UnifiedPreview      #   统一文件预览组件
 ├── composables/            #   组合式函数
 │   ├── useCheckProgress.js #     查重进度 WebSocket
 │   └── useMessageWebSocket.js #  消息 STOMP WebSocket
@@ -103,11 +114,21 @@ src/
 │   └── message.js          #     消息状态
 ├── styles/                 #   全局样式
 ├── utils/                  #   工具函数
+│   ├── jwt.js              #     JWT 解析工具
+│   ├── tokenManager.js     #     Token 管理工具
+│   └── download.js         #     文件下载工具
 ├── views/
 │   ├── login/              #     登录页
+│   ├── common/             #     公共页面（用户设置）
 │   ├── student/            #     学生端页面
 │   ├── teacher/            #     教师端页面
 │   └── admin/              #     管理员页面
+│       ├── SystemNoticeManagement    # 通知管理
+│       ├── MessageTemplateManagement # 消息模板管理
+│       ├── SystemMonitoring          # 系统监控面板
+│       ├── CheckRuleManagement       # 查重规则管理
+│       ├── CompareLibManagement      # 对比库管理
+│       └── LogCenter                 # 日志中心（含统计分析）
 ├── App.vue                 #   根组件
 └── main.js                 #   入口文件
 ```

@@ -97,3 +97,21 @@ export const downloadPaper = (paperId) => {
     responseType: 'blob'
   })
 }
+
+// 审核论文
+export const auditPaper = (paperId, data) => {
+  return request({
+    url: `/api/v1/admin/papers/${paperId}/audit`,
+    method: 'put',
+    data
+  })
+}
+
+// 批量审核论文
+export const batchAuditPapers = (data) => {
+  return request({
+    url: '/api/v1/admin/papers/batch-audit',
+    method: 'post',
+    data
+  })
+}

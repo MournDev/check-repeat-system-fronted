@@ -8,6 +8,7 @@
       <div class="header-actions">
         <el-button type="primary" :icon="Refresh" @click="refreshLogs">刷新数据</el-button>
         <el-button :icon="Download" @click="exportLogs">导出日志</el-button>
+        <el-button type="danger" :icon="Delete" @click="handleCleanExpired">清理过期日志</el-button>
       </div>
     </div>
 
@@ -31,6 +32,7 @@
                   <el-option label="学生" value="STUDENT" />
                   <el-option label="教师" value="TEACHER" />
                   <el-option label="管理员" value="ADMIN" />
+                  <el-option label="super_admin" value="SUPER_ADMIN" />
                 </el-select>
                 <el-select v-model="operationFilters.module" placeholder="功能模块" clearable style="width: 140px" @change="onModuleChange">
                   <el-option
@@ -55,7 +57,8 @@
             </div>
           </template>
 
-          <el-table :data="operationLogs" style="width: 100%" v-loading="operationLoading" stripe>
+          <el-table :data="operationLogs" style="width: 100%" v-loading="operationLoading" stripe @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="50" />
             <el-table-column prop="operationTime" label="操作时间" min-width="170">
               <template #default="{ row }">{{ formatDate(row.operationTime) }}</template>
             </el-table-column>
@@ -86,6 +89,11 @@
             </el-table-column>
           </el-table>
 
+          <div class="table-footer" v-if="selectedRows.length > 0">
+            <span class="selected-count">已选 {{ selectedRows.length }} 项</span>
+            <el-button size="small" type="danger" @click="handleBatchDelete">批量删除</el-button>
+          </div>
+
           <div class="pagination-wrapper">
             <el-pagination
               v-model:current-page="operationPagination.pageNum"
@@ -115,8 +123,11 @@
                   value-format="YYYY-MM-DD"
                   style="width: 240px"
                 />
-                <el-input v-model="loginFilters.ip" placeholder="IP地址" clearable style="width: 150px" />
+                <el-input v-model="loginFilters.username" placeholder="用户名" clearable style="width: 140px" />
+                <el-input v-model="loginFilters.ip" placeholder="IP地址" clearable style="width: 140px" />
                 <el-button type="primary" :icon="Search" @click="loadLoginLogs">查询</el-button>
+                <el-button @click="resetLoginFilters">重置</el-button>
+                <el-button :icon="Download" @click="exportLoginLogData">导出</el-button>
               </div>
             </div>
           </template>
@@ -197,6 +208,82 @@
           </div>
         </el-card>
       </el-tab-pane>
+
+      <!-- 统计分析 -->
+      <el-tab-pane label="统计分析" name="statistics">
+        <!-- 统计卡片 -->
+        <div class="stats-row">
+          <el-card shadow="never" class="stat-card">
+            <div class="stat-value">{{ logStats.totalCount || 0 }}</div>
+            <div class="stat-label">总操作数</div>
+          </el-card>
+          <el-card shadow="never" class="stat-card">
+            <div class="stat-value success">{{ logStats.successCount || 0 }}</div>
+            <div class="stat-label">成功操作</div>
+          </el-card>
+          <el-card shadow="never" class="stat-card">
+            <div class="stat-value danger">{{ logStats.failCount || 0 }}</div>
+            <div class="stat-label">失败操作</div>
+          </el-card>
+          <el-card shadow="never" class="stat-card">
+            <div class="stat-value primary">{{ logStats.dailyAvg || 0 }}</div>
+            <div class="stat-label">日均操作</div>
+          </el-card>
+        </div>
+
+        <div class="charts-row">
+          <!-- 热门操作 TOP10 -->
+          <el-card shadow="never" class="chart-card">
+            <template #header>
+              <div class="card-header">
+                <span class="card-title">热门操作 TOP10</span>
+                <el-select v-model="statsDays" style="width: 100px" size="small" @change="loadStatsData">
+                  <el-option label="最近7天" :value="7" />
+                  <el-option label="最近30天" :value="30" />
+                </el-select>
+              </div>
+            </template>
+            <el-table :data="hotOperations" style="width: 100%" stripe size="small">
+              <el-table-column type="index" label="排名" width="60" align="center" />
+              <el-table-column prop="operationType" label="操作类型" min-width="160">
+                <template #default="{ row }">{{ getOperationName(row.operationType) || row.operationType }}</template>
+              </el-table-column>
+              <el-table-column prop="count" label="操作次数" width="100" align="center" />
+              <el-table-column label="占比" width="120">
+                <template #default="{ row }">
+                  <el-progress :percentage="calcPercent(row.count, hotOperationsTotal)" :stroke-width="6" :show-text="false" />
+                  <span class="percent-text">{{ calcPercent(row.count, hotOperationsTotal) }}%</span>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-card>
+
+          <!-- 用户活跃度 TOP10 -->
+          <el-card shadow="never" class="chart-card">
+            <template #header>
+              <span class="card-title">用户活跃度 TOP10</span>
+            </template>
+            <el-table :data="userActivity" style="width: 100%" stripe size="small">
+              <el-table-column type="index" label="排名" width="60" align="center" />
+              <el-table-column prop="userName" label="用户" min-width="120" />
+              <el-table-column prop="userType" label="类型" width="80">
+                <template #default="{ row }">
+                  <el-tag :type="getUserTypeTag(row.userType)" size="small">{{ getUserTypeName(row.userType) }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="count" label="操作次数" width="100" align="center" />
+            </el-table>
+          </el-card>
+        </div>
+
+        <!-- 模块使用率 -->
+        <el-card shadow="never" class="module-card">
+          <template #header>
+            <span class="card-title">模块使用率</span>
+          </template>
+          <div ref="moduleChartRef" class="chart-container"></div>
+        </el-card>
+      </el-tab-pane>
     </el-tabs>
 
     <!-- 日志详情对话框 -->
@@ -227,11 +314,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getOperationLogs, exportOperationLogs, getLoginLogs } from '@/api/admin/logs'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getOperationLogs, exportOperationLogsNew, getLoginLogs, getOperationStatistics, getHotOperations, getUserActivity, getModuleUsage, batchDeleteLogs, cleanExpiredLogs, exportLoginLogs } from '@/api/admin/logs'
 import { getBackupHistory } from '@/api/admin/backup'
-import { Refresh, Download, Search } from '@element-plus/icons-vue'
+import { Refresh, Download, Search, Delete } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
 
 // ==================== 操作类型字典 ====================
 const OPERATION_MODULES = [
@@ -424,7 +512,7 @@ const currentLog = ref(null)
 
 // 操作日志筛选
 const operationFilters = reactive({ dateRange: [], userType: '', module: '', operationType: '', keyword: '' })
-const loginFilters = reactive({ dateRange: [], ip: '' })
+const loginFilters = reactive({ dateRange: [], username: '', ip: '' })
 
 // 分页
 const operationPagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
@@ -435,6 +523,16 @@ const loginLogs = ref([])
 const backupRecords = ref([])
 const backupLoading = ref(false)
 const backupPagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
+
+// 统计分析相关
+const selectedRows = ref([])
+const statsDays = ref(7)
+const logStats = reactive({ totalCount: 0, successCount: 0, failCount: 0, dailyAvg: 0 })
+const hotOperations = ref([])
+const hotOperationsTotal = ref(0)
+const userActivity = ref([])
+const moduleChartRef = ref(null)
+let moduleChart = null
 
 // 模块列表
 const operationModules = computed(() => OPERATION_MODULES.map(m => ({ value: m.value, label: m.label })))
@@ -479,6 +577,10 @@ async function refreshLogs(showMessage = true) {
 function onTabChange(tab) {
   if (tab === 'login') loadLoginLogs()
   else if (tab === 'backup') loadBackupRecords()
+  else if (tab === 'statistics') {
+    loadStatsData()
+    initModuleChart()
+  }
 }
 
 async function loadBackupRecords() {
@@ -530,6 +632,7 @@ async function loadLoginLogs() {
       size: loginPagination.pageSize,
       startDate: loginFilters.dateRange?.[0] || undefined,
       endDate: loginFilters.dateRange?.[1] || undefined,
+      username: loginFilters.username || undefined,
       ip: loginFilters.ip || undefined
     }
     const response = await getLoginLogs(params)
@@ -542,6 +645,39 @@ async function loadLoginLogs() {
     ElMessage.error('加载登录日志失败')
   } finally {
     loginLoading.value = false
+  }
+}
+
+function resetLoginFilters() {
+  loginFilters.dateRange = []
+  loginFilters.username = ''
+  loginFilters.ip = ''
+  loginPagination.pageNum = 1
+  loadLoginLogs()
+}
+
+async function exportLoginLogData() {
+  try {
+    ElMessage.info('正在导出登录日志...')
+    const params = {
+      startDate: loginFilters.dateRange?.[0],
+      endDate: loginFilters.dateRange?.[1],
+      username: loginFilters.username,
+      ip: loginFilters.ip
+    }
+    const response = await exportLoginLogs(params)
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `login-logs-${new Date().toISOString().split('T')[0]}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('登录日志导出成功')
+  } catch {
+    ElMessage.error('登录日志导出失败')
   }
 }
 
@@ -561,8 +697,8 @@ async function exportLogs() {
       operationType: operationFilters.operationType,
       keyword: operationFilters.keyword
     }
-    const response = await exportOperationLogs(params)
-    const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const response = await exportOperationLogsNew(params)
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -577,6 +713,109 @@ async function exportLogs() {
   }
 }
 
+// ==================== 统计分析功能 ====================
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const calcPercent = (value, total) => {
+  if (!total || total <= 0) return 0
+  return Math.round((value / total) * 100)
+}
+
+const loadStatsData = async () => {
+  try {
+    const days = statsDays.value
+    const [statsRes, hotRes, activityRes, moduleRes] = await Promise.all([
+      getOperationStatistics(days),
+      getHotOperations(days, 10),
+      getUserActivity(days),
+      getModuleUsage(days)
+    ])
+    if (statsRes.code === 200 && statsRes.data) {
+      Object.assign(logStats, statsRes.data)
+    }
+    if (hotRes.code === 200 && hotRes.data) {
+      hotOperations.value = hotRes.data || []
+      hotOperationsTotal.value = hotRes.data.reduce((sum, item) => sum + (item.count || 0), 0)
+    }
+    if (activityRes.code === 200 && activityRes.data) {
+      userActivity.value = activityRes.data || []
+    }
+    if (moduleRes.code === 200 && moduleRes.data) {
+      renderModuleChart(moduleRes.data)
+    }
+  } catch (e) {
+    console.error('加载统计数据失败', e)
+  }
+}
+
+const renderModuleChart = (data) => {
+  if (!moduleChart || !data || data.length === 0) return
+  const chartData = data.map(item => ({
+    name: item.moduleName || item.module || '未知',
+    value: item.count || 0
+  }))
+  moduleChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { orient: 'vertical', left: 'left', top: 'center' },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      center: ['60%', '50%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+      labelLine: { show: false },
+      data: chartData
+    }]
+  })
+}
+
+const handleModuleChartResize = () => { moduleChart?.resize() }
+
+const initModuleChart = () => {
+  nextTick(() => {
+    if (moduleChartRef.value) {
+      moduleChart = echarts.init(moduleChartRef.value)
+      window.addEventListener('resize', handleModuleChartResize)
+    }
+  })
+}
+
+const handleBatchDelete = async () => {
+  const ids = selectedRows.value.map(r => r.id)
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条日志吗？`, '确认删除', { type: 'warning' })
+    const res = await batchDeleteLogs(ids)
+    if (res.code === 200) {
+      ElMessage.success(res.message || '删除成功')
+      selectedRows.value = []
+      loadOperationLogs()
+    }
+  } catch {}
+}
+
+const handleCleanExpired = async () => {
+  try {
+    const { value } = await ElMessageBox.prompt('请输入清理天数（清理N天前的日志）', '清理过期日志', {
+      inputPattern: /^\d+$/,
+      inputErrorMessage: '请输入有效的天数',
+      inputValue: '30',
+      confirmButtonText: '确认清理',
+      cancelButtonText: '取消'
+    })
+    const days = parseInt(value)
+    await ElMessageBox.confirm(`确定清理 ${days} 天前的日志吗？此操作不可恢复。`, '确认清理', { type: 'warning' })
+    const res = await cleanExpiredLogs(days)
+    if (res.code === 200) {
+      ElMessage.success(res.message || '清理成功')
+      loadOperationLogs()
+    }
+  } catch {}
+}
+
 // ==================== 格式化工具函数 ====================
 function formatDate(dateString) {
   if (!dateString) return ''
@@ -584,7 +823,7 @@ function formatDate(dateString) {
 }
 
 function getUserTypeName(userType) {
-  const map = { 'STUDENT': '学生', 'TEACHER': '教师', 'ADMIN': '管理员' }
+  const map = { 'STUDENT': '学生', 'TEACHER': '教师', 'ADMIN': '管理员', 'SUPER_ADMIN': 'super_admin' }
   return map[userType] || userType || ''
 }
 
@@ -611,6 +850,14 @@ function formatFileSize(bytes) {
 // ==================== 生命周期 ====================
 onMounted(() => {
   refreshLogs(false)
+})
+
+onUnmounted(() => {
+  if (moduleChart) {
+    moduleChart.dispose()
+    moduleChart = null
+  }
+  window.removeEventListener('resize', handleModuleChartResize)
 })
 </script>
 
@@ -657,6 +904,26 @@ onMounted(() => {
 .log-detail {
   :deep(.el-descriptions__label) { width: 100px; }
 }
+
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+.stat-card { text-align: center; padding: 8px 0; }
+.stat-value { font-size: 28px; font-weight: 700; color: #303133; }
+.stat-value.success { color: #67C23A; }
+.stat-value.danger { color: #F56C6C; }
+.stat-value.primary { color: #409EFF; }
+.stat-label { font-size: 13px; color: #909399; margin-top: 4px; }
+
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-card { margin-bottom: 0; }
+.card-header { display: flex; justify-content: space-between; align-items: center; }
+.card-title { font-weight: 600; font-size: 15px; }
+.percent-text { font-size: 12px; color: #909399; margin-left: 8px; }
+
+.module-card { margin-bottom: 16px; }
+.chart-container { width: 100%; height: 300px; }
+
+.table-footer { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #EBEEF5; margin-top: 12px; }
+.selected-count { font-size: 13px; color: #606266; }
 
 @media (max-width: 768px) {
   .page-header {

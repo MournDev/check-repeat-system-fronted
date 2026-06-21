@@ -119,15 +119,16 @@ const loadPreview = async () => {
   errorMessage.value = ''
   previewUrl.value = ''
 
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '正在加载预览内容...',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+
   try {
-    const loadingInstance = ElLoading.service({
-      lock: true,
-      text: '正在加载预览内容...',
-      background: 'rgba(0, 0, 0, 0.7)'
-    })
 
     // 获取JWT令牌（优先从Cookie获取，其次从localStorage获取）
-    const token = Cookies.get('token') || localStorage.getItem('token')
+    const token = Cookies.get('token')
     
     // 调用预览接口获取临时token
     const response = await fetch(`/check/api/v1/preview/info/${props.fileId}`, {
@@ -160,13 +161,11 @@ const loadPreview = async () => {
       error.value = true
       errorMessage.value = data.message || '获取预览信息失败'
     }
-
-    loadingInstance.close()
   } catch (err) {
     error.value = true
     errorMessage.value = '获取预览信息失败: ' + err.message
-    ElLoading.service().close()
   } finally {
+    loadingInstance.close()
     loading.value = false
   }
 }

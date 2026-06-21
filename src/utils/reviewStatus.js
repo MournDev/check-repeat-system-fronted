@@ -11,13 +11,15 @@ export const PAPER_STATUS = {
   AUDITING: 'auditing',    // 待审核
   COMPLETED: 'completed',  // 审核通过
   REJECTED: 'rejected',    // 审核不通过
+  REVISION_NEEDED: 'revision_needed', // 需要修改
   WITHDRAWN: 'withdrawn'   // 已取消
 }
 
 // 审核操作状态
 export const REVIEW_OPERATION = {
-  PASS: 'completed',    // 审核通过
-  REJECT: 'rejected'    // 审核不通过
+  PASS: 'completed',         // 审核通过
+  REVISION_NEEDED: 'revision_needed', // 需要修改
+  REJECT: 'rejected'         // 审核不通过
 }
 
 // 状态文本映射
@@ -29,9 +31,10 @@ export const getStatusText = (status) => {
     [PAPER_STATUS.AUDITING]: '待审核',
     [PAPER_STATUS.COMPLETED]: '审核通过',
     [PAPER_STATUS.REJECTED]: '审核不通过',
+    [PAPER_STATUS.REVISION_NEEDED]: '需要修改',
     [PAPER_STATUS.WITHDRAWN]: '已取消',
   }
-  
+
   return textMap[status] || '未知状态'
 }
 
@@ -44,9 +47,10 @@ export const getStatusType = (status) => {
     [PAPER_STATUS.AUDITING]: 'warning',
     [PAPER_STATUS.COMPLETED]: 'success',
     [PAPER_STATUS.REJECTED]: 'danger',
+    [PAPER_STATUS.REVISION_NEEDED]: 'warning',
     [PAPER_STATUS.WITHDRAWN]: 'info',
   }
-  
+
   return typeMap[status] || 'info'
 }
 
@@ -61,15 +65,22 @@ export const convertToBackendStatus = (frontendStatus) => {
     'REJECT': REVIEW_OPERATION.REJECT,
     'reject': REVIEW_OPERATION.REJECT,
     '未通过': REVIEW_OPERATION.REJECT,
-    'rejected': REVIEW_OPERATION.REJECT
+    'rejected': REVIEW_OPERATION.REJECT,
+    'MODIFY': REVIEW_OPERATION.REVISION_NEEDED,
+    'modify': REVIEW_OPERATION.REVISION_NEEDED,
+    '需要修改': REVIEW_OPERATION.REVISION_NEEDED,
+    'revision_needed': REVIEW_OPERATION.REVISION_NEEDED,
+    'DEFER': REVIEW_OPERATION.REVISION_NEEDED,
+    'defer': REVIEW_OPERATION.REVISION_NEEDED,
+    '暂缓审核': REVIEW_OPERATION.REVISION_NEEDED
   }
-  
+
   return statusMap[frontendStatus] || REVIEW_OPERATION.REJECT // 默认未通过
 }
 
 // 验证状态是否有效
 export const isValidReviewStatus = (status) => {
-  const validStatuses = [REVIEW_OPERATION.PASS, REVIEW_OPERATION.REJECT]
+  const validStatuses = [REVIEW_OPERATION.PASS, REVIEW_OPERATION.REVISION_NEEDED, REVIEW_OPERATION.REJECT]
   return validStatuses.includes(status)
 }
 

@@ -431,15 +431,6 @@ export const getReviewHistory = (paperId) => {
   })
 }
 
-// 获取教师审核历史
-export const getTeacherReviewHistory = (params) => {
-  return request({
-    url: '/api/v1/teacher/reviews/reviewed-list',
-    method: 'get',
-    params
-  })
-}
-
 // 获取详细查重报告
 export const getDetailedPlagiarismReport = (paperId) => {
   return request({
@@ -490,6 +481,16 @@ export const getReviewedList = (params) => {
     url: '/api/v1/teacher/reviews/reviewed-list',
     method: 'get',
     params
+  })
+}
+
+// 导出审核记录
+export const exportReviewRecords = (params) => {
+  return request({
+    url: '/api/v1/teacher/reviews/export',
+    method: 'get',
+    params,
+    responseType: 'blob'
   })
 }
 
@@ -698,6 +699,65 @@ export const compareReport = (reportId, sourceId) => {
       reportId,
       sourceId
     }
+  })
+}
+
+// ── 审核草稿 ──
+
+// 保存审核草稿
+export const saveReviewDraft = (data) => {
+  return request({
+    url: '/api/v1/teacher/review-drafts/save',
+    method: 'post',
+    data
+  })
+}
+
+// 获取审核草稿
+export const getReviewDraft = (params) => {
+  return request({
+    url: '/api/v1/teacher/review-drafts/get',
+    method: 'get',
+    params
+  })
+}
+
+// 删除审核草稿
+export const deleteReviewDraft = (params) => {
+  return request({
+    url: '/api/v1/teacher/review-drafts/delete',
+    method: 'delete',
+    params
+  })
+}
+
+// 获取审核草稿列表
+export const getReviewDraftList = (params) => {
+  return request({
+    url: '/api/v1/teacher/review-drafts/list',
+    method: 'get',
+    params
+  })
+}
+
+// ── 教师端审核详情 ──
+
+// 获取审核详情
+export const getReviewDetail = (params) => {
+  return request({
+    url: '/api/v1/teacher/reviews/detail',
+    method: 'get',
+    params
+  })
+}
+
+// 下载审核附件
+export const downloadReviewAttach = (params) => {
+  return request({
+    url: '/api/v1/teacher/reviews/download-attach',
+    method: 'get',
+    params,
+    responseType: 'blob'
   })
 }
 

@@ -304,7 +304,7 @@ import {
   DataAnalysis, Lightning, ArrowRight, ArrowLeft, Download
 } from '@element-plus/icons-vue'
 
-import { getCheckHistory, getSimilarityTrend, comparePaperVersions } from '@/api/student'
+import { getCheckHistory, getSimilarityTrend, compareVersionHistory } from '@/api/student'
 import { getSimilarityColor } from '@/utils/dataType.js'
 import * as echarts from 'echarts'
 
@@ -542,9 +542,7 @@ const renderTrendChart = (data) => {
     chartInstance.value.setOption(option)
     
     // 响应式调整
-    window.addEventListener('resize', () => {
-      chartInstance.value?.resize()
-    })
+    window.addEventListener('resize', handleResize)
   })
 }
 
@@ -593,7 +591,7 @@ const compareWithCurrent = async (record) => {
   const toSubmitVersion = currentRecord?.submitVersion ?? paperInfo.value.versionCount
 
   try {
-    const res = await comparePaperVersions(paperId, [fromSubmitVersion, toSubmitVersion])
+    const res = await compareVersionHistory(paperId, fromSubmitVersion, toSubmitVersion)
 
     if (res.code === 200) {
       compareData.value = {
@@ -763,14 +761,16 @@ onMounted(async () => {
   await loadStatistics()
 })
 
+const handleResize = () => {
+  chartInstance.value?.resize()
+}
+
 onUnmounted(() => {
   if (chartInstance.value) {
     chartInstance.value.dispose()
     chartInstance.value = null
   }
-  window.removeEventListener('resize', () => {
-    chartInstance.value?.resize()
-  })
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 

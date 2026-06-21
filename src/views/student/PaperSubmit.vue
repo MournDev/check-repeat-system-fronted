@@ -26,7 +26,7 @@
 
       <!-- 第一步：基本信息 -->
       <div v-if="activeStep === 0" class="step-content">
-        <form :model="paperForm" class="paper-form">
+        <el-form ref="basicFormRef" :model="paperForm" :rules="paperRules" class="paper-form">
           <div class="form-group">
             <label class="form-label">学科领域</label>
             <el-tree-select v-model="paperForm.subjectCode" :data="subjectTree" placeholder="请选择学科领域" :props="treeProps"
@@ -64,12 +64,12 @@
             <el-input v-model="paperForm.paperAbstract" type="textarea" :rows="5" placeholder="请输入论文摘要（不超过500字）"
               maxlength="500" show-word-limit class="form-control" />
           </div>
-        </form>
+        </el-form>
       </div>
 
       <!-- 第二步：文件上传 -->
       <div v-if="activeStep === 1" class="step-content">
-        <form :model="paperForm" class="paper-form">
+        <el-form ref="uploadFormRef" :model="paperForm" :rules="paperRules" class="paper-form">
           <div class="form-group">
             <label class="form-label">论文附件</label>
             <div class="upload-area" @drop="handleDrop" @dragover.prevent @dragenter.prevent @dragleave.prevent>
@@ -96,7 +96,7 @@
               </div>
             </div>
           </div>
-        </form>
+        </el-form>
       </div>
 
       <!-- 第三步：提交确认 -->
@@ -161,12 +161,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getAllColleges, getMajorsByCollegeId } from '@/api/user'
-import { uploadPaper, resubmitAfterWithdraw, getMajorList } from '@/api/student'
-import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
+import { uploadPaper, resubmitAfterWithdraw, resubmitAfterRevision, getMajorList } from '@/api/student'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, Upload } from '@element-plus/icons-vue'
 import SparkMD5 from 'spark-md5'
 import { getDictDataByType, getSubjectFieldTree } from '@/api/user.js'
-import { autoAssign } from '@/api/student.js'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -467,11 +467,11 @@ const handleDrop = (event) => {
 const checkResubmitMode = () => {
   const action = route.query.action;
   const paperIdParam = route.query.paperId;
-  
-  if (action === 'resubmit-after-withdraw' && paperIdParam) {
+
+  if ((action === 'resubmit-after-withdraw' || action === 'resubmit') && paperIdParam) {
     isResubmitMode.value = true;
     resubmitPaperId.value = paperIdParam;
-    
+
     // 显示提示信息
     ElMessageBox.alert(
       '您正在对已撤回的论文进行重新提交。请修改论文内容后重新上传并提交。',
@@ -481,43 +481,19 @@ const checkResubmitMode = () => {
         type: 'info'
       }
     );
-    
-  }
-}
+  } else if (action === 'revision' && paperIdParam) {
+    isResubmitMode.value = true;
+    resubmitPaperId.value = paperIdParam;
 
-const assignTeacherAutomatically = async (submittedPaperId) => {
-  try {
-    const loading = ElLoading.service({
-      lock: true,
-      text: '正在自动分配指导老师...',
-      background: 'rgba(0, 0, 0, 0.7)',
-    })
-
-    const result = await autoAssign(submittedPaperId)
-
-    loading.close()
-
-    if (result.code === 200) {
-      const teacherInfo = result.data
-      let successMessage = '指导老师分配成功'
-
-      if (teacherInfo && teacherInfo.teacherName) {
-        successMessage += `，分配的老师：${teacherInfo.teacherName}`
-        if (teacherInfo.teacherTitle) {
-          successMessage += `（${teacherInfo.teacherTitle}）`
-        }
+    // 显示提示信息
+    ElMessageBox.alert(
+      '您正在根据审核意见修改论文。请修改论文内容后重新上传并提交。',
+      '修改重提模式',
+      {
+        confirmButtonText: '确定',
+        type: 'warning'
       }
-
-      ElMessage.success(successMessage)
-      return { success: true, teacherInfo }
-    } else {
-      ElMessage.warning('自动分配指导老师失败：' + result.message)
-      return { success: false, message: result.message }
-    }
-  } catch (error) {
-    ElMessage.error('分配导师服务异常：' + (error.message || '未知错误'))
-    console.error('分配导师失败：', error)
-    return { success: false, message: error.message }
+    );
   }
 }
 
@@ -617,8 +593,14 @@ const submitPaper = async () => {
     let res;
     // 判断是否是撤回后重新提交模式
     if (isResubmitMode.value && resubmitPaperId.value) {
-      // 撤回后重新提交
-      res = await resubmitAfterWithdraw(resubmitPaperId.value, submitParams);
+      const action = route.query.action;
+      if (action === 'revision') {
+        // 审核意见修改后重新提交
+        res = await resubmitAfterRevision(resubmitPaperId.value, submitParams);
+      } else {
+        // 撤回后重新提交
+        res = await resubmitAfterWithdraw(resubmitPaperId.value, submitParams);
+      }
           
       if (res.code === 200) {
         ElMessage.success('重新提交成功！论文已进入审核流程');
@@ -633,14 +615,8 @@ const submitPaper = async () => {
       // 正常提交
       res = await uploadPaper(submitParams)
       if (res.code === 200) {
-        const submittedPaperId = res.data.id
-        ElMessage.success('附件上传成功')
-        const assignResult = await assignTeacherAutomatically(String(submittedPaperId))
-        if (assignResult.success) {
-          ElMessage.success('论文提交完成，指导老师已分配')
-        } else {
-          ElMessage.warning('论文提交完成，但指导老师分配失败，请联系管理员')
-        }
+        ElMessage.success('论文提交成功，系统正在自动分配指导老师')
+        // 后端已异步自动分配指导老师，无需前端单独调用
         // 跳转到我的论文页面
         setTimeout(() => {
           router.push('/student/my-papers');

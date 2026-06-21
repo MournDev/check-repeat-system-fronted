@@ -746,7 +746,7 @@ const downloadAttachment = async (file) => {
   try {
     const res = await downloadMessageAttachment(file.id);
     // 创建下载链接
-    const blob = new Blob([res.data]);
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data]);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

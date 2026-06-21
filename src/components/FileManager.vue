@@ -261,7 +261,7 @@ const downloadFile = async (file) => {
   try {
     const apiModule = await getApi()
     const res = await apiModule.downloadSharedFile(file.id)
-    const blob = new Blob([res.data])
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data])
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

@@ -706,7 +706,7 @@ const exportConfig = async () => {
     const response = await exportApiConfig()
     
     // 创建下载链接
-    const blob = new Blob([response], { type: 'application/json' })
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/json' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

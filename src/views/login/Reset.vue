@@ -43,6 +43,32 @@
         </el-input>
       </el-form-item>
 
+      <div class="field-label">验证码</div>
+      <el-form-item prop="verificationCode">
+        <div class="code-row">
+          <el-input
+            v-model="resetForm.verificationCode"
+            placeholder="请输入邮箱验证码"
+            @focus="isTyping = true; error = ''"
+            @blur="isTyping = false"
+            class="code-input"
+          >
+            <template #prefix>
+              <el-icon><Key /></el-icon>
+            </template>
+          </el-input>
+          <el-button
+            type="primary"
+            :disabled="codeCooldown > 0"
+            @click="handleSendCode"
+            :loading="sendingCode"
+            class="send-code-btn"
+          >
+            {{ codeCooldown > 0 ? `${codeCooldown}s后重发` : '发送验证码' }}
+          </el-button>
+        </div>
+      </el-form-item>
+
       <div class="field-label">新密码</div>
       <el-form-item prop="newPassword">
         <el-input
@@ -124,8 +150,8 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, Message, View, Hide } from '@element-plus/icons-vue'
-import { forgetPassword } from '@/api/login'
+import { User, Lock, Message, View, Hide, Key } from '@element-plus/icons-vue'
+import { forgetPassword, sendPasswordResetCode } from '@/api/login'
 import AuthLayout from '@/components/layout/AuthLayout.vue'
 const router = useRouter()
 const resetFormRef = ref(null)
@@ -135,10 +161,14 @@ const loading = ref(false)
 const isTyping = ref(false)
 const showPassword = ref(false)
 const error = ref('')
+const sendingCode = ref(false)
+const codeCooldown = ref(0)
+let cooldownTimer = null
 
 const resetForm = ref({
   username: '',
   email: '',
+  verificationCode: '',
   newPassword: '',
   confirmPassword: ''
 })
@@ -159,9 +189,12 @@ const resetRules = {
     { required: true, message: '请输入邮箱用于身份验证', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
   ],
+  verificationCode: [
+    { required: true, message: '请输入验证码', trigger: 'blur' }
+  ],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' }, 
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 8, message: '密码长度不能少于8位', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请确认新密码', trigger: 'blur' },
@@ -178,17 +211,49 @@ const resetRules = {
   ]
 }
 
+const handleSendCode = async () => {
+  if (!resetForm.value.username) {
+    error.value = '请先输入用户名'
+    return
+  }
+  if (!resetForm.value.email) {
+    error.value = '请先输入邮箱'
+    return
+  }
+  try {
+    sendingCode.value = true
+    error.value = ''
+    await sendPasswordResetCode({
+      username: resetForm.value.username,
+      email: resetForm.value.email
+    })
+    ElMessage.success('验证码已发送到您的邮箱')
+    codeCooldown.value = 60
+    cooldownTimer = setInterval(() => {
+      codeCooldown.value--
+      if (codeCooldown.value <= 0) {
+        clearInterval(cooldownTimer)
+      }
+    }, 1000)
+  } catch (err) {
+    error.value = err?.response?.data?.message || err.message || '发送验证码失败'
+  } finally {
+    sendingCode.value = false
+  }
+}
+
 const handleReset = async () => {
   try {
     await resetFormRef.value.validate()
     loading.value = true
     error.value = ''
 
-    
+
     // 构建请求数据
     const payload = {
       username: resetForm.value.username,
       email: resetForm.value.email,
+      verificationCode: resetForm.value.verificationCode,
       newPassword: resetForm.value.newPassword
     }
 
@@ -280,6 +345,23 @@ const goLogin = () => {
 
 .eye-toggle:hover {
   color: #1d1d1f;
+}
+
+.code-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.send-code-btn {
+  height: 48px !important;
+  border-radius: 9999px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .submit-btn {

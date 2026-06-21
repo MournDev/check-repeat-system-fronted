@@ -132,6 +132,14 @@ export const getProgressTracking = () => {
   })
 }
 
+export const exportDashboardStats = () => {
+  return request({
+    url: '/api/v1/student/dashboard/export',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
 export const getPaperDetails = (paperId) => {
   return request({
     url: '/api/v1/papers/detail',
@@ -282,6 +290,14 @@ export const resubmitAfterWithdraw = (paperId, data) => {
   });
 };
 
+export const resubmitAfterRevision = (paperId, data) => {
+  return request({
+    url: `/api/v1/papers/${paperId}/resubmit-after-revision`,
+    method: "post",
+    data
+  });
+};
+
 export const requestModification = (paperId, reason) => {
   return request({
     url: `/api/v1/papers/${paperId}/modify-request`,
@@ -337,6 +353,17 @@ export const comparePaperVersions = (paperId, versionIds) => {
     data: {
       paperId,
       versionIds
+    }
+  });
+};
+
+export const compareVersionHistory = (paperId, fromVersion, toVersion) => {
+  return request({
+    url: `/api/v1/student/papers/${paperId}/compare-versions`,
+    method: "post",
+    data: {
+      fromVersion,
+      toVersion
     }
   });
 };
@@ -517,5 +544,79 @@ export const updateChecklistItem = (itemId, checked) => {
     url: `/api/v1/student/academic-integrity/checklist/${itemId}`,
     method: 'put',
     data: { checked }
+  });
+};
+
+// ── 学生审核结果 ──
+
+export const getStudentReviewList = (params) => {
+  return request({
+    url: '/api/v1/student/reviews/list',
+    method: 'get',
+    params
+  });
+};
+
+export const getStudentReviewDetail = (params) => {
+  return request({
+    url: '/api/v1/student/reviews/detail',
+    method: 'get',
+    params
+  });
+};
+
+export const downloadReviewAttach = (params) => {
+  return request({
+    url: '/api/v1/student/reviews/download-attach',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  });
+};
+
+export const resubmitAfterReview = (formData) => {
+  return request({
+    url: '/api/v1/student/reviews/re-submit',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+};
+
+export const getResubmitRecord = (params) => {
+  return request({
+    url: '/api/v1/student/reviews/resubmit-record',
+    method: 'get',
+    params
+  });
+};
+
+// ── 取消查重任务 ──
+
+export const cancelCheckTask = (taskId) => {
+  return request({
+    url: '/api/v1/student/check-tasks/cancel',
+    method: 'delete',
+    params: { taskId }
+  });
+};
+
+// ── 论文统计 ──
+
+export const getPaperStatistics = (paperId) => {
+  return request({
+    url: `/api/v1/student/papers/${paperId}/statistics`,
+    method: 'get'
+  });
+};
+
+// ── 查重规则 ──
+
+export const getDefaultCheckRule = () => {
+  return request({
+    url: '/api/v1/check-rules/default',
+    method: 'get'
   });
 };

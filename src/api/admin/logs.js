@@ -112,3 +112,88 @@ export const getApiResponseTimes = (params) => {
     params
   })
 }
+
+// ==================== 操作日志管理（SysOperationLogController） ====================
+
+// 获取操作统计信息
+export const getOperationStatistics = (days = 7) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/statistics',
+    method: 'get',
+    params: { days }
+  })
+}
+
+// 获取热门操作统计
+export const getHotOperations = (days = 7, limit = 10) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/hot-operations',
+    method: 'get',
+    params: { days, limit }
+  })
+}
+
+// 获取用户活跃度统计
+export const getUserActivity = (days = 7) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/user-activity',
+    method: 'get',
+    params: { days }
+  })
+}
+
+// 获取模块使用统计
+export const getModuleUsage = (days = 7) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/module-usage',
+    method: 'get',
+    params: { days }
+  })
+}
+
+// 批量删除操作日志
+export const batchDeleteLogs = (ids) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/batch',
+    method: 'delete',
+    data: ids
+  })
+}
+
+// 清理过期操作日志
+export const cleanExpiredLogs = (days = 30) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/clean-expired',
+    method: 'delete',
+    params: { days }
+  })
+}
+
+// 导出操作日志（新接口）
+export const exportOperationLogsNew = (params) => {
+  return request({
+    url: '/api/v1/admin/operation-logs/export',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  })
+}
+
+// 获取系统日志
+export const getSystemLogs = (params) => {
+  return request({
+    url: '/api/v1/admin/logs/system',
+    method: 'get',
+    params
+  })
+}
+
+// 导出登录日志
+export const exportLoginLogs = (params) => {
+  return request({
+    url: '/api/v1/admin/logs/login/export',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  })
+}

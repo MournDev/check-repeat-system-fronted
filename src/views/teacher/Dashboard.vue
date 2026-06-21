@@ -61,10 +61,6 @@
           <div class="stat-value">{{ stats.studentCount || 0 }}</div>
           <div class="stat-label">指导学生</div>
         </div>
-        <div class="stat-trend positive">
-          <el-icon><ArrowUp /></el-icon>
-          <span>12%</span>
-        </div>
       </div>
       <div class="stat-card" v-loading="loading.stats">
         <div class="stat-icon pending-icon">
@@ -87,10 +83,6 @@
         <div class="stat-content">
           <div class="stat-value">{{ stats.reviewedCount || 0 }}</div>
           <div class="stat-label">已审核</div>
-        </div>
-        <div class="stat-trend positive">
-          <el-icon><ArrowUp /></el-icon>
-          <span>8%</span>
         </div>
       </div>
       <div class="stat-card" v-loading="loading.stats">
@@ -714,8 +706,7 @@ const openLayoutSettings = () => {
 const downloadPaperFile = async (paperId) => {
   try {
     const response = await downloadPaper(paperId)
-    // 处理文件下载逻辑
-    const blob = new Blob([response.data])
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data])
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -739,7 +730,7 @@ const exportData = async () => {
     
     const response = await exportTeacherData({ teacherId })
     // 处理文件下载
-    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

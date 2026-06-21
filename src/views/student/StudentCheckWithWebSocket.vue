@@ -60,6 +60,32 @@
       </el-card>
     </div>
 
+    <!-- 当前查重规则 -->
+    <el-card v-if="checkRule" class="rule-info-card">
+      <template #header>
+        <div class="table-header">
+          <span>当前查重规则</span>
+          <el-tag size="small" type="info">{{ checkRule.ruleName }}</el-tag>
+        </div>
+      </template>
+      <el-descriptions :column="4" border size="small">
+        <el-descriptions-item label="通过阈值">
+          <el-tag :type="checkRule.passThreshold <= 20 ? 'success' : 'warning'">
+            {{ checkRule.passThreshold }}%
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="最大查重次数">
+          {{ checkRule.maxCheckCount || '不限制' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="最大重提次数">
+          {{ checkRule.maxReSubmitCount || '不限制' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="查重间隔">
+          {{ checkRule.checkInterval ? checkRule.checkInterval + '秒' : '无限制' }}
+        </el-descriptions-item>
+      </el-descriptions>
+    </el-card>
+
     <!-- 查重任务列表 -->
     <el-card class="table-card">
       <template #header>
@@ -250,7 +276,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { ElMessage, ElButton, ElTable, ElTag, ElProgress, ElTooltip, ElBadge, ElMessageBox, ElCard, ElPagination } from 'element-plus';
+import { ElMessage, ElButton, ElTable, ElTag, ElProgress, ElTooltip, ElBadge, ElMessageBox, ElCard, ElPagination, ElDescriptions, ElDescriptionsItem } from 'element-plus';
 import { Refresh, Upload } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import { useCheckProgress } from '@/composables/useCheckProgress';
@@ -282,6 +308,9 @@ const reportData = ref(null);
 // 分页相关
 const currentPage = ref(1);
 const pageSize = ref(10);
+
+// 查重规则
+const checkRule = ref(null);
 
 // 任务统计
 const taskStats = computed(() => {
@@ -490,7 +519,8 @@ const exportReport = async (reportIdValue) => {
     }
     
     // 创建下载链接
-    const url = window.URL.createObjectURL(new Blob([result]));
+    const blob = result.data instanceof Blob ? result.data : new Blob([result.data]);
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `查重报告_${new Date().getTime()}.pdf`);
@@ -689,10 +719,26 @@ const getRiskLevel = (similarity) => {
   return '极高风险';
 };
 
-// 组件挂载时加载任务列表
+// 组件挂载时加载任务列表和查重规则
 onMounted(() => {
   loadTaskList();
+  loadCheckRule();
 });
+
+/**
+ * 加载查重规则
+ */
+const loadCheckRule = async () => {
+  try {
+    const res = await studentApi.getDefaultCheckRule();
+    if (res.code === 200 && res.data) {
+      checkRule.value = res.data;
+    }
+  } catch (e) {
+    // 规则加载失败不影响主功能
+    console.warn('加载查重规则失败:', e);
+  }
+};
 
 // 组件卸载时清理
 onUnmounted(() => {
@@ -735,6 +781,10 @@ onUnmounted(() => {
   .stat-card {
     flex: 1;
     min-width: 120px;
+  }
+
+  .rule-info-card {
+    margin-bottom: 24px;
   }
 
   .stat-item {

@@ -798,12 +798,12 @@ const assignAdvisor = async (student) => {
 const viewPaper = async (student) => {
   try {
     // 显示加载状态
-    const loading = ElLoading.service({
+    const loadingRef = ElLoading.service({
       lock: true,
       text: '正在加载论文信息...',
       background: 'rgba(0,0,0,0.4)'
     })
-    
+
     // 获取学生论文信息
     const res = await getStudentPaper(student.studentId)
     
@@ -830,7 +830,7 @@ const viewPaper = async (student) => {
   } finally {
     // 关闭加载状态
     setTimeout(() => {
-      ElLoading.service().close()
+      loadingRef?.close()
     }, 500)
   }
 }
@@ -838,7 +838,7 @@ const viewPaper = async (student) => {
 const viewAllPapers = async (student) => {
   try {
     // 显示加载状态
-    const loading = ElLoading.service({
+    const loadingRef2 = ElLoading.service({
       lock: true,
       text: '正在加载论文列表...',
       background: 'rgba(0,0,0,0.4)'
@@ -860,7 +860,7 @@ const viewAllPapers = async (student) => {
   } finally {
     // 关闭加载状态
     setTimeout(() => {
-      ElLoading.service().close()
+      loadingRef2?.close()
     }, 500)
   }
 }
@@ -1107,7 +1107,7 @@ const exportData = async () => {
     const res = await exportStudentData(params)
     
     // 创建下载链接
-    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -1239,7 +1239,7 @@ const batchExport = async () => {
     const res = await exportStudentData(params)
     
     // 创建下载链接
-    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

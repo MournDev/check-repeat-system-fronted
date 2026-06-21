@@ -13,7 +13,7 @@ export const downloadPaper = async (fileId, fileName) => {
   }
 
   try {
-    const token = Cookies.get('token') || localStorage.getItem('token')
+    const token = Cookies.get('token')
     if (!token) {
       ElMessage.error('请先登录')
       return

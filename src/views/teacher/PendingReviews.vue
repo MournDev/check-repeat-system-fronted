@@ -111,10 +111,7 @@
             
             <el-select v-model="filterCollege" placeholder="学院" clearable>
               <el-option label="全部学院" value="" />
-              <el-option label="计算机学院" value="computer" />
-              <el-option label="电子信息学院" value="electronic" />
-              <el-option label="机械工程学院" value="mechanical" />
-              <el-option label="管理学院" value="management" />
+              <el-option v-for="college in collegeList" :key="college.value" :label="college.label" :value="college.value" />
             </el-select>
             
             <el-select v-model="filterSimilarity" placeholder="相似度" clearable>
@@ -142,13 +139,13 @@
     <!-- 论文列表 -->
     <el-card class="list-card enhanced-table-card" shadow="never">
       <el-table
+        ref="tableRef"
         :data="filteredPapers"
         class="enhanced-table"
         row-class-name="table-row"
         style="width: 100%"
         v-loading="loading"
         @selection-change="handleSelectionChange"
-        @row-click="handleRowClick"
       >
         <el-table-column type="selection" width="55" />
         
@@ -443,11 +440,6 @@
       @close="closePreview"
     >
       <div class="preview-container">
-        <!-- 调试信息 -->
-        <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 5px; z-index: 1000; font-size: 12px;">
-          调试: loading={{ previewLoading }}, error={{ previewError }}, url={{ !!previewUrl }}, fullscreen={{ isFullscreen }}
-        </div>
-        
         <div v-if="previewLoading" class="loading-placeholder">
           <el-skeleton animated>
             <template #template>
@@ -479,13 +471,6 @@
               <li v-if="currentPaper.pageCount">页数：{{ currentPaper.pageCount }}</li>
             </ul>
           </div>
-          <div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 8px;">
-            <p><strong>调试信息：</strong></p>
-            <p>预览URL: {{ previewUrl || '无' }}</p>
-            <p>加载状态: {{ previewLoading ? '加载中' : '已完成' }}</p>
-            <p>错误状态: {{ previewError ? '有错误' : '无错误' }}</p>
-          </div>
-          
           <!-- 备用操作 -->
           <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
             <p><strong>🔧 备用方案：</strong></p>
@@ -1364,8 +1349,9 @@ import ReviewDialog from '@/views/teacher/ReviewDialog.vue'
 import PlagiarismReportViewer from '@/views/teacher/PlagiarismReportViewer.vue'// import SimilarityReportDialog from './components/SimilarityReportDialog.vue'
 import PriorityBadge from '@/views/teacher/PriorityBadge.vue'
 import { formatDateTime } from '@/utils/dataType.js'
+import { getAllColleges } from '@/api/user'
 
-import { 
+import {
   getPendingReviewList, 
   doReview, 
   getPendingStats, 
@@ -1377,7 +1363,8 @@ import {
   delegateReview,
   getPaperContent,
   getPaperPreviewUrl,
-  getDetailedPlagiarismReport
+  getDetailedPlagiarismReport,
+  downloadPaper
 } from '@/api/teacher.js'
 import { convertToBackendStatus, getSimilarityColor, getSimilarityClass, getSimilarityTagType } from '@/utils/reviewStatus.js'
 import {
@@ -1417,9 +1404,14 @@ const filterPriority = ref('')
 const filterCollege = ref('')
 const filterSimilarity = ref('')
 const sortDesc = ref(true)
+const collegeList = ref([])
 
 // 加载状态
 const loading = ref(false)
+let loadingInstance = null
+
+// 表格引用
+const tableRef = ref(null)
 
 // 选择的行
 const selectedPapers = ref([])
@@ -1444,16 +1436,33 @@ const papers = ref([])
 const showOnlyOverdue = ref(false)
 
 // 论文预览功能
+const buildPreviewUrl = (rawUrl) => {
+  if (!rawUrl) return ''
+  if (rawUrl.includes('onlinePreview')) return rawUrl
+  try {
+    if (rawUrl.includes('url=')) {
+      const urlParam = new URLSearchParams(rawUrl.split('?')[1]).get('url')
+      if (urlParam) {
+        const decodedUrl = decodeURIComponent(atob(urlParam))
+        const previewBase = import.meta.env.VITE_KKFILEVIEW_BASE_URL || ''
+        return `${previewBase}/onlinePreview?url=${btoa(decodedUrl)}`
+      }
+    }
+  } catch (e) {
+    console.warn('URL处理失败:', e)
+  }
+  return rawUrl
+}
+
 const viewPaper = async (paper) => {
   try {
-    
     // 重置所有状态
     previewLoading.value = true
     previewError.value = false
     previewUrl.value = ''
     currentPaper.value = null
     
-    const loading = ElLoading.service({
+    loadingInstance = ElLoading.service({
       lock: true,
       text: '正在加载论文信息...',
       background: 'rgba(0,0,0,0.4)'
@@ -1514,32 +1523,7 @@ const viewPaper = async (paper) => {
         return
       }
       
-      let finalUrl = rawUrl
-      
-      // 如果是KKFileView的onlinePreview URL，直接使用
-      if (rawUrl && rawUrl.includes('onlinePreview')) {
-        finalUrl = rawUrl
-      } else {
-        // 如果是文件下载URL，尝试包装成KKFileView格式
-        try {
-          if (rawUrl && rawUrl.includes('url=')) {
-            const urlParam = new URLSearchParams(rawUrl.split('?')[1]).get('url')
-            if (urlParam) {
-              finalUrl = decodeURIComponent(atob(urlParam))
-              
-              // 重新包装为KKFileView格式
-              const encodedFileUrl = btoa(finalUrl)
-              const previewBase = import.meta.env.VITE_KKFILEVIEW_BASE_URL || ''
-              finalUrl = `${previewBase}/onlinePreview?url=${encodedFileUrl}`
-            }
-          }
-        } catch (decodeError) {
-          console.warn('URL处理失败:', decodeError)
-          finalUrl = rawUrl
-        }
-      }
-      
-      previewUrl.value = finalUrl
+      previewUrl.value = buildPreviewUrl(rawUrl)
       
       if (previewUrl.value) {
         previewVisible.value = true
@@ -1582,7 +1566,8 @@ const viewPaper = async (paper) => {
     ElMessage.error('获取论文信息失败: ' + error.message)
   } finally {
     setTimeout(() => {
-      ElLoading.service().close()
+      loadingInstance?.close()
+      loadingInstance = null
     }, 500)
   }
 }
@@ -1632,28 +1617,7 @@ const retryPreview = async (paper) => {
     
     if (res.code === 200 && res.data) {
       const rawUrl = res.data.previewUrl || res.data.url
-      let finalUrl = rawUrl
-      
-      // 使用相同的URL处理逻辑
-      if (rawUrl && rawUrl.includes('onlinePreview')) {
-        finalUrl = rawUrl
-      } else {
-        try {
-          if (rawUrl && rawUrl.includes('url=')) {
-            const urlParam = new URLSearchParams(rawUrl.split('?')[1]).get('url')
-            if (urlParam) {
-              const decodedUrl = decodeURIComponent(atob(urlParam))
-              const encodedFileUrl = btoa(decodedUrl)
-              const previewBase = import.meta.env.VITE_KKFILEVIEW_BASE_URL || ''
-              finalUrl = `${previewBase}/onlinePreview?url=${encodedFileUrl}`
-            }
-          }
-        } catch (decodeError) {
-          console.warn('URL处理失败:', decodeError)
-        }
-      }
-      
-      previewUrl.value = finalUrl
+      previewUrl.value = buildPreviewUrl(rawUrl)
       
       if (previewUrl.value) {
         previewError.value = false
@@ -1721,7 +1685,6 @@ const computeDeadlineFromSubmit = (submitTime, days = 7) => {
 }
 
 const filteredPapers = computed(() => {
-  // 确保papers.value是数组
   if (showOnlyOverdue.value) {
     const list = overduePapers.value.slice()
     list.sort((a, b) => new Date(b.submitTime) - new Date(a.submitTime))
@@ -1729,37 +1692,36 @@ const filteredPapers = computed(() => {
   }
   const papersArray = Array.isArray(papers.value) ? [...papers.value] : []
   let result = papersArray
-  
-  // 按优先级筛选
+
+  // 按优先级筛选（兼容字符串和数字）
   if (filterPriority.value) {
-    result = result.filter(paper => paper.priority === filterPriority.value)
+    const priorityMap = { urgent: ['urgent', 2], high: ['high', 1], normal: ['normal', 0] }
+    const match = priorityMap[filterPriority.value] || []
+    result = result.filter(paper => match.includes(paper.priority))
   }
-  
-  // 按学院筛选
+
+  // 按学院筛选（精确匹配）
   if (filterCollege.value) {
-    result = result.filter(paper => paper.college.includes(filterCollege.value))
+    result = result.filter(paper => paper.college === filterCollege.value)
   }
-  
+
   // 按相似度筛选
   if (filterSimilarity.value) {
     result = result.filter(paper => {
-      const similarity = paper.similarity
-      if (filterSimilarity.value === 'low') return similarity < 15
-      if (filterSimilarity.value === 'medium') return similarity >= 15 && similarity < 30
-      if (filterSimilarity.value === 'high') return similarity >= 30
+      const s = paper.similarity
+      if (filterSimilarity.value === 'low') return s < 15
+      if (filterSimilarity.value === 'medium') return s >= 15 && s < 30
+      if (filterSimilarity.value === 'high') return s >= 30
       return true
     })
   }
-  
+
   // 排序
-  result.sort((a, b) => {
-    if (sortDesc.value) {
-      return new Date(b.submitTime) - new Date(a.submitTime)
-    } else {
-      return new Date(a.submitTime) - new Date(b.submitTime)
-    }
-  })
-  
+  result.sort((a, b) => sortDesc.value
+    ? new Date(b.submitTime) - new Date(a.submitTime)
+    : new Date(a.submitTime) - new Date(b.submitTime)
+  )
+
   return result
 })
 
@@ -1807,10 +1769,6 @@ const truncateText = (text, maxLength = 50) => {
 // 事件处理
 const handleSelectionChange = (selection) => {
   selectedPapers.value = selection
-}
-
-const handleRowClick = (row) => {
-  // 可以选择查看详情
 }
 
 const toggleSort = () => {
@@ -1964,13 +1922,13 @@ const toggleFullscreen = () => {
 const handleReportApprove = (paperId) => {
   ElMessage.success('论文审核已通过')
   reportDialogVisible.value = false
-  loadPendingPapers()
+  refreshList()
 }
 
 const handleReportRevision = ({ paperId, suggestion }) => {
   ElMessage.success('修改要求已发送')
   reportDialogVisible.value = false
-  loadPendingPapers()
+  refreshList()
 }
 
 const contactStudent = async (paper) => {
@@ -2011,8 +1969,20 @@ const handleMoreAction = async (paper, command) => {
       break
     case 'download':
       try {
-        // 这里应该调用下载接口
-        ElMessage.success('开始下载论文文件')
+        const paperId = paper.paperId ?? paper.paperBaseInfo?.paperId ?? paper.id
+        if (!paperId) {
+          ElMessage.error('无法获取论文ID')
+          return
+        }
+        const res = await downloadPaper(paperId)
+        const blob = res.data instanceof Blob ? res.data : new Blob([res.data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `论文_${paper.paperTitle || paperId}.docx`
+        link.click()
+        window.URL.revokeObjectURL(url)
+        ElMessage.success('论文下载成功')
       } catch (error) {
         console.error('下载失败:', error)
         ElMessage.error('下载失败，请重试')
@@ -2084,25 +2054,20 @@ const batchReview = async () => {
     ElMessage.warning('请先选择要审核的论文')
     return
   }
-  
+
   try {
-    // 弹出审核对话框进行审核决策
-    ElMessageBox.confirm(
+    await ElMessageBox.confirm(
       `确定要批量审核 ${selectedPapers.value.length} 篇论文吗？`,
       '批量审核',
-      {
-        type: 'warning',
-        confirmButtonText: '开始审核',
-        cancelButtonText: '取消'
-      }
-    ).then(() => {
-      // 打开审核对话框，传递多个论文ID以支持批量操作
-      currentPaperId.value = selectedPapers.value[0]?.paperId || selectedPapers.value[0]?.id || null
-      reviewDialogVisible.value = true
-    })
+      { type: 'warning', confirmButtonText: '开始审核', cancelButtonText: '取消' }
+    )
+    currentPaperId.value = selectedPapers.value[0]?.paperId || selectedPapers.value[0]?.id || null
+    reviewDialogVisible.value = true
   } catch (error) {
-    console.error('批量审核操作失败:', error)
-    ElMessage.error('批量审核操作失败，请重试')
+    if (error !== 'cancel') {
+      console.error('批量审核操作失败:', error)
+      ElMessage.error('批量审核操作失败，请重试')
+    }
   }
 }
 
@@ -2145,6 +2110,7 @@ const batchRemind = async () => {
 }
 
 const clearSelection = () => {
+  tableRef.value?.clearSelection()
   selectedPapers.value = []
 }
 
@@ -2182,12 +2148,19 @@ const handleReviewCompleted = async (reviewResult) => {
   }
 }
 
-const loadPendingPapers = async () => {
-  await refreshList()
+const loadColleges = async () => {
+  try {
+    const res = await getAllColleges()
+    if (res.code === 200) {
+      collegeList.value = res.data || []
+    }
+  } catch (e) {
+    console.error('获取学院列表失败:', e)
+  }
 }
 
 onMounted(async () => {
-  await refreshList()
+  await Promise.all([refreshList(), loadColleges()])
 })
 
 onUnmounted(() => {
@@ -2197,483 +2170,3 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style lang="scss" scoped>
-/* Enhanced component styles using design tokens */
-
-.enhanced-table {
-  width: 100%;
-
-  :deep(.el-table__header-wrapper) {
-    background-color: var(--apple-canvas-parchment);
-
-    th {
-      color: var(--apple-primary);
-      font-weight: 600;
-      border-bottom: 2px solid var(--apple-primary);
-      padding: 12px 16px;
-    }
-  }
-
-  :deep(.el-table__row:hover) {
-    background-color: rgba(0, 102, 204, 0.05);
-    transition: background-color 0.2s ease;
-  }
-
-  :deep(.el-table__row) {
-    transition: background-color 0.2s ease;
-    padding: 16px 0;
-  }
-
-  :deep(.el-table__row.el-table__row--striped) {
-    background-color: rgba(0, 102, 204, 0.02);
-  }
-
-  :deep(.el-table__cell) {
-    padding: 16px;
-  }
-}
-
-/* 学生信息增强样式 */
-.student-info-enhanced {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--apple-canvas-parchment);
-  border-radius: var(--apple-rounded-lg);
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background: #f0f7ff;
-  }
-}
-
-.student-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.student-main-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.student-name {
-  font-weight: 600;
-  color: var(--apple-primary);
-  font-size: 17px;
-}
-
-.student-secondary-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--apple-ink-muted-48);
-}
-
-.college-tag, .contact-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  .el-icon {
-    color: var(--apple-primary);
-  }
-}
-
-/* 论文信息增强样式 */
-.paper-info-enhanced {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.paper-title-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.paper-title {
-  font-weight: 400;
-  color: var(--apple-primary);
-  line-height: 1.4;
-  cursor: pointer;
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--apple-canvas-parchment);
-  border-radius: var(--apple-rounded-md);
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    color: var(--apple-primary-hover);
-    background: #f0f7ff;
-  }
-}
-
-.paper-tags {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.paper-meta-enhanced {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.meta-chip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--apple-ink-muted-48);
-  background: var(--apple-canvas-parchment);
-  padding: 4px 8px;
-  border-radius: var(--apple-rounded-lg);
-
-  .el-icon {
-    color: var(--apple-primary);
-  }
-}
-
-/* 相似度信息增强样式 */
-.similarity-info-enhanced {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background: var(--apple-canvas-parchment);
-  border-radius: var(--apple-rounded-lg);
-  transition: border-color 0.2s ease;
-
-  &:hover {
-    border: 1px solid var(--apple-hairline);
-  }
-}
-
-.similarity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.similarity-score-display {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.similarity-percentage {
-  font-weight: 700;
-  font-size: 18px;
-  padding: 4px 12px;
-  background: var(--apple-surface);
-  border-radius: var(--apple-rounded-lg);
-}
-
-.similarity-visual {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.similarity-progress {
-  :deep(.el-progress__bar) {
-    border-radius: var(--apple-rounded-md);
-  }
-
-  :deep(.el-progress__text) {
-    display: none;
-  }
-
-  :deep(.el-progress__bar__outer) {
-    background: var(--apple-hairline);
-    border-radius: var(--apple-rounded-md);
-  }
-}
-
-.similarity-indicators {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 4px;
-}
-
-.indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  transition: transform 0.2s ease;
-
-  &.active {
-    transform: scale(1.2);
-  }
-
-  &.current {
-    transform: scale(1.5);
-    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.15);
-  }
-}
-
-.similarity-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.report-btn,
-.recheck-btn {
-  transition: border-color 0.2s ease;
-
-  &:hover {
-    border: 1px solid var(--apple-hairline);
-  }
-}
-
-/* 等待时间样式 */
-.waiting-time {
-  font-weight: 400;
-  font-size: 17px;
-}
-
-.waiting-short {
-  color: var(--apple-success);
-}
-
-.waiting-medium {
-  color: var(--apple-warning);
-}
-
-.waiting-long {
-  color: var(--apple-danger);
-}
-
-/* 截止时间样式 */
-.deadline-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 17px;
-}
-
-.deadline-warning {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--apple-warning);
-  font-size: 12px;
-
-  .el-icon {
-    color: var(--apple-warning);
-  }
-}
-
-.deadline-overdue {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--apple-danger);
-  font-size: 12px;
-
-  .el-icon {
-    color: var(--apple-danger);
-  }
-}
-
-/* 操作按钮样式 */
-.action-buttons-enhanced {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  transition: border-color 0.2s ease;
-  border-radius: var(--apple-rounded-md);
-
-  &:hover {
-    border: 1px solid var(--apple-hairline);
-  }
-}
-
-.primary-action {
-  background-color: var(--apple-primary);
-  border-color: var(--apple-primary);
-
-  &:hover {
-    background-color: var(--apple-primary-hover);
-    border-color: var(--apple-primary-hover);
-  }
-}
-
-.more-dropdown {
-  .el-button {
-    transition: border-color 0.2s ease;
-    border-radius: var(--apple-rounded-md);
-
-    &:hover {
-      color: var(--apple-primary);
-      background-color: #f0f7ff;
-    }
-  }
-}
-
-/* 批量操作样式 */
-.batch-actions {
-  padding: 20px;
-  border-top: 1px solid var(--apple-hairline);
-  background-color: var(--apple-canvas-parchment);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-
-  span {
-    font-weight: 600;
-    color: var(--apple-primary);
-    font-size: 17px;
-  }
-
-  .el-button {
-    transition: border-color 0.2s ease;
-    border-radius: var(--apple-rounded-md);
-
-    &:hover {
-      border: 1px solid var(--apple-hairline);
-    }
-  }
-}
-
-/* 报告对话框样式 */
-.report-dialog {
-  border-radius: var(--apple-rounded-lg);
-  overflow: hidden;
-}
-
-.report-dialog :deep(.el-dialog__body) {
-  padding: 0;
-  height: calc(100vh - 200px);
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--apple-hairline);
-  background: var(--apple-canvas-parchment);
-}
-
-/* 论文预览对话框样式 */
-.preview-dialog {
-  border-radius: var(--apple-rounded-lg);
-  overflow: hidden;
-}
-
-.preview-dialog :deep(.el-dialog__body) {
-  padding: 0;
-  height: v-bind('isFullscreen ? "100vh" : "calc(100vh - 200px)"');
-}
-
-.preview-dialog.fullscreen :deep(.el-dialog__body) {
-  height: 100vh;
-}
-
-.preview-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.preview-frame {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.loading-placeholder {
-  padding: 20px;
-}
-
-.error-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--apple-ink-muted-48);
-}
-
-.error-placeholder p {
-  margin: 16px 0;
-  font-size: 16px;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .teacher-pending {
-    padding: 1rem;
-  }
-
-  .page-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .action-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .action-left,
-  .action-right {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .paper-title-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .paper-meta-enhanced {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .similarity-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .action-buttons-enhanced {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .batch-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-}
-</style>

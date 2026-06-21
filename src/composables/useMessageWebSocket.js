@@ -48,22 +48,26 @@ export function useMessageWebSocket() {
       }
       // 构建 WebSocket URL（开发环境用 localhost，生产从 env 读取）
       const wsBase = import.meta.env.VITE_WS_BASE_URL || (
-        import.meta.env.DEV ? 'ws://localhost:3000' : `ws://${window.location.host}`
+        window.location.protocol === 'https:'
+          ? `wss://${window.location.host}`
+          : `ws://${window.location.host}`
       );
-      const wsUrl = `${wsBase}/ws/messages/${userId}`;
+      const wsUrl = `${wsBase}/ws/messages/${userId}?token=${encodeURIComponent(token)}`;
 
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log('WebSocket 连接成功');
-        // 连接成功后发送 token 进行认证
-        ws.send(JSON.stringify({
-          type: 'AUTH',
-          token: token,
-          userId: userId
-        }));
         isConnected.value = true;
         isConnecting.value = false;
+        // 连接成功后发送 token 进行认证
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'AUTH',
+            token: token,
+            userId: userId
+          }));
+        }
       };
 
       ws.onmessage = (event) => {

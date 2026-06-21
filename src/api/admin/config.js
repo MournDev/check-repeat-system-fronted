@@ -104,3 +104,70 @@ export const updateDeadlinesConfig = (data) => {
     data: data
   })
 }
+
+// ========================== 查重规则管理 ==========================
+
+// 查询查重规则列表
+export const getCheckRuleList = (params) => {
+  return request({
+    url: '/api/v1/admin/config/check-rule/list',
+    method: 'get',
+    params: params
+  })
+}
+
+// 新增/编辑查重规则
+export const saveOrUpdateCheckRule = (data) => {
+  return request({
+    url: '/api/v1/admin/config/check-rule/save-or-update',
+    method: 'post',
+    data: data
+  })
+}
+
+// 删除查重规则
+export const deleteCheckRule = (ruleId) => {
+  return request({
+    url: '/api/v1/admin/config/check-rule/delete',
+    method: 'post',
+    params: { ruleId }
+  })
+}
+
+// 查询规则关联的比对库
+export const getRuleRelatedLibs = (ruleId) => {
+  return request({
+    url: '/api/v1/admin/config/check-rule/related-libs',
+    method: 'get',
+    params: { ruleId }
+  })
+}
+
+// ========================== 比对库管理 ==========================
+
+// 查询比对库列表
+export const getCompareLibList = (params) => {
+  return request({
+    url: '/api/v1/admin/config/compare-lib/list',
+    method: 'get',
+    params: params
+  })
+}
+
+// 新增/编辑比对库
+export const saveOrUpdateCompareLib = (data) => {
+  return request({
+    url: '/api/v1/admin/config/compare-lib/save-or-update',
+    method: 'post',
+    data: data
+  })
+}
+
+// 启用/禁用比对库
+export const toggleLibEnabled = (libId, isEnabled) => {
+  return request({
+    url: '/api/v1/admin/config/compare-lib/toggle-enabled',
+    method: 'post',
+    params: { libId, isEnabled }
+  })
+}

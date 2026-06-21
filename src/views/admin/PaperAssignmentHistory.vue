@@ -50,6 +50,7 @@
             <el-option label="已生效" value="active"></el-option>
             <el-option label="已撤销" value="revoked"></el-option>
             <el-option label="待确认" value="pending"></el-option>
+            <el-option label="待重新分配" value="pending_reassign"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="关键词">
@@ -611,7 +612,8 @@ const getStatusName = (status) => {
   const statusMap = {
     'active': '已生效',
     'revoked': '已撤销',
-    'pending': '待确认'
+    'pending': '待确认',
+    'pending_reassign': '待重新分配'
   }
   return statusMap[status] || status
 }

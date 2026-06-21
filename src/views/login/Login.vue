@@ -194,7 +194,9 @@ const handleLogin = async () => {
       } else if (role === 'TEACHER') {
         targetRoute = { name: 'TeacherDashboard' }
       } else if (role === 'ADMIN') {
-        targetRoute = { name: 'AdminDashboard' }
+        targetRoute = { name: 'SchoolOverview' }
+      } else if (role === 'SUPER_ADMIN') {
+        targetRoute = { name: 'SuperAdminDashboard' }
       } else {
         targetRoute = { name: 'Dashboard' }
       }

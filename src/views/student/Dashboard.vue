@@ -405,7 +405,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking } from "@/api/student.js"
+import { getLatestPaper, getAdvisorInfo, getStudentDashboardStats, getDashboardDeadlines, getAbilityRadarData, getSimilarityTrendChart, getMajorComparisonData, getTodoList, getNotifications, getProgressTracking, exportDashboardStats } from "@/api/student.js"
 import * as echarts from 'echarts'
 
 // 图标导入
@@ -505,32 +505,45 @@ let comparisonChartInstance = null
 // 计算属性
 const currentProgress = computed(() => {
   // 优先使用进度跟踪接口返回的数据
-  if (progressTrackingData.currentStep !== undefined) {
+  if (progressTrackingData.currentStep !== undefined && progressTrackingData.currentStep !== null) {
     return progressTrackingData.currentStep;
   }
   // 如果没有论文，返回 0
   if (!latestPaper.value) return 0;
   const status = latestPaper.value.status;
   const progressMap = {
+    'draft': 0,
     'submitted': 1,
-    'assigned': 2,
+    'pending': 1,
     'auditing': 2,
-    'completed': 4,
-    'rejected': 3
+    'reviewed': 2,
+    'rejected': 3,
+    'revised': 3,
+    'completed': 4
   };
   return progressMap[status] || 0;
 });
 
 // 进度步骤数据
 const progressSteps = computed(() => {
+  // 如果有进度跟踪接口返回的步骤数据，优先使用
+  if (progressTrackingData.steps && progressTrackingData.steps.length > 0) {
+    return progressTrackingData.steps.map(step => ({
+      title: step.name,
+      description: step.description
+    }));
+  }
+
+  // 否则根据当前进度计算步骤状态
+  const progress = currentProgress.value;
   return [
     {
       title: '论文提交',
-      description: '已完成'
+      description: progress >= 1 ? '已完成' : (progress === 0 && latestPaper.value ? '进行中' : '等待提交')
     },
     {
-      title: '分配导师',
-      description: latestPaper.value?.advisorName ? '已完成' : '进行中'
+      title: '查重检测',
+      description: progress >= 2 ? '已完成' : (progress === 1 ? '进行中' : '等待检测')
     },
     {
       title: '导师审核',
@@ -538,7 +551,7 @@ const progressSteps = computed(() => {
     },
     {
       title: '审核通过',
-      description: '目标'
+      description: progress >= 4 ? '已完成' : (progress === 3 ? '需修改' : '等待审核')
     }
   ];
 });
@@ -574,11 +587,60 @@ const collectionCount = computed(() => {
 })
 
 const estimatedCompletion = computed(() => {
-  return progressTrackingData.estimatedCompletion || '2024 年 2 月 25 日'
+  if (progressTrackingData.estimatedCompletion) {
+    // 如果是日期格式，格式化显示
+    const dateStr = progressTrackingData.estimatedCompletion;
+    if (dateStr === '已完成') return '已完成';
+    try {
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      }
+    } catch (e) {
+      // 解析失败直接返回原值
+    }
+    return dateStr;
+  }
+  // 根据当前进度计算默认值
+  const progress = currentProgress.value;
+  const now = new Date();
+  switch (progress) {
+    case 0: return '未开始';
+    case 1: {
+      const d = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+      return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    case 2: {
+      const d = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    case 3: {
+      const d = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000);
+      return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    case 4: return '已完成';
+    default: return '计算中';
+  }
 })
 
 const processingSpeed = computed(() => {
-  return progressTrackingData.processingSpeed || '较快'
+  if (progressTrackingData.processingSpeed) {
+    return progressTrackingData.processingSpeed;
+  }
+  // 根据当前进度返回默认值
+  const progress = currentProgress.value;
+  const speedMap = {
+    0: '未开始',
+    1: '等待审核',
+    2: '正常处理中',
+    3: '需修改后重新提交',
+    4: '已完成'
+  };
+  return speedMap[progress] || '未知';
 })
 
 // 方法
@@ -741,9 +803,24 @@ const exportDashboardData = () => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'info'
-  }).then(() => {
-    ElMessage.success('数据导出开始，请稍候...')
-    // 实际导出逻辑
+  }).then(async () => {
+    try {
+      ElMessage.info('正在导出数据...')
+      const res = await exportDashboardStats()
+      const blob = res.data || res
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `工作台数据_${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      ElMessage.success('数据导出成功')
+    } catch (error) {
+      console.error('导出失败:', error)
+      ElMessage.error(error.message || '数据导出失败')
+    }
   })
 }
 
@@ -794,7 +871,8 @@ const getAllocationStatusText = (allocationStatus) => {
   const map = {
     'pending': '等待教师确认',
     'confirmed': '教师已确认',
-    'rejected': '已拒绝，重新分配中'
+    'rejected': '已拒绝',
+    'pending_reassign': '导师拒绝，正在重新分配'
   }
   return map[allocationStatus] || allocationStatus || '未知'
 }

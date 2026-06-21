@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   resolve: {
     alias: {
@@ -32,11 +32,14 @@ export default defineConfig({
   build: {
     // 目标环境
     target: 'es2015',
-    
+
+    // 生产环境移除 console/debugger
+    esbuild: {
+      drop: mode === 'production' ? ['console', 'debugger'] : []
+    },
+
     // 代码分割优化
     rollupOptions: {
-      // 外部依赖 - 这些依赖不会被打包，需要在运行时提供
-      external: ['sockjs-client', '@stomp/stompjs'],
       output: {
         // 手动分割大块依赖 - 使用函数形式
         manualChunks(id) {
@@ -87,4 +90,4 @@ export default defineConfig({
       'sockjs-client'
     ]
   }
-})
+}))

@@ -70,3 +70,20 @@ export const exportUsers = (params) => {
     responseType: 'blob'
   })
 }
+
+// 重置用户密码
+export const resetUserPassword = (userId) => {
+  return request({
+    url: `/api/v1/admin/users/${userId}/reset-password`,
+    method: 'put'
+  })
+}
+
+// 获取用户登录历史
+export const getUserLoginHistory = (userId, params) => {
+  return request({
+    url: `/api/v1/admin/users/${userId}/login-history`,
+    method: 'get',
+    params
+  })
+}

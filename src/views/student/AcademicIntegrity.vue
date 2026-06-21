@@ -373,7 +373,7 @@
                       {{ faq.question }}
                     </template>
                     <div class="faq-answer">
-                      <p v-html="faq.answer"></p>
+                      <p v-html="sanitizeHtml(faq.answer)"></p>
                       <div v-if="faq.example" class="faq-example">
                         <h4>示例：</h4>
                         <p>{{ faq.example }}</p>
@@ -422,6 +422,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { sanitizeHtml } from '@/utils/markdown'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { 
